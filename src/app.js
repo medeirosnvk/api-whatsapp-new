@@ -31,9 +31,17 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-        // executablePath: "C:Program FilesGoogleChromeApplicationchrome.exe",
-        // headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        headless: true,
+        args: [
+            "--no-default-browser-check",
+            "--disable-session-crashed-bubble",
+            "--disable-dev-shm-usage",
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-accelerated-2d-canvas",
+            "--no-first-run",
+        ],
+        takeoverOnConflict: true,
     },
     webVersionCache: {
         type: "remote",
