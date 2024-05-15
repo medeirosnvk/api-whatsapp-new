@@ -28,6 +28,8 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
     sessionData = require(SESSION_FILE_PATH);
 }
 
+const wwebVersion = "2.2412.54";
+
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
@@ -45,8 +47,7 @@ const client = new Client({
     },
     webVersionCache: {
         type: "remote",
-        remotePath:
-            "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2403.2.html",
+        remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${wwebVersion}.html`,
     },
 });
 
