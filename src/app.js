@@ -35,20 +35,20 @@ const customDbConfig = {
     connectTimeout: 60000,
 };
 
-const privateKey = fs.readFileSync(
-    "/etc/letsencrypt/live/whatsapp.cobrance.online/privkey.pem",
-    "utf8"
-);
-const certificate = fs.readFileSync(
-    "/etc/letsencrypt/live/whatsapp.cobrance.online/fullchain.pem",
-    "utf8"
-);
-const ca = fs.readFileSync(
-    "/etc/letsencrypt/live/whatsapp.cobrance.online/chain.pem",
-    "utf8"
-);
-const credentials = { key: privateKey, cert: certificate, ca };
-const httpsServer = https.createServer(credentials, app);
+// const privateKey = fs.readFileSync(
+//     "/etc/letsencrypt/live/whatsapp.cobrance.online/privkey.pem",
+//     "utf8"
+// );
+// const certificate = fs.readFileSync(
+//     "/etc/letsencrypt/live/whatsapp.cobrance.online/fullchain.pem",
+//     "utf8"
+// );
+// const ca = fs.readFileSync(
+//     "/etc/letsencrypt/live/whatsapp.cobrance.online/chain.pem",
+//     "utf8"
+// );
+// const credentials = { key: privateKey, cert: certificate, ca };
+// const httpsServer = https.createServer(credentials, app);
 
 app.use(express.json());
 app.use(cors());
@@ -2568,7 +2568,7 @@ app.get("/listAllFiles", (req, res) => {
 
 app.use("/media", express.static(mediaDataPath));
 
-httpsServer.listen(port, async () => {
+app.listen(port, async () => {
     console.log(`Servidor HTTPS iniciado na porta ${port}`);
 
     initializeConnectionStatus();
