@@ -17,7 +17,7 @@ let sessions = {};
 let stateMachines = {};
 
 const app = express();
-const port = 3060;
+const port = process.env.PORT;
 
 const wwebVersion = "2.2412.54";
 const qrCodeDataPath = path.join(__dirname, "qrcodes");
