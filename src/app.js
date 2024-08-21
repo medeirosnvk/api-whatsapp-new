@@ -2569,8 +2569,8 @@ app.get("/listAllFiles", (req, res) => {
 app.use("/media", express.static(mediaDataPath));
 
 app.listen(port, async () => {
-    console.log(`Servidor HTTPS iniciado na porta ${port}`);
+    console.log(`Servidor HTTP iniciado na porta ${port}`);
 
-    initializeConnectionStatus();
+    // initializeConnectionStatus();
     //   await restoreAllSessions();
 });
