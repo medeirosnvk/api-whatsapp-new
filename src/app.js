@@ -493,8 +493,7 @@ class StateMachine {
                 credorInfo.length +
                 "."
             );
-            await this._handleInitialState(origin, phoneNumber, response);
-            this._setCurrentState(phoneNumber, "INICIO");
+            return;
           }
 
           this._setDataCredores(phoneNumber, credorInfo);
