@@ -35,21 +35,6 @@ const customDbConfig = {
   connectTimeout: 60000,
 };
 
-// const privateKey = fs.readFileSync(
-//     "/etc/letsencrypt/live/whatsapp.cobrance.online/privkey.pem",
-//     "utf8"
-// );
-// const certificate = fs.readFileSync(
-//     "/etc/letsencrypt/live/whatsapp.cobrance.online/fullchain.pem",
-//     "utf8"
-// );
-// const ca = fs.readFileSync(
-//     "/etc/letsencrypt/live/whatsapp.cobrance.online/chain.pem",
-//     "utf8"
-// );
-// const credentials = { key: privateKey, cert: certificate, ca };
-// const httpsServer = https.createServer(credentials, app);
-
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
@@ -1148,6 +1133,10 @@ const createSession = async (sessionName) => {
         client.destroy();
       }
     }, 3 * 60 * 1000); // 3 minutos
+
+    client.on("loading_screen", (percent, message) => {
+      console.log("Carregando...", percent, message);
+    });
 
     let isQRFunctionExposed = false;
 
@@ -2371,8 +2360,30 @@ app.get("/listAllFiles", (req, res) => {
 
 app.use("/media", express.static(mediaDataPath));
 
-app.listen(port, async () => {
-  console.log(`Servidor HTTP iniciado na porta ${port}`);
+// app.listen(port, async () => {
+//   console.log(`Servidor HTTP iniciado na porta ${port}`);
+
+//   initializeConnectionStatus();
+//   await restoreAllSessions();
+// });
+
+const privateKey = fs.readFileSync(
+  "/etc/letsencrypt/live/whatsapp.cobrance.online/privkey.pem",
+  "utf8"
+);
+const certificate = fs.readFileSync(
+  "/etc/letsencrypt/live/whatsapp.cobrance.online/fullchain.pem",
+  "utf8"
+);
+const ca = fs.readFileSync(
+  "/etc/letsencrypt/live/whatsapp.cobrance.online/chain.pem",
+  "utf8"
+);
+const credentials = { key: privateKey, cert: certificate, ca };
+const httpsServer = https.createServer(credentials, app);
+
+httpsServer.listen(port, async () => {
+  console.log(`Servidor HTTPS iniciado na porta ${port}`);
 
   initializeConnectionStatus();
   await restoreAllSessions();
