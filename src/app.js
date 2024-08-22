@@ -392,6 +392,20 @@ class StateMachine {
 
   async _handleMenuState(origin, phoneNumber, response) {
     const initialStateResponse = response.body.trim();
+    const validOptions = ["1", "2", "3", "4"]; // Definindo as opções válidas
+
+    // Verifica se a resposta é uma das opções válidas
+    if (!validOptions.includes(initialStateResponse)) {
+      await this._postMessage(
+        origin,
+        "Resposta inválida. Por favor, escolha uma opção válida entre 1 e " +
+          validOptions.length +
+          "."
+      );
+      await this._handleInitialState(origin, phoneNumber, response);
+      this._setCurrentState(phoneNumber, "INICIO");
+      return; // Interrompe o processamento se a resposta for inválida
+    }
 
     switch (initialStateResponse) {
       case "1":
@@ -404,7 +418,7 @@ class StateMachine {
             await this._postMessage(origin, messageErro);
             await this._handleInitialState(origin, phoneNumber, response);
             this._setCurrentState(phoneNumber, "INICIO");
-          } else if (credorInfo && credorInfo.length === 1) {
+          } else if (credorInfo.length === 1) {
             const credorMessage = utils.formatCredorInfo(credorInfo);
             const messageSucess = `${credorMessage}`;
 
@@ -413,7 +427,7 @@ class StateMachine {
             this._setCurrentState(phoneNumber, "CREDOR");
           } else {
             const credorMessage = utils.formatCredorInfo(credorInfo);
-            const messageSucess = `${credorMessage}\n\n_Selecione o numero da divida a negociar._`;
+            const messageSucess = `${credorMessage}\n\n_Selecione o número da dívida a negociar._`;
 
             await this._postMessage(origin, messageSucess);
             this._setCurrentState(phoneNumber, "CREDOR");
@@ -430,7 +444,7 @@ class StateMachine {
 
       case "2":
         try {
-          await this._handleAcordoState(origin, phoneNumber); // Passando o phoneNumber como argumento
+          await this._handleAcordoState(origin, phoneNumber);
         } catch (error) {
           console.error("Case 2 retornou um erro - ", error.message);
           await this._handleErrorState(
@@ -443,7 +457,7 @@ class StateMachine {
 
       case "3":
         try {
-          await this._handleBoletoState(origin, phoneNumber, response); // Passando o phoneNumber e response como argumentos
+          await this._handleBoletoState(origin, phoneNumber, response);
         } catch (error) {
           console.error("Case 3 retornou um erro - ", error.message);
           await this._handleErrorState(
@@ -456,7 +470,7 @@ class StateMachine {
 
       case "4":
         try {
-          await this._handlePixState(origin, phoneNumber, response); // Passando o phoneNumber e response como argumentos
+          await this._handlePixState(origin, phoneNumber, response);
         } catch (error) {
           console.error("Case 4 retornou um erro - ", error.message);
           await this._handleErrorState(
