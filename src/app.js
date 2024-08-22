@@ -487,9 +487,12 @@ class StateMachine {
           } else {
             await this._postMessage(
               origin,
-              "Resposta inválida. Por favor, escolha uma opção válida."
+              "Resposta inválida. Por favor, escolha uma opção válida entre 1 e " +
+                credorInfo.length +
+                "."
             );
-            return;
+            await this._handleInitialState(origin, phoneNumber, response);
+            this._setCurrentState(phoneNumber, "INICIO");
           }
         }
 
