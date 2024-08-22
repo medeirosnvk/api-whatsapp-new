@@ -1250,21 +1250,13 @@ const createSession = async (sessionName) => {
         client = new Client({
             authStrategy: new LocalAuth({ clientId: sessionName }),
             puppeteer: {
-                headless: true,
-                args: [
-                    "--no-default-browser-check",
-                    "--disable-session-crashed-bubble",
-                    "--disable-dev-shm-usage",
-                    "--no-sandbox",
-                    "--disable-setuid-sandbox",
-                    "--disable-accelerated-2d-canvas",
-                    "--no-first-run",
-                ],
+                headless: false,
+                args: ["--no-sandbox", "--disable-setuid-sandbox"],
             },
-            webVersionCache: {
-                type: "remote",
-                remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${wwebVersion}.html`,
-            },
+            // webVersionCache: {
+            //     type: "remote",
+            //     remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${wwebVersion}.html`,
+            // },
         });
 
         client.connectionState = "connecting";
