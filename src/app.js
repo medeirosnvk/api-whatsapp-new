@@ -471,11 +471,15 @@ class StateMachine {
 
   async _handleCredorState(origin, phoneNumber, response) {
     try {
-      const response = parseInt(response.body.trim());
+      const userResponse = parseInt(response.body.trim());
       const { cpfcnpj: document } = this._getCredor(phoneNumber);
       const credorInfo = await requests.getCredorInfo(document);
 
-      if (isNaN(response) || response < 1 || response > credorInfo.length) {
+      if (
+        isNaN(userResponse) ||
+        userResponse < 1 ||
+        userResponse > credorInfo.length
+      ) {
         await this._postMessage(
           origin,
           "Resposta inválida. Por favor, escolha uma opção válida entre 1 e " +
