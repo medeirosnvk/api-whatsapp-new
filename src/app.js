@@ -492,8 +492,8 @@ class StateMachine {
               origin,
               "Resposta inválida. Por favor, escolha uma opção válida."
             );
-            // Retorna ao estado anterior (MENU) para permitir que o usuário tente novamente
-            await this._handleMenuState(origin, phoneNumber, response);
+            // Retorna ao estado anterior (MENU) e interrompe o fluxo
+            return await this._handleMenuState(origin, phoneNumber, response);
           }
 
           selectedCreditor = credorInfo[selectedOption - 1];
