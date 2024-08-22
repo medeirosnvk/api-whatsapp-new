@@ -493,8 +493,8 @@ class StateMachine {
                 credorInfo.length +
                 "."
             );
-            await this._handleInitialState(origin, phoneNumber, response);
-            this._setCurrentState(phoneNumber, "INICIO");
+            await this._handleMenuState(origin, phoneNumber, response);
+            this._setCurrentState(phoneNumber, "MENU");
             return;
           }
 
