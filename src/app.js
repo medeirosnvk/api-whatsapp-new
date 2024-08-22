@@ -477,7 +477,7 @@ class StateMachine {
         let selectedCreditor;
         let selectedOption;
 
-        // Obtenha a lista de credores se houver mais de um
+        // Se houver mais de um credor, solicitar escolha
         if (credorInfo.length > 1) {
           this._setDataCredores(phoneNumber, credorInfo);
           selectedOption = parseInt(response.body.trim());
@@ -493,7 +493,7 @@ class StateMachine {
               "Resposta inválida. Por favor, escolha uma opção válida."
             );
             // Retorna ao estado anterior (MENU) e interrompe o fluxo
-            return await this._handleMenuState(origin, phoneNumber, response);
+            return;
           }
 
           selectedCreditor = credorInfo[selectedOption - 1];
