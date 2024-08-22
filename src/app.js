@@ -493,6 +493,7 @@ class StateMachine {
                 credorInfo.length +
                 "."
             );
+            this._setCurrentState(phoneNumber, "MENU");
             return;
           }
 
