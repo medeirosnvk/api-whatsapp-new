@@ -1250,13 +1250,21 @@ const createSession = async (sessionName) => {
         client = new Client({
             authStrategy: new LocalAuth({ clientId: sessionName }),
             puppeteer: {
-                headless: false,
-                args: ["--no-sandbox", "--disable-setuid-sandbox"],
+                headless: true,
+                args: [
+                    "--no-default-browser-check",
+                    "--disable-session-crashed-bubble",
+                    "--disable-dev-shm-usage",
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox",
+                    "--disable-accelerated-2d-canvas",
+                    "--no-first-run",
+                ],
             },
-            // webVersionCache: {
-            //     type: "remote",
-            //     remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${wwebVersion}.html`,
-            // },
+            webVersionCache: {
+                type: "remote",
+                remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${wwebVersion}.html`,
+            },
         });
 
         client.connectionState = "connecting";
@@ -1367,10 +1375,20 @@ const createSession = async (sessionName) => {
             }
         });
 
-        client.on("ready", () => {
+        client.on("ready", async () => {
             clearTimeout(qrTimeout);
             client.connectionState = "open";
             console.log(`Sessão ${sessionName} está pronta!`);
+
+            const debugWWebVersion = await client.getWWebVersion();
+            console.log(`WWebVersion = ${debugWWebVersion}`);
+
+            client.pupPage.on("pageerror", function (err) {
+                console.log("Page error: " + err.toString());
+            });
+            client.pupPage.on("error", function (err) {
+                console.log("Page error: " + err.toString());
+            });
 
             try {
                 saveClientData(client);
