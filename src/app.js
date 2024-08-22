@@ -483,17 +483,21 @@ class StateMachine {
           selectedOption = parseInt(response.body.trim());
 
           // Verifique se a opção selecionada é válida
-          if (selectedOption >= 1 && selectedOption <= credorInfo.length) {
-            selectedCreditor = credorInfo[selectedOption - 1];
-          } else {
+          if (
+            isNaN(selectedOption) ||
+            selectedOption < 1 ||
+            selectedOption > credorInfo.length
+          ) {
             await this._postMessage(
               origin,
               "Resposta inválida. Por favor, escolha uma opção válida."
             );
-            // Rechama a função para permitir que o usuário tente novamente
+            // Retorna ao estado anterior (MENU) para permitir que o usuário tente novamente
             await this._handleMenuState(origin, phoneNumber, response);
             return; // Retorna para evitar que continue para o próximo bloco
           }
+
+          selectedCreditor = credorInfo[selectedOption - 1];
         } else {
           selectedCreditor = credorInfo[0];
         }
