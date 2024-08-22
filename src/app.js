@@ -392,6 +392,7 @@ class StateMachine {
 
   async _handleMenuState(origin, phoneNumber, response) {
     const initialStateResponse = response.body.trim();
+
     switch (initialStateResponse) {
       case "1":
         try {
@@ -410,20 +411,22 @@ class StateMachine {
                 "."
             );
             await this._handleInitialState(origin, phoneNumber, response);
+            this._setCurrentState(phoneNumber, "INICIO");
+            return;
           }
 
           if (!credorInfo || credorInfo.length === 0) {
             const messageErro = `Você não possui dívidas ou ofertas disponíveis.`;
             await this._postMessage(origin, messageErro);
             await this._handleInitialState(origin, phoneNumber, response);
+            this._setCurrentState(phoneNumber, "INICIO");
           } else if (credorInfo && credorInfo.length === 1) {
             const credorMessage = utils.formatCredorInfo(credorInfo);
             const messageSucess = `${credorMessage}`;
 
-            this._setCurrentState(phoneNumber, "CREDOR");
-
             await this._postMessage(origin, messageSucess);
             await this._handleCredorState(origin, phoneNumber, response);
+            this._setCurrentState(phoneNumber, "CREDOR");
           } else {
             const credorMessage = utils.formatCredorInfo(credorInfo);
             const messageSucess = `${credorMessage}\n\n_Selecione o numero da divida a negociar._`;
