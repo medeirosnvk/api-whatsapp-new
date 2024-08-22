@@ -485,6 +485,8 @@ class StateMachine {
           if (selectedOption >= 1 && selectedOption <= credorInfo.length) {
             selectedCreditor = credorInfo[selectedOption - 1];
           } else {
+            this._setCurrentState(phoneNumber, "INICIO");
+
             await this._postMessage(
               origin,
               "Resposta inválida. Por favor, escolha uma opção válida entre 1 e " +
@@ -492,7 +494,6 @@ class StateMachine {
                 "."
             );
             await this._handleInitialState(origin, phoneNumber, response);
-            this._setCurrentState(phoneNumber, "INICIO");
           }
         }
 
