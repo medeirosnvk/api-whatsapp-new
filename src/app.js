@@ -482,6 +482,13 @@ class StateMachine {
         if (credorInfo.length > 1) {
           selectedOption = parseInt(response.body.trim());
 
+          this._setDataCredores(phoneNumber, credorInfo);
+          selectedCreditor = credorInfo[selectedOption - 1];
+        } else {
+          selectedCreditor = credorInfo[0];
+        }
+
+        if (selectedCreditor) {
           if (
             isNaN(selectedOption) ||
             selectedOption < 1 ||
@@ -493,17 +500,10 @@ class StateMachine {
                 credorInfo.length +
                 "."
             );
-            this._setCurrentState(phoneNumber, "MENU");
-            return;
+            await this._handleInitialState(origin, phoneNumber, response);
+            this._setCurrentState(phoneNumber, "INICIO");
           }
 
-          this._setDataCredores(phoneNumber, credorInfo);
-          selectedCreditor = credorInfo[selectedOption - 1];
-        } else {
-          selectedCreditor = credorInfo[0];
-        }
-
-        if (selectedCreditor) {
           this._setDataCredorSelecionado(phoneNumber, selectedCreditor);
 
           const idDevedor = selectedCreditor.iddevedor;
