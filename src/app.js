@@ -392,30 +392,61 @@ class StateMachine {
 
   async _handleMenuState(origin, phoneNumber, response) {
     const initialStateResponse = response.body.trim();
+
     switch (initialStateResponse) {
       case "1":
         try {
           const { cpfcnpj: document } = this._getCredor(phoneNumber);
           const credorInfo = await requests.getCredorInfo(document);
 
+          // Verifica se existe informação de credores
           if (!credorInfo || credorInfo.length === 0) {
             const messageErro = `Você não possui dívidas ou ofertas disponíveis.`;
             await this._postMessage(origin, messageErro);
             await this._handleInitialState(origin, phoneNumber, response);
-          } else if (credorInfo && credorInfo.length === 1) {
+            return;
+          }
+
+          // Se existir mais de um credor, solicitar seleção
+          if (credorInfo.length > 1) {
+            const credorMessage = utils.formatCredorInfo(credorInfo);
+            const messageSucess = `${credorMessage}\n\n_Selecione o número da dívida a negociar._`;
+
+            await this._postMessage(origin, messageSucess);
+
+            const selectedOption = parseInt(response.body.trim());
+
+            // Verifique se a opção selecionada é válida
+            if (
+              isNaN(selectedOption) ||
+              selectedOption < 1 ||
+              selectedOption > credorInfo.length
+            ) {
+              await this._postMessage(
+                origin,
+                "Resposta inválida. Por favor, escolha uma opção válida entre 1 e " +
+                  credorInfo.length +
+                  "."
+              );
+              return; // Interrompe o fluxo se a resposta for inválida
+            }
+
+            const selectedCreditor = credorInfo[selectedOption - 1];
+            this._setDataCredorSelecionado(phoneNumber, selectedCreditor);
+
+            this._setCurrentState(phoneNumber, "CREDOR");
+            await this._handleCredorState(origin, phoneNumber, response);
+          } else {
+            // Se houver apenas um credor
+            const selectedCreditor = credorInfo[0];
             const credorMessage = utils.formatCredorInfo(credorInfo);
             const messageSucess = `${credorMessage}`;
 
+            this._setDataCredorSelecionado(phoneNumber, selectedCreditor);
             this._setCurrentState(phoneNumber, "CREDOR");
 
             await this._postMessage(origin, messageSucess);
             await this._handleCredorState(origin, phoneNumber, response);
-          } else {
-            const credorMessage = utils.formatCredorInfo(credorInfo);
-            const messageSucess = `${credorMessage}\n\n_Selecione o numero da divida a negociar._`;
-
-            await this._postMessage(origin, messageSucess);
-            this._setCurrentState(phoneNumber, "CREDOR");
           }
         } catch (error) {
           console.error("Case 1 retornou um erro - ", error.message);
