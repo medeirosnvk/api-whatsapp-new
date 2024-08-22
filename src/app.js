@@ -491,7 +491,7 @@ class StateMachine {
               "Resposta inválida. Por favor, escolha uma opção válida."
             );
             // Rechama a função para permitir que o usuário tente novamente
-            await this._handleCredorState(origin, phoneNumber, response);
+            await this._handleMenuState(origin, phoneNumber, response);
             return; // Retorna para evitar que continue para o próximo bloco
           }
         } else {
