@@ -399,22 +399,6 @@ class StateMachine {
           const { cpfcnpj: document } = this._getCredor(phoneNumber);
           const credorInfo = await requests.getCredorInfo(document);
 
-          if (
-            isNaN(initialStateResponse) ||
-            initialStateResponse < 1 ||
-            initialStateResponse > credorInfo.length
-          ) {
-            await this._postMessage(
-              origin,
-              "Resposta inválida. Por favor, escolha uma opção válida entre 1 e " +
-                credorInfo.length +
-                "."
-            );
-            await this._handleInitialState(origin, phoneNumber, response);
-            this._setCurrentState(phoneNumber, "INICIO");
-            return;
-          }
-
           if (!credorInfo || credorInfo.length === 0) {
             const messageErro = `Você não possui dívidas ou ofertas disponíveis.`;
             await this._postMessage(origin, messageErro);
@@ -496,10 +480,8 @@ class StateMachine {
 
         // Se houver mais de um credor, solicitar escolha
         if (credorInfo.length > 1) {
-          this._setDataCredores(phoneNumber, credorInfo);
           selectedOption = parseInt(response.body.trim());
 
-          // Verifique se a opção selecionada é válida
           if (
             isNaN(selectedOption) ||
             selectedOption < 1 ||
@@ -507,12 +489,16 @@ class StateMachine {
           ) {
             await this._postMessage(
               origin,
-              "Resposta inválida. Por favor, escolha uma opção válida."
+              "Resposta inválida. Por favor, escolha uma opção válida entre 1 e " +
+                credorInfo.length +
+                "."
             );
-            // Retorna ao estado anterior (MENU) e interrompe o fluxo
+            await this._handleInitialState(origin, phoneNumber, response);
+            this._setCurrentState(phoneNumber, "INICIO");
             return;
           }
 
+          this._setDataCredores(phoneNumber, credorInfo);
           selectedCreditor = credorInfo[selectedOption - 1];
         } else {
           selectedCreditor = credorInfo[0];
