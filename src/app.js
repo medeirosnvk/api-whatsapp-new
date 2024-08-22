@@ -494,7 +494,6 @@ class StateMachine {
             );
             // Retorna ao estado anterior (MENU) para permitir que o usuário tente novamente
             await this._handleMenuState(origin, phoneNumber, response);
-            return; // Retorna para evitar que continue para o próximo bloco
           }
 
           selectedCreditor = credorInfo[selectedOption - 1];
