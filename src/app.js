@@ -475,14 +475,13 @@ class StateMachine {
 
       if (Array.isArray(credorInfo) && credorInfo.length > 0) {
         let selectedCreditor;
-        let selectedOption;
 
-        // Obtenha a lista de credores se houver mais de um
-        if (credorInfo.length > 1) {
+        if (credorInfo.length === 1) {
+          selectedCreditor = credorInfo[0];
+        } else if (credorInfo.length > 1) {
+          const selectedOption = parseInt(response.body.trim());
           this._setDataCredores(phoneNumber, credorInfo);
-          selectedOption = parseInt(response.body.trim());
 
-          // Verifique se a opção selecionada é válida
           if (selectedOption >= 1 && selectedOption <= credorInfo.length) {
             selectedCreditor = credorInfo[selectedOption - 1];
           } else {
@@ -490,12 +489,8 @@ class StateMachine {
               origin,
               "Resposta inválida. Por favor, escolha uma opção válida."
             );
-            // Rechama a função para permitir que o usuário tente novamente
-            await this._handleCredorState(origin, phoneNumber, response);
-            return; // Retorna para evitar que continue para o próximo bloco
+            return;
           }
-        } else {
-          selectedCreditor = credorInfo[0];
         }
 
         if (selectedCreditor) {
