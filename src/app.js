@@ -392,21 +392,6 @@ class StateMachine {
 
   async _handleMenuState(origin, phoneNumber, response) {
     const initialStateResponse = response.body.trim();
-    const validOptions = ["1", "2", "3", "4"]; // Definindo as opções válidas
-
-    // Verifica se a resposta é uma das opções válidas
-    if (!validOptions.includes(initialStateResponse)) {
-      await this._postMessage(
-        origin,
-        "Resposta inválida. Por favor, escolha uma opção válida entre 1 e " +
-          validOptions.length +
-          "."
-      );
-      await this._handleInitialState(origin, phoneNumber, response);
-      this._setCurrentState(phoneNumber, "INICIO");
-      return; // Interrompe o processamento se a resposta for inválida
-    }
-
     switch (initialStateResponse) {
       case "1":
         try {
@@ -417,17 +402,17 @@ class StateMachine {
             const messageErro = `Você não possui dívidas ou ofertas disponíveis.`;
             await this._postMessage(origin, messageErro);
             await this._handleInitialState(origin, phoneNumber, response);
-            this._setCurrentState(phoneNumber, "INICIO");
-          } else if (credorInfo.length === 1) {
+          } else if (credorInfo && credorInfo.length === 1) {
             const credorMessage = utils.formatCredorInfo(credorInfo);
             const messageSucess = `${credorMessage}`;
 
+            this._setCurrentState(phoneNumber, "CREDOR");
+
             await this._postMessage(origin, messageSucess);
             await this._handleCredorState(origin, phoneNumber, response);
-            this._setCurrentState(phoneNumber, "CREDOR");
           } else {
             const credorMessage = utils.formatCredorInfo(credorInfo);
-            const messageSucess = `${credorMessage}\n\n_Selecione o número da dívida a negociar._`;
+            const messageSucess = `${credorMessage}\n\n_Selecione o numero da divida a negociar._`;
 
             await this._postMessage(origin, messageSucess);
             this._setCurrentState(phoneNumber, "CREDOR");
@@ -444,7 +429,7 @@ class StateMachine {
 
       case "2":
         try {
-          await this._handleAcordoState(origin, phoneNumber);
+          await this._handleAcordoState(origin, phoneNumber); // Passando o phoneNumber como argumento
         } catch (error) {
           console.error("Case 2 retornou um erro - ", error.message);
           await this._handleErrorState(
@@ -457,7 +442,7 @@ class StateMachine {
 
       case "3":
         try {
-          await this._handleBoletoState(origin, phoneNumber, response);
+          await this._handleBoletoState(origin, phoneNumber, response); // Passando o phoneNumber e response como argumentos
         } catch (error) {
           console.error("Case 3 retornou um erro - ", error.message);
           await this._handleErrorState(
@@ -470,7 +455,7 @@ class StateMachine {
 
       case "4":
         try {
-          await this._handlePixState(origin, phoneNumber, response);
+          await this._handlePixState(origin, phoneNumber, response); // Passando o phoneNumber e response como argumentos
         } catch (error) {
           console.error("Case 4 retornou um erro - ", error.message);
           await this._handleErrorState(
@@ -485,35 +470,30 @@ class StateMachine {
 
   async _handleCredorState(origin, phoneNumber, response) {
     try {
-      const userResponse = parseInt(response.body.trim());
       const { cpfcnpj: document } = this._getCredor(phoneNumber);
       const credorInfo = await requests.getCredorInfo(document);
-
-      if (
-        isNaN(userResponse) ||
-        userResponse < 1 ||
-        userResponse > credorInfo.length
-      ) {
-        await this._postMessage(
-          origin,
-          "Resposta inválida. Por favor, escolha uma opção válida entre 1 e " +
-            credorInfo.length +
-            "."
-        );
-        await this._handleInitialState(origin, phoneNumber, response);
-        this._setCurrentState(phoneNumber, "INICIO");
-      }
 
       if (Array.isArray(credorInfo) && credorInfo.length > 0) {
         let selectedCreditor;
         let selectedOption;
 
-        // Se houver mais de um credor, solicitar escolha
+        // Obtenha a lista de credores se houver mais de um
         if (credorInfo.length > 1) {
+          this._setDataCredores(phoneNumber, credorInfo);
           selectedOption = parseInt(response.body.trim());
 
-          this._setDataCredores(phoneNumber, credorInfo);
-          selectedCreditor = credorInfo[selectedOption - 1];
+          // Verifique se a opção selecionada é válida
+          if (selectedOption >= 1 && selectedOption <= credorInfo.length) {
+            selectedCreditor = credorInfo[selectedOption - 1];
+          } else {
+            await this._postMessage(
+              origin,
+              "Resposta inválida. Por favor, escolha uma opção válida."
+            );
+            // Rechama a função para permitir que o usuário tente novamente
+            await this._handleCredorState(origin, phoneNumber, response);
+            return; // Retorna para evitar que continue para o próximo bloco
+          }
         } else {
           selectedCreditor = credorInfo[0];
         }
@@ -798,9 +778,7 @@ class StateMachine {
             parsedData4
           );
 
-          const parsedData5 = utils.parseDadosImagemQrCode({
-            idboleto,
-          });
+          const parsedData5 = utils.parseDadosImagemQrCode({ idboleto });
 
           const responseQrcodeContent = await requests.getImagemQrCode(
             parsedData5
