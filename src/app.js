@@ -471,8 +471,20 @@ class StateMachine {
 
   async _handleCredorState(origin, phoneNumber, response) {
     try {
+      const response = parseInt(response.body.trim());
       const { cpfcnpj: document } = this._getCredor(phoneNumber);
       const credorInfo = await requests.getCredorInfo(document);
+
+      if (isNaN(response) || response < 1 || response > credorInfo.length) {
+        await this._postMessage(
+          origin,
+          "Resposta inválida. Por favor, escolha uma opção válida entre 1 e " +
+            credorInfo.length +
+            "."
+        );
+        await this._handleInitialState(origin, phoneNumber, response);
+        this._setCurrentState(phoneNumber, "INICIO");
+      }
 
       if (Array.isArray(credorInfo) && credorInfo.length > 0) {
         let selectedCreditor;
@@ -489,21 +501,6 @@ class StateMachine {
         }
 
         if (selectedCreditor) {
-          if (
-            isNaN(selectedOption) ||
-            selectedOption < 1 ||
-            selectedOption > credorInfo.length
-          ) {
-            await this._postMessage(
-              origin,
-              "Resposta inválida. Por favor, escolha uma opção válida entre 1 e " +
-                credorInfo.length +
-                "."
-            );
-            await this._handleInitialState(origin, phoneNumber, response);
-            this._setCurrentState(phoneNumber, "INICIO");
-          }
-
           this._setDataCredorSelecionado(phoneNumber, selectedCreditor);
 
           const idDevedor = selectedCreditor.iddevedor;
