@@ -406,10 +406,9 @@ class StateMachine {
             const credorMessage = utils.formatCredorInfo(credorInfo);
             const messageSucess = `${credorMessage}`;
 
-            this._setCurrentState(phoneNumber, "CREDOR");
-
             await this._postMessage(origin, messageSucess);
-            await this._handleCredorState(origin, phoneNumber, response);
+            // await this._handleCredorState(origin, phoneNumber, response);
+            this._setCurrentState(phoneNumber, "CREDOR");
           } else {
             const credorMessage = utils.formatCredorInfo(credorInfo);
             const messageSucess = `${credorMessage}\n\n_Selecione o numero da divida a negociar._`;
