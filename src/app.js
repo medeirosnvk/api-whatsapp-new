@@ -1020,7 +1020,6 @@ class StateMachine {
       switch (currentState) {
         case "INICIO":
           await this._handleInitialState(origin, phoneNumber, response);
-          this._setCurrentState(phoneNumber, "MENU");
           break;
         case "MENU":
           await this._handleMenuState(origin, phoneNumber, response);
