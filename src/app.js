@@ -180,10 +180,7 @@ class StateMachine {
       },
     };
 
-    console.log(
-      `[Sessão: ${this.sessionName} - Número: ${phoneNumber} - Estado: ${currentState}]`
-    );
-
+    console.log("Estado inicializado:", this.userStates[phoneNumber]);
     return this.userStates[phoneNumber];
   }
 
@@ -567,7 +564,6 @@ class StateMachine {
 
         if (
           selectedOptionParcelamento >= 1 &&
-          selectedOptionParcelamento <= 5 &&
           selectedOptionParcelamento <= credorOfertas.length
         ) {
           await this._postMessage(
@@ -831,14 +827,21 @@ class StateMachine {
               error
             );
           }
+        } else {
+          // Resposta inválida, informar o usuário
+          await this._postMessage(
+            origin,
+            "Resposta inválida. Por favor, escolha uma opção válida."
+          );
+          this._setCurrentState(phoneNumber, "OFERTA"); // Mantém o estado OFERTA
         }
       } else {
+        // Resposta não numérica, informar o usuário
         await this._postMessage(
           origin,
           "Resposta inválida. Por favor, escolha uma opção válida."
         );
-
-        this._setCurrentState(phoneNumber, "CREDOR");
+        this._setCurrentState(phoneNumber, "OFERTA"); // Mantém o estado OFERTA
       }
     } catch (error) {
       console.error("Erro ao lidar com o estado de oferta:", error);
@@ -1018,12 +1021,16 @@ class StateMachine {
 
   async handleMessage(phoneNumber, response) {
     try {
-      let { credor, currentState } = this._getState(phoneNumber);
+      let { currentState } = this._getState(phoneNumber);
       const origin = response.from;
 
       if (!currentState) {
         currentState = "INICIO";
       }
+
+      console.log(
+        `[Sessão: ${this.sessionName} - Número: ${phoneNumber} - Estado: ${currentState}]`
+      );
 
       switch (currentState) {
         case "INICIO":
