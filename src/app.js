@@ -407,8 +407,8 @@ class StateMachine {
             const messageSucess = `${credorMessage}`;
 
             await this._postMessage(origin, messageSucess);
-            await this._handleCredorState(origin, phoneNumber, response);
             this._setCurrentState(phoneNumber, "CREDOR");
+            await this._handleCredorState(origin, phoneNumber, response);
           } else {
             const credorMessage = utils.formatCredorInfo(credorInfo);
             const messageSucess = `${credorMessage}\n\n_Selecione o numero da divida a negociar._`;
@@ -485,7 +485,7 @@ class StateMachine {
             selectedCreditor = credorInfo[selectedOption - 1];
           } else {
             // Mantém o estado atual como "MENU" e não altera para "INICIO"
-            this._setCurrentState(phoneNumber, "MENU");
+            // this._setCurrentState(phoneNumber, "MENU");
 
             await this._postMessage(
               origin,
