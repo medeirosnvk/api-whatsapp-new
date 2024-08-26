@@ -58,6 +58,20 @@ if (fs.existsSync(clientDataPath)) {
   fs.writeFileSync(clientDataPath, JSON.stringify(sessions, null, 2));
 }
 
+process.on("uncaughtException", (err) => {
+  console.error("Exceção Não Tratada:", err);
+  // Opcional: Registrar o erro em um arquivo ou serviço de monitoramento
+  // Exemplo: fs.appendFileSync('error.log', `Exceção Não Tratada: ${err.stack}\n`);
+  process.exit(1); // Encerra o processo
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Rejeição de Promessa Não Tratada:", reason);
+  // Opcional: Registrar o erro em um arquivo ou serviço de monitoramento
+  // Exemplo: fs.appendFileSync('error.log', `Rejeição de Promessa Não Tratada: ${reason}\n`);
+  process.exit(1); // Encerra o processo
+});
+
 class StateMachine {
   constructor(client, sessionName) {
     this.userStates = {};
@@ -166,11 +180,9 @@ class StateMachine {
 
   _getState(phoneNumber) {
     if (this.userStates[phoneNumber]) {
-      console.log("Estado encontrado:", this.userStates[phoneNumber]);
       return this.userStates[phoneNumber];
     }
 
-    console.log("Inicializando estado para:", phoneNumber);
     this.userStates[phoneNumber] = {
       currentState: "INICIO",
       credor: {},
@@ -180,7 +192,6 @@ class StateMachine {
       },
     };
 
-    console.log("Estado inicializado:", this.userStates[phoneNumber]);
     return this.userStates[phoneNumber];
   }
 
