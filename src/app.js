@@ -180,7 +180,10 @@ class StateMachine {
       },
     };
 
-    console.log("Estado inicializado:", this.userStates[phoneNumber]);
+    console.log(
+      `[Sessão: ${this.sessionName} - Número: ${phoneNumber} - Estado: ${currentState}]`
+    );
+
     return this.userStates[phoneNumber];
   }
 
@@ -1021,10 +1024,6 @@ class StateMachine {
       if (!currentState) {
         currentState = "INICIO";
       }
-
-      console.log(
-        `[Sessão: ${this.sessionName} - Número: ${phoneNumber} - Estado: ${currentState}]`
-      );
 
       switch (currentState) {
         case "INICIO":
