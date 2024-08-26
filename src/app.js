@@ -151,6 +151,7 @@ class StateMachine {
       this.userStates[phoneNumber] = { currentState: "INICIO" };
     }
 
+    console.log("SALVANDO NOVO ESTADO...");
     this.userStates[phoneNumber].currentState = newState;
   }
 
