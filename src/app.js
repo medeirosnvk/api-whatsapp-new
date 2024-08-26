@@ -407,7 +407,7 @@ class StateMachine {
             const messageSucess = `${credorMessage}`;
 
             await this._postMessage(origin, messageSucess);
-            // await this._handleCredorState(origin, phoneNumber, response);
+            await this._handleCredorState(origin, phoneNumber, response);
             this._setCurrentState(phoneNumber, "CREDOR");
           } else {
             const credorMessage = utils.formatCredorInfo(credorInfo);
