@@ -151,8 +151,13 @@ class StateMachine {
       this.userStates[phoneNumber] = { currentState: "INICIO" };
     }
 
-    console.log("SALVANDO NOVO ESTADO...");
+    console.log("Estado anterior:", this.userStates[phoneNumber].currentState);
+    console.log("SALVANDO NOVO ESTADO...", newState);
     this.userStates[phoneNumber].currentState = newState;
+    console.log(
+      "Estado atualizado:",
+      this.userStates[phoneNumber].currentState
+    );
   }
 
   _getCredor(phoneNumber) {
@@ -161,9 +166,11 @@ class StateMachine {
 
   _getState(phoneNumber) {
     if (this.userStates[phoneNumber]) {
+      console.log("Estado encontrado:", this.userStates[phoneNumber]);
       return this.userStates[phoneNumber];
     }
 
+    console.log("Inicializando estado para:", phoneNumber);
     this.userStates[phoneNumber] = {
       currentState: "INICIO",
       credor: {},
@@ -173,6 +180,7 @@ class StateMachine {
       },
     };
 
+    console.log("Estado inicializado:", this.userStates[phoneNumber]);
     return this.userStates[phoneNumber];
   }
 
