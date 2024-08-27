@@ -2220,10 +2220,7 @@ app.post("/sendMessage", async (req, res) => {
   try {
     const { mediatype, fileName, caption, media } = mediaMessage;
 
-    // Processar o número de telefone
     let processedNumber = number;
-
-    // Remover o nono dígito se o número for brasileiro e contiver 9 dígitos no número local
     const brazilCountryCode = "55";
 
     if (
