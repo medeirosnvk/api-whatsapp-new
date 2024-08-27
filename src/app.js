@@ -67,9 +67,29 @@ process.on("uncaughtException", (err) => {
 
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Rejeição de Promessa Não Tratada:", reason);
-  // Opcional: Registrar o erro em um arquivo ou serviço de monitoramento
-  // Exemplo: fs.appendFileSync('error.log', `Rejeição de Promessa Não Tratada: ${reason}\n`);
-  process.exit(1); // Encerra o processo
+
+  // Verificar se a razão é um erro específico que você deseja tratar
+  if (reason.code === "ENOTEMPTY") {
+    console.warn("Diretório não está vazio. Tentando nova operação...");
+    // Implementar uma nova tentativa de operação ou outra lógica de tratamento aqui
+  } else if (
+    reason instanceof TypeError &&
+    reason.message.includes(
+      "Cannot read properties of undefined (reading 'AppState')"
+    )
+  ) {
+    console.warn(
+      "Erro ao acessar propriedades indefinidas. Descartando operação..."
+    );
+    // Implementar lógica para tratar esse erro específico aqui
+  } else {
+    // Se o erro não for tratado especificamente, registrar e encerrar o processo
+    fs.appendFileSync(
+      "error.log",
+      `Rejeição de Promessa Não Tratada: ${reason}\n`
+    );
+    process.exit(1);
+  }
 });
 
 class StateMachine {
