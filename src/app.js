@@ -1156,10 +1156,6 @@ const createSession = async (sessionName) => {
           "--no-first-run",
         ],
       },
-      // webVersionCache: {
-      //     type: "remote",
-      //     remotePath: `https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/${wwebVersion}.html`,
-      // },
     });
 
     client.connectionState = "connecting";
@@ -1208,14 +1204,16 @@ const createSession = async (sessionName) => {
 
         if (
           error.message.includes("Cannot read properties of undefined") ||
-          error.message.includes("ENOTEMPTY")
+          error.message.includes("ENOTEMPTY") ||
+          error.message.includes(
+            "Protocol error (Runtime.callFunctionOn): Target closed"
+          )
         ) {
           console.error(
             "Erro ao acessar propriedades indefinidas ou diretório não vazio durante a desconexão:",
             error.message
           );
 
-          // Evita a tentativa de reconexão e classifica a sessão como 'banned'
           client.connectionState = "banned";
           saveClientData(client);
         } else {
