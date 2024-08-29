@@ -1380,7 +1380,7 @@ const createSession = async (sessionName) => {
         }
 
         if (!fromPhoneNumber || !response) {
-          console.log("Mensagem inválida recebida", message);
+          console.log("Mensagem inválida recebida", message.body);
           return;
         }
 
@@ -1399,19 +1399,16 @@ const createSession = async (sessionName) => {
           const statusAtendimento = await requests.getStatusAtendimento(
             fromPhoneNumber
           );
-          if (statusAtendimento[0] && statusAtendimento[0].bot_idstatus) {
-            bot_idstatus = statusAtendimento[0].bot_idstatus;
-          }
+          const bot_idstatus = statusAtendimento[0]?.bot_idstatus;
 
           if (!bot_idstatus) {
             console.log(
               "Status de atendimento não encontrado para o usuário -",
               fromPhoneNumber
             );
-          }
-
-          if (bot_idstatus === 2) {
+          } else if (bot_idstatus === 2) {
             console.log("Usuário em atendimento humano -", bot_idstatus);
+
             if (!redirectSentMap.get(fromPhoneNumber)) {
               await client.sendMessage(
                 from,
@@ -1420,9 +1417,7 @@ const createSession = async (sessionName) => {
               redirectSentMap.set(fromPhoneNumber, true);
             }
             return;
-          }
-
-          if (bot_idstatus === 1 || bot_idstatus === 3 || bot_idstatus === "") {
+          } else if ([1, 3].includes(bot_idstatus) || bot_idstatus === "") {
             console.log("Usuário em atendimento automático -", bot_idstatus);
           }
 
