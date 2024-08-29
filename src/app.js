@@ -68,22 +68,18 @@ process.on("uncaughtException", (err) => {
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Rejeição de Promessa Não Tratada:", reason);
 
-  // Verificar se a razão é um erro específico que você deseja tratar
   if (reason.code === "ENOTEMPTY") {
-    console.warn("Diretório não está vazio. Tentando nova operação...");
-    // Implementar uma nova tentativa de operação ou outra lógica de tratamento aqui
+    console.error("Diretório não está vazio. Tentando nova operação...");
   } else if (
     reason instanceof TypeError &&
     reason.message.includes(
       "Cannot read properties of undefined (reading 'AppState')"
     )
   ) {
-    console.warn(
+    console.error(
       "Erro ao acessar propriedades indefinidas. Descartando operação..."
     );
-    // Implementar lógica para tratar esse erro específico aqui
   } else {
-    // Se o erro não for tratado especificamente, registrar e encerrar o processo
     fs.appendFileSync(
       "error.log",
       `Rejeição de Promessa Não Tratada: ${reason}\n`
@@ -1142,8 +1138,13 @@ const createSession = async (sessionName) => {
   let client;
 
   try {
-    client = new Client({
-      authStrategy: new LocalAuth({ clientId: sessionName }),
+    const localAuth = new LocalAuth({ clientId: sessionName });
+
+    delete localAuth.logout;
+    localAuth.logout = async () => {};
+
+    const client = new Client({
+      authStrategy: localAuth,
       puppeteer: {
         headless: true,
         args: [
