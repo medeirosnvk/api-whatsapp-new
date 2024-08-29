@@ -79,12 +79,18 @@ process.on("unhandledRejection", (reason, promise) => {
     console.error(
       "Erro ao acessar propriedades indefinidas. Descartando operação..."
     );
+  } else if (
+    reason instanceof Error &&
+    reason.message.includes(
+      "Failed to add page binding with name onQRChangedEvent"
+    )
+  ) {
+    console.error("Erro: O nome 'onQRChangedEvent' já existe. Ignorando...");
   } else {
     fs.appendFileSync(
       "error.log",
       `Rejeição de Promessa Não Tratada: ${reason}\n`
     );
-    process.exit(1);
   }
 });
 

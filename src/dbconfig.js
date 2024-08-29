@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable quotes */
 const puppeteer = require("puppeteer");
 const mysql = require("mysql2/promise");
 require("dotenv").config();
