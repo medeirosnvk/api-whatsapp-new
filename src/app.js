@@ -2320,7 +2320,7 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
     await client.sendMessage(`${processedNumber}@c.us`, textMessage.text);
 
     console.log(
-      `Mensagem de texto enviada com sucesso ao numero ${number} pela instancia ${instanceName}!`
+      `Mensagem de texto enviada com sucesso ao numero ${number} pela instancia ${instanceName} no horário ${new Date()}!`
     );
     res.status(200).json({ status: "PENDING" });
   } catch (error) {
@@ -2380,7 +2380,7 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
     });
 
     console.log(
-      `Mensagem enviada com sucesso ao numero ${number} pela instancia ${instanceName}!`
+      `Mensagem de media enviada com sucesso ao numero ${number} pela instancia ${instanceName} no horário ${new Date()}!`
     );
     res.status(200).json({ status: "PENDING" });
   } catch (error) {
