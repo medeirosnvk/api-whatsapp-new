@@ -1152,7 +1152,26 @@ const createSession = async (sessionName) => {
     const localAuth = new LocalAuth({ clientId: sessionName });
 
     delete localAuth.logout;
-    localAuth.logout = async () => {};
+    localAuth.logout = async () => {
+      try {
+        console.log("Executando logout...");
+
+        if (this.userDataDir) {
+          await fs.promises.rm(this.userDataDir, {
+            recursive: true,
+            force: true,
+          });
+          console.log(
+            `Diretório de dados do usuário ${this.userDataDir} removido com sucesso.`
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Erro ao remover o diretório de dados do usuário:",
+          error
+        );
+      }
+    };
 
     client = new Client({
       authStrategy: localAuth,
@@ -1804,7 +1823,7 @@ const deleteSession = (sessionName) => {
   }
 };
 
-const deleteUnusedSessions = () => {
+const deleteUnusedSessions = async () => {
   const clientDataFilePath = path.join(__dirname, "clientData.json");
   let clientData = {};
 
@@ -1820,8 +1839,8 @@ const deleteUnusedSessions = () => {
   }
 
   // Filtra as sessões desconectadas e remove os diretórios e dados correspondentes
-  Object.keys(clientData).forEach((sessionName) => {
-    if (clientData[sessionName].connectionState === "disconnected") {
+  for (const sessionName of Object.keys(clientData)) {
+    if (clientData[sessionName].connectionState !== "open") {
       const sessionDirPath = path.join(
         sessionDataPath,
         `session-${sessionName}`
@@ -1845,7 +1864,7 @@ const deleteUnusedSessions = () => {
       // Remove os dados da sessão do arquivo JSON
       delete clientData[sessionName];
     }
-  });
+  }
 
   // Atualiza o arquivo JSON
   try {
