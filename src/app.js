@@ -1282,9 +1282,14 @@ const createSession = async (sessionName) => {
       const debugWWebVersion = await client.getWWebVersion();
       console.log(`WWebVersion = ${debugWWebVersion}`);
 
+      client.pupPage.on("load", async (err) => {
+        console.log("Page error: " + err.toString());
+      });
+
       client.pupPage.on("pageerror", function (err) {
         console.log("Page error: " + err.toString());
       });
+
       client.pupPage.on("error", function (err) {
         console.log("Page error: " + err.toString());
       });
