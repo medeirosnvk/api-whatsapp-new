@@ -86,7 +86,15 @@ process.on("unhandledRejection", (reason, promise) => {
     )
   ) {
     console.error("Erro: O nome 'onQRChangedEvent' já existe. Ignorando...");
+  } else if (
+    reason instanceof Error &&
+    reason.message.includes("window is not defined")
+  ) {
+    console.error(
+      "Erro: O objeto 'window' não está disponível. Verifique o contexto de execução."
+    );
   } else {
+    // Registra a rejeição em um arquivo de log para análise posterior
     fs.appendFileSync(
       "error.log",
       `Rejeição de Promessa Não Tratada: ${reason}\n`
