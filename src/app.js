@@ -1141,10 +1141,7 @@ const reconnectSession = async (sessionName) => {
 };
 
 const createSession = async (sessionName) => {
-  if (
-    sessions[sessionName] &&
-    sessions[sessionName].connectionState === "open"
-  ) {
+  if (sessions[sessionName]?.connectionState === "open") {
     console.log(`A instância ${sessionName} já está conectada.`);
     return;
   }
@@ -1157,7 +1154,7 @@ const createSession = async (sessionName) => {
     delete localAuth.logout;
     localAuth.logout = async () => {};
 
-    const client = new Client({
+    client = new Client({
       authStrategy: localAuth,
       puppeteer: {
         headless: true,
@@ -2213,6 +2210,7 @@ app.get("/instance/connect/image/:sessionName", (req, res) => {
 
 app.post("/sendMessage", async (req, res) => {
   const { instanceName, number, mediaMessage } = req.body;
+  const client = sessions[instanceName];
 
   if (!instanceName || !number || !mediaMessage) {
     return res
@@ -2220,10 +2218,11 @@ app.post("/sendMessage", async (req, res) => {
       .send("instanceName, number, and mediaMessage are required");
   }
 
-  const client = sessions[instanceName];
-  if (!client) {
-    return res.status(400).send(`Session ${instanceName} does not exist`);
-  }
+  // if (!client || client.connectionState !== "open") {
+  //   return res
+  //     .status(400)
+  //     .send(`Session ${instanceName} is disconnected or does not exist`);
+  // }
 
   try {
     const { mediatype, fileName, caption, media } = mediaMessage;
@@ -2254,7 +2253,11 @@ app.post("/sendMessage", async (req, res) => {
     console.log("Mensagem enviada com sucesso!");
     res.status(200).json({ status: "PENDING" });
   } catch (error) {
-    res.status(500).send(`Error sending message: ${error.message}`);
+    res.status(404).send({
+      status: 404,
+      error: "Not Found",
+      message: [`The "${instanceName}" instance does not exist`],
+    });
   }
 });
 
@@ -2269,13 +2272,11 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
       .send("instanceName, number, and textMessage.text are required");
   }
 
-  if (!client) {
-    return res.status(400).send(`Session ${instanceName} does not exist`);
-  }
-
-  if (client.connectionState === "disconnected") {
-    return res.status(400).send(`Session ${instanceName} is disconnected`);
-  }
+  // if (!client || client.connectionState !== "open") {
+  //   return res
+  //     .status(400)
+  //     .send(`Session ${instanceName} is disconnected or does not exist`);
+  // }
 
   try {
     let processedNumber = number;
@@ -2299,7 +2300,11 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
     );
     res.status(200).json({ status: "PENDING" });
   } catch (error) {
-    res.status(500).send(`Error sending message: ${error.message}`);
+    res.status(404).send({
+      status: 404,
+      error: "Not Found",
+      message: [`The "${instanceName}" instance does not exist`],
+    });
   }
 });
 
@@ -2314,11 +2319,11 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
       .send("instanceName, number, and mediaMessage.media are required");
   }
 
-  if (!client || client.connectionState !== "open") {
-    return res
-      .status(400)
-      .send(`Session ${instanceName} is disconnected or does not exist`);
-  }
+  // if (!client || client.connectionState !== "open") {
+  //   return res
+  //     .status(400)
+  //     .send(`Session ${instanceName} is disconnected or does not exist`);
+  // }
 
   try {
     let processedNumber = number;
@@ -2363,8 +2368,11 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
       console.error(`Erro desconhecido ao enviar mensagem: ${error.message}`);
     }
 
-    // Notificar o usuário sobre o erro específico
-    res.status(500).send(`Error sending message: ${error.message}`);
+    res.status(404).send({
+      status: 404,
+      error: "Not Found",
+      message: [`The "${instanceName}" instance does not exist`],
+    });
   }
 });
 
