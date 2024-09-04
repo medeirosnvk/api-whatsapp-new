@@ -1200,7 +1200,7 @@ const createSession = async (sessionName) => {
         );
         client.destroy();
       }
-    }, 10 * 60 * 1000); // 10 minutos
+    }, 30 * 60 * 1000); // 30 minutos
 
     client.on("loading_screen", (percent, message) => {
       console.log("Carregando...", percent, message);
