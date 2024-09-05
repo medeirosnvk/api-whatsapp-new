@@ -1,3 +1,7 @@
+/* eslint-disable indent */
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
+/* eslint-disable quotes */
 require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
@@ -449,7 +453,8 @@ class StateMachine {
           const credorInfo = await requests.getCredorInfo(document);
 
           if (!credorInfo || credorInfo.length === 0) {
-            const messageErro = `Você não possui dívidas ou ofertas disponíveis.`;
+            const messageErro =
+              "Você não possui dívidas ou ofertas disponíveis.";
             await this._postMessage(origin, messageErro);
             await this._handleInitialState(origin, phoneNumber, response);
           } else if (credorInfo && credorInfo.length === 1) {
@@ -539,7 +544,7 @@ class StateMachine {
 
             await this._postMessage(
               origin,
-              `Resposta inválida. Por favor, tente novamente.`
+              "Resposta inválida. Por favor, tente novamente."
             );
             return;
           }
@@ -609,7 +614,7 @@ class StateMachine {
         ) {
           await this._postMessage(
             origin,
-            `Aguarde, estamos gerando o seu acordo...`
+            "Aguarde, estamos gerando o seu acordo..."
           );
 
           const ofertaSelecionada =
@@ -847,7 +852,8 @@ class StateMachine {
 
           const mensagemAcordo = `*ACORDO REALIZADO COM SUCESSO!*\n\nPague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n\nhttp://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`;
 
-          const mensagemRecibo = `*ATENÇÃO! CONFIRA SEUS DADOS E VALOR NA HORA DO PAGAMENTO!*\n\nPor favor, nos envie o *comprovante* assim que possivel para registro! Atendimento finalizado, obrigado e bons negócios.`;
+          const mensagemRecibo =
+            "*ATENÇÃO! CONFIRA SEUS DADOS E VALOR NA HORA DO PAGAMENTO!*\n\nPor favor, nos envie o *comprovante* assim que possivel para registro! Atendimento finalizado, obrigado e bons negócios.";
 
           try {
             await this._postMessage(origin, mensagemAcordo);
@@ -896,7 +902,7 @@ class StateMachine {
       const acordosFirmados = await requests.getAcordosFirmados(document);
 
       if (!acordosFirmados || acordosFirmados.length === 0) {
-        const message = `Você não possui acordos efetuados a listar.`;
+        const message = "Você não possui acordos efetuados a listar.";
         await this._postMessage(origin, message);
         await this._handleInitialState(origin, phoneNumber, response);
       } else {
@@ -923,7 +929,8 @@ class StateMachine {
       const acordosFirmados = await requests.getAcordosFirmados(document);
 
       if (!acordosFirmados || acordosFirmados.length === 0) {
-        const message = `Você não possui acordos nem Linhas Digitáveis a listar.`;
+        const message =
+          "Você não possui acordos nem Linhas Digitáveis a listar.";
         await this._postMessage(origin, message);
         await this._handleInitialState(origin, phoneNumber, response);
       } else {
@@ -991,7 +998,7 @@ class StateMachine {
       const acordosFirmados = await requests.getAcordosFirmados(document);
 
       if (!acordosFirmados || acordosFirmados.length === 0) {
-        const message = `Você não possui acordos nem Códigos PIX a listar.`;
+        const message = "Você não possui acordos nem Códigos PIX a listar.";
         await this._postMessage(origin, message);
         await this._handleInitialState(origin, phoneNumber, response);
       } else {
@@ -1501,7 +1508,10 @@ const createSession = async (sessionName) => {
     });
 
     client.on("change_state", (data) => {
-      console.log("change_state -", JSON.stringify(data, undefined, 2));
+      console.log(
+        `Mudando status da Sessão ${sessionName} -`,
+        JSON.stringify(data, undefined, 2)
+      );
     });
 
     client.initialize();
@@ -2012,7 +2022,7 @@ app.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
       ]);
     }
   } catch (error) {
-    console.error(`Erro na rota whatsappNumbers`, error.message);
+    console.error("Erro na rota whatsappNumbers", error.message);
     return res.status(404).json([
       {
         exists: false,

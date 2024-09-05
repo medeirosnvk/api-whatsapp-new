@@ -1,16 +1,17 @@
-'use strict';
+/* eslint-disable quotes */
+"use strict";
 
-const PrivateChat = require('../structures/PrivateChat');
-const GroupChat = require('../structures/GroupChat');
+const PrivateChat = require("../structures/PrivateChat");
+const GroupChat = require("../structures/GroupChat");
 
 class ChatFactory {
-    static create(client, data) {
-        if(data.isGroup) {
-            return new GroupChat(client, data);
-        }
-
-        return new PrivateChat(client, data);
+  static create(client, data) {
+    if (data.isGroup) {
+      return new GroupChat(client, data);
     }
+
+    return new PrivateChat(client, data);
+  }
 }
 
 module.exports = ChatFactory;
