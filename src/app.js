@@ -1615,7 +1615,7 @@ const disconnectSession = async (sessionName) => {
       try {
         // Tente realizar o logout
         await client.logout();
-        console.log(`Sessão ${sessionName} desconectada com sucesso.`);
+        console.log(`Logout da sessão ${sessionName} realizado com sucesso.`);
       } catch (logoutError) {
         // Se o logout falhar, registrar o erro, mas continuar o processo
         console.error(
@@ -2051,7 +2051,6 @@ app.delete("/instance/logout/:sessionName", async (req, res) => {
   try {
     await disconnectSession(sessionName);
 
-    console.log(`Sessao ${sessionName} desconectada com sucesso!`);
     res.json({
       success: true,
       message: `Session ${sessionName} disconnected successfully`,
