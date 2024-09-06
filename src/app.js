@@ -1612,8 +1612,17 @@ const disconnectSession = async (sessionName) => {
 
   if (client) {
     try {
-      await client.logout();
-      console.log(`Sessão ${sessionName} desconectada`);
+      try {
+        // Tente realizar o logout
+        await client.logout();
+        console.log(`Sessão ${sessionName} desconectada com sucesso.`);
+      } catch (logoutError) {
+        // Se o logout falhar, registrar o erro, mas continuar o processo
+        console.error(
+          `Erro ao realizar logout da sessão ${sessionName}. Prosseguindo com a limpeza...`,
+          logoutError
+        );
+      }
 
       const sessionPath = path.join(
         __dirname,
@@ -1645,7 +1654,7 @@ const disconnectSession = async (sessionName) => {
       deleteFolderRecursive(sessionPath);
 
       // Destruir o cliente e remover a sessão da memória
-      client.destroy();
+      await client.destroy();
       delete sessions[sessionName];
       delete stateMachines[sessionName];
       console.log(`Sessão ${sessionName} removida da memória com sucesso.`);
@@ -1654,6 +1663,7 @@ const disconnectSession = async (sessionName) => {
       const clientData = JSON.parse(fs.readFileSync(clientDataPath, "utf8"));
       delete clientData[sessionName];
       fs.writeFileSync(clientDataPath, JSON.stringify(clientData, null, 2));
+      console.log(`Sessão ${sessionName} removida do clientData.json.`);
     } catch (error) {
       console.error(`Erro ao desconectar a sessão ${sessionName}:`, error);
       throw error;
@@ -2447,13 +2457,6 @@ app.get("/listAllFiles", (req, res) => {
 });
 
 app.use("/media", express.static(mediaDataPath));
-
-// app.listen(port, async () => {
-//   console.log(`Servidor HTTP iniciado na porta ${port}`);
-
-//   initializeConnectionStatus();
-//   await restoreAllSessions();
-// });
 
 const privateKey = fs.readFileSync(
   "/etc/letsencrypt/live/whatsapp.cobrance.online/privkey.pem",
