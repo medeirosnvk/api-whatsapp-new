@@ -256,38 +256,59 @@ class StateMachine {
   async _getCredorFromDB(phoneNumber) {
     try {
       if (!this.userStates[phoneNumber]) {
-        this.userStates[phoneNumber] = {}; // inicialize o objeto se não existir
+        this.userStates[phoneNumber] = {}; // Inicialize o objeto se não existir
       }
 
-      const dbQuery = `
+      const query = `
         select
-        d.iddevedor,
-        d.cpfcnpj,
-        d.nome,
-        t.telefone,
-        t.idtelefones,
-        d.idusuario
-      from
-        statustelefone s,
-        telefones2 t,
-        devedor d ,
-        credor c
-      where
-        right(t.telefone,8) = '${phoneNumber}'
-        and d.cpfcnpj = t.cpfcnpj
-        and d.idusuario not in (11, 14)
-        and s.idstatustelefone = t.idstatustelefone
-        and s.fila = 's'
-        and c.idcredor = d.idcredor
-        and c.libera_api_acordo = 's'
-        -- and idcredor <> 1011
-        `;
+          d.iddevedor,
+          d.cpfcnpj,
+          d.nome,
+          t.telefone,
+          t.idtelefones,
+          d.idusuario
+        from
+          statustelefone s,
+          telefones2 t,
+          devedor d ,
+          credor c
+        where
+          right(t.telefone,8) = '${phoneNumber}'
+          and d.cpfcnpj = t.cpfcnpj
+          and d.idusuario not in (11, 14)
+          and s.idstatustelefone = t.idstatustelefone
+          and s.fila = 's'
+          and c.idcredor = d.idcredor
+          and c.libera_api_acordo = 's'
+      `;
 
-      const dbResponse = await executeQuery(dbQuery, customDbConfig);
+      const dbResponse = await executeQuery(query, customDbConfig);
 
       if (dbResponse && dbResponse.length) {
-        this._setCredor(phoneNumber, dbResponse[0]);
-        return dbResponse[0];
+        for (const credor of dbResponse) {
+          // Executar a segunda query para cada iddevedor
+          const liberaApiQuery = `select libera_api(${credor.iddevedor}) as liberaApi;`;
+          const liberaApiResponse = await executeQuery(
+            liberaApiQuery,
+            customDbConfig
+          );
+
+          // Se o liberaApiResponse retornar algo, retorne o primeiro credor
+          if (
+            liberaApiResponse &&
+            liberaApiResponse.length &&
+            liberaApiResponse[0].liberaApi
+          ) {
+            this._setCredor(phoneNumber, dbResponse[0]); // Define o credor com base no primeiro resultado
+            return dbResponse[0]; // Retorna o primeiro credor
+          }
+        }
+
+        // Se nenhum valor de liberaApi for encontrado, retorna null
+        console.log(
+          `Nenhuma liberação de API encontrada para o número ${phoneNumber}.`
+        );
+        return null;
       } else {
         console.log(`Nenhum credor encontrado para o número ${phoneNumber}.`);
         return null;
