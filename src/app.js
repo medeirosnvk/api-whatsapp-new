@@ -286,21 +286,21 @@ class StateMachine {
 
       if (dbResponse && dbResponse.length) {
         for (const credor of dbResponse) {
-          // Executar a segunda query para cada iddevedor
           const liberaApiQuery = `select libera_api(${credor.iddevedor}) as liberaApi;`;
           const liberaApiResponse = await executeQuery(
             liberaApiQuery,
             customDbConfig
           );
 
-          // Se o liberaApiResponse retornar algo, retorne o primeiro credor
+          // Se o liberaApiResponse retornar 'S' retorne o primeiro credor
           if (
             liberaApiResponse &&
             liberaApiResponse.length &&
-            liberaApiResponse[0].liberaApi
+            liberaApiResponse[0].liberaApi === "S"
           ) {
-            this._setCredor(phoneNumber, dbResponse[0]); // Define o credor com base no primeiro resultado
-            return dbResponse[0]; // Retorna o primeiro credor
+            console.log(`Libera API encontrada para o número ${phoneNumber}.`);
+            this._setCredor(phoneNumber, dbResponse[0]);
+            return dbResponse[0];
           }
         }
 
