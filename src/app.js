@@ -1140,7 +1140,7 @@ class StateMachine {
   }
 }
 
-const initializeConnectionStatus = () => {
+const initializeConnectionStatus = async () => {
   Object.keys(sessions).forEach((sessionName) => {
     const state = getConnectionStatus(sessionName);
     sessions[sessionName].connectionState = state;
@@ -1150,7 +1150,7 @@ const initializeConnectionStatus = () => {
   fs.writeFileSync(clientDataPath, JSON.stringify(sessions, null, 2), "utf8");
 };
 
-const updateSessionStatus = (sessionName, status) => {
+const updateSessionStatus = async (sessionName, status) => {
   sessions[sessionName].connectionState = status;
 
   // Salvar as atualizações de volta para clientData.json
@@ -1175,6 +1175,7 @@ const createSession = async (sessionName) => {
   }
 
   let client;
+  let isQRFunctionExposed = false;
 
   try {
     const localAuth = new LocalAuth({ clientId: sessionName });
@@ -1234,8 +1235,6 @@ const createSession = async (sessionName) => {
       console.log("Carregando...", percent, message);
     });
 
-    let isQRFunctionExposed = false;
-
     client.on("qr", async (qr) => {
       try {
         if (!isQRFunctionExposed) {
@@ -1286,11 +1285,6 @@ const createSession = async (sessionName) => {
     client.on("authenticated", (data) => {
       console.log("AUTHENTICATED -", JSON.stringify(data, undefined, 2));
       clearTimeout(qrTimeout);
-
-      // if (sessions && sessions[sessionName]) {
-      //   console.log("SESSIONS JA EXISTE", sessionName);
-      //   return;
-      // }
 
       sessions[client.sessionName] = client;
       console.log(`Conexão bem-sucedida na sessão ${client.sessionName}!`);
@@ -1348,6 +1342,13 @@ const createSession = async (sessionName) => {
       } catch (error) {
         console.error("Erro ao criar arquivo clientData.json:", error);
       }
+    });
+
+    client.on("change_state", (data) => {
+      console.log(
+        `Mudando status da Sessão ${sessionName} -`,
+        JSON.stringify(data, undefined, 2)
+      );
     });
 
     client.on("message", async (message) => {
@@ -1528,13 +1529,6 @@ const createSession = async (sessionName) => {
       }
     });
 
-    client.on("change_state", (data) => {
-      console.log(
-        `Mudando status da Sessão ${sessionName} -`,
-        JSON.stringify(data, undefined, 2)
-      );
-    });
-
     client.initialize();
     sessions[sessionName] = client;
   } catch (error) {
@@ -1544,7 +1538,7 @@ const createSession = async (sessionName) => {
   return client;
 };
 
-const saveClientData = (client) => {
+const saveClientData = async (client) => {
   const filePath = path.join(__dirname, "clientData.json");
   let clientData = {};
 
@@ -1586,7 +1580,7 @@ const saveClientData = (client) => {
   }
 };
 
-const getConnectionStatus = (instanceName) => {
+const getConnectionStatus = async (instanceName) => {
   const client = sessions[instanceName];
 
   if (!client) {
@@ -1608,7 +1602,7 @@ const saveQRCodeImage = async (qr, sessionName) => {
   });
 };
 
-const deleteAllQRCodeImages = () => {
+const deleteAllQRCodeImages = async () => {
   const qrCodesDir = path.join(__dirname, "../src/qrcodes");
 
   if (fs.existsSync(qrCodesDir)) {
@@ -1715,7 +1709,7 @@ const disconnectAllSessions = async () => {
   }
 };
 
-const restoreSession = (sessionName) => {
+const restoreSession = async (sessionName) => {
   const sessionFolder = `session-${sessionName}`;
   const sessionPath = path.join(__dirname, "../.wwebjs_auth", sessionFolder);
 
@@ -1758,7 +1752,7 @@ const restoreAllSessions = async () => {
   }
 };
 
-const validateAndFormatNumber = (number) => {
+const validateAndFormatNumber = async (number) => {
   if (typeof number !== "string") {
     throw new Error("Number must be a string");
   }
@@ -1791,7 +1785,7 @@ const validateAndFormatNumber = (number) => {
   return formattedNumber;
 };
 
-const getAllFiles = (dirPath, arrayOfFiles = []) => {
+const getAllFiles = async (dirPath, arrayOfFiles = []) => {
   const files = fs.readdirSync(dirPath);
 
   files.forEach((file) => {
@@ -1808,7 +1802,7 @@ const getAllFiles = (dirPath, arrayOfFiles = []) => {
   return arrayOfFiles;
 };
 
-const deleteSession = (sessionName) => {
+const deleteSession = async (sessionName) => {
   const clientDataFilePath = path.join(__dirname, "clientData.json");
   let clientData = {};
 
@@ -1865,21 +1859,25 @@ const deleteSession = (sessionName) => {
 };
 
 const deleteUnusedSessions = async () => {
-  const clientDataFilePath = path.join(__dirname, "clientData.json");
   let clientData = {};
+  const clientFileDataPath = path.join(__dirname, "clientData.json");
 
-  // Tente ler o arquivo existente
+  // Tente ler o arquivo clientData.json
   try {
-    if (fs.existsSync(clientDataFilePath)) {
-      const fileContent = fs.readFileSync(clientDataFilePath, "utf-8");
+    if (fs.existsSync(clientFileDataPath)) {
+      const fileContent = fs.readFileSync(clientFileDataPath, "utf-8");
       clientData = JSON.parse(fileContent);
+      console.log(
+        "Arquivo clientData.json encontrado e lido corretamente! -",
+        clientData
+      );
     }
   } catch (error) {
-    console.error("Erro ao ler o arquivo de dados do cliente:", error);
+    console.error("Erro ao ler o arquivo clientData.json:", error);
     return;
   }
 
-  // Filtra as sessões desconectadas e remove os diretórios e dados correspondentes
+  // Filtra as sessões nao 'open' e remove os diretórios e dados correspondentes
   for (const sessionName of Object.keys(clientData)) {
     if (clientData[sessionName].connectionState !== "open") {
       const sessionDirPath = path.join(
@@ -1907,9 +1905,38 @@ const deleteUnusedSessions = async () => {
     }
   }
 
+  // Verifica por diretórios de sessões que não estão em clientData e os remove
+  try {
+    const sessionDirs = fs.readdirSync(sessionDataPath);
+    for (const dir of sessionDirs) {
+      const sessionName = dir.replace("session-", "");
+      const sessionDirPath = path.join(sessionDataPath, dir);
+
+      // Verifica se é um diretório de sessão e se ele não existe no clientData
+      if (
+        !clientData[sessionName] &&
+        fs.lstatSync(sessionDirPath).isDirectory()
+      ) {
+        try {
+          fs.rmSync(sessionDirPath, { recursive: true, force: true });
+          console.log(
+            `Sessão ${sessionName} não encontrado em clientData e pasta removida.`
+          );
+        } catch (error) {
+          console.error(
+            `Erro ao remover o diretório da sessão ${sessionName} não encontrado em clientData:`,
+            error
+          );
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Erro ao listar diretórios de sessões:", error);
+  }
+
   // Atualiza o arquivo JSON
   try {
-    fs.writeFileSync(clientDataFilePath, JSON.stringify(clientData, null, 2));
+    fs.writeFileSync(clientFileDataPath, JSON.stringify(clientData, null, 2));
     console.log("Dados das sessões atualizados no arquivo JSON.");
   } catch (error) {
     console.error("Erro ao salvar os dados do cliente:", error);
@@ -2282,12 +2309,6 @@ app.post("/sendMessage", async (req, res) => {
       .send("instanceName, number, and mediaMessage are required");
   }
 
-  // if (!client || client.connectionState !== "open") {
-  //   return res
-  //     .status(400)
-  //     .send(`Session ${instanceName} is disconnected or does not exist`);
-  // }
-
   try {
     const { mediatype, fileName, caption, media } = mediaMessage;
 
@@ -2382,12 +2403,6 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
       .status(400)
       .send("instanceName, number, and mediaMessage.media are required");
   }
-
-  // if (!client || client.connectionState !== "open") {
-  //   return res
-  //     .status(400)
-  //     .send(`Session ${instanceName} is disconnected or does not exist`);
-  // }
 
   try {
     let processedNumber = number;
@@ -2503,6 +2518,11 @@ app.use("/media", express.static(mediaDataPath));
 app.listen(port, async () => {
   console.log(`Servidor HTTP iniciado na porta ${port}`);
 
-  initializeConnectionStatus();
+  // Inicialize e restaure sessões
+  await initializeConnectionStatus();
   await restoreAllSessions();
+
+  // Após completar as funções acima, execute as seguintes funções
+  await deleteAllQRCodeImages();
+  await deleteUnusedSessions();
 });
