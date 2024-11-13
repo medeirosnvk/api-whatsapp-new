@@ -1735,7 +1735,8 @@ const restoreAllSessions = async () => {
     const sessionFolders = fs.readdirSync(authDir);
     console.log("Pastas de sessão encontradas:", sessionFolders);
 
-    sessionFolders.forEach(async (sessionFolder) => {
+    // Usando for...of para garantir que await funcione conforme esperado
+    for (const sessionFolder of sessionFolders) {
       const sessionName = sessionFolder.replace("session-", "");
 
       try {
@@ -1746,7 +1747,7 @@ const restoreAllSessions = async () => {
           `Erro ao tentar reconectar a instancia ${sessionName}: ${error.message}`
         );
       }
-    });
+    }
   } else {
     console.error(`O diretório ${authDir} não existe.`);
   }
@@ -1859,46 +1860,52 @@ const deleteSession = async (sessionName) => {
 };
 
 const deleteUnusedSessions = async () => {
+  const clientDataFilePath = path.join(__dirname, "clientData.json");
   let clientData = {};
-  const clientFileDataPath = path.join(__dirname, "clientData.json");
 
-  // Tente ler o arquivo clientData.json
-  try {
-    if (fs.existsSync(clientFileDataPath)) {
-      const fileContent = fs.readFileSync(clientFileDataPath, "utf-8");
-      clientData = JSON.parse(fileContent);
+  // Função para excluir a pasta da sessão
+  const deleteFolderRecursive = (folderPath, sessionName) => {
+    if (fs.existsSync(folderPath)) {
+      fs.readdirSync(folderPath).forEach((file) => {
+        const curPath = path.join(folderPath, file);
+        if (fs.lstatSync(curPath).isDirectory()) {
+          // Recursivamente exclui pastas
+          deleteFolderRecursive(curPath, sessionName);
+        } else {
+          // Exclui arquivos
+          fs.unlinkSync(curPath);
+        }
+      });
+      fs.rmdirSync(folderPath);
       console.log(
-        "Arquivo clientData.json encontrado e lido corretamente! -",
-        clientData
+        `Diretório de autenticação da sessão ${sessionName} excluído com sucesso!`
       );
+    }
+  };
+
+  // Tente ler o arquivo existente
+  try {
+    if (fs.existsSync(clientDataFilePath)) {
+      console.log("Arquivo clientData.json encontrado e lido corretamente.");
+      const fileContent = fs.readFileSync(clientDataFilePath, "utf-8");
+      clientData = JSON.parse(fileContent);
     }
   } catch (error) {
     console.error("Erro ao ler o arquivo clientData.json:", error);
     return;
   }
 
-  // Filtra as sessões nao 'open' e remove os diretórios e dados correspondentes
+  // Filtra as sessões desconectadas e remove os diretórios e dados correspondentes
   for (const sessionName of Object.keys(clientData)) {
     if (clientData[sessionName].connectionState !== "open") {
-      const sessionDirPath = path.join(
-        sessionDataPath,
+      const sessionPath = path.join(
+        __dirname,
+        "../.wwebjs_auth",
         `session-${sessionName}`
       );
 
-      // Remove o diretório da sessão
-      if (fs.existsSync(sessionDirPath)) {
-        try {
-          fs.rmSync(sessionDirPath, { recursive: true, force: true });
-          console.log(
-            `Diretório da sessão ${sessionName} removido com sucesso.`
-          );
-        } catch (error) {
-          console.error(
-            `Erro ao remover o diretório da sessão ${sessionName}:`,
-            error
-          );
-        }
-      }
+      // Remove o diretório da sessão usando deleteFolderRecursive
+      deleteFolderRecursive(sessionPath, sessionName);
 
       // Remove os dados da sessão do arquivo JSON
       delete clientData[sessionName];
@@ -1907,26 +1914,18 @@ const deleteUnusedSessions = async () => {
 
   // Verifica por diretórios de sessões que não estão em clientData e os remove
   try {
-    const sessionDirs = fs.readdirSync(sessionDataPath);
+    const sessionDirs = fs.readdirSync(path.join(__dirname, "../.wwebjs_auth"));
     for (const dir of sessionDirs) {
-      const sessionName = dir.replace("session-", "");
-      const sessionDirPath = path.join(sessionDataPath, dir);
+      if (dir.startsWith("session-")) {
+        const sessionName = dir.replace("session-", "");
+        const sessionDirPath = path.join(__dirname, "../.wwebjs_auth", dir);
 
-      // Verifica se é um diretório de sessão e se ele não existe no clientData
-      if (
-        !clientData[sessionName] &&
-        fs.lstatSync(sessionDirPath).isDirectory()
-      ) {
-        try {
-          fs.rmSync(sessionDirPath, { recursive: true, force: true });
-          console.log(
-            `Sessão ${sessionName} não encontrado em clientData e pasta removida.`
-          );
-        } catch (error) {
-          console.error(
-            `Erro ao remover o diretório da sessão ${sessionName} não encontrado em clientData:`,
-            error
-          );
+        // Verifica se a sessão não existe no clientData e remove o diretório se necessário
+        if (
+          !clientData[sessionName] &&
+          fs.lstatSync(sessionDirPath).isDirectory()
+        ) {
+          deleteFolderRecursive(sessionDirPath, sessionName);
         }
       }
     }
@@ -1936,7 +1935,7 @@ const deleteUnusedSessions = async () => {
 
   // Atualiza o arquivo JSON
   try {
-    fs.writeFileSync(clientFileDataPath, JSON.stringify(clientData, null, 2));
+    fs.writeFileSync(clientDataFilePath, JSON.stringify(clientData, null, 2));
     console.log("Dados das sessões atualizados no arquivo JSON.");
   } catch (error) {
     console.error("Erro ao salvar os dados do cliente:", error);
