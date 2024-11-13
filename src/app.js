@@ -1735,8 +1735,8 @@ const restoreAllSessions = async () => {
     const sessionFolders = fs.readdirSync(authDir);
     console.log("Pastas de sessão encontradas:", sessionFolders);
 
-    // Usando for...of para garantir que await funcione conforme esperado
-    for (const sessionFolder of sessionFolders) {
+    // Cria uma lista de promessas para cada sessão
+    const restorePromises = sessionFolders.map(async (sessionFolder) => {
       const sessionName = sessionFolder.replace("session-", "");
 
       try {
@@ -1747,7 +1747,11 @@ const restoreAllSessions = async () => {
           `Erro ao tentar reconectar a instancia ${sessionName}: ${error.message}`
         );
       }
-    }
+    });
+
+    // Aguarda que todas as promessas sejam resolvidas
+    await Promise.all(restorePromises);
+    console.log("Todas as sessões foram restauradas.");
   } else {
     console.error(`O diretório ${authDir} não existe.`);
   }
