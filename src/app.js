@@ -2519,8 +2519,8 @@ httpsServer.listen(port, async () => {
   await restoreAllSessions();
 
   // Após completar as funções acima, execute as seguintes funções
-  await deleteAllQRCodeImages();
-  await deleteUnusedSessions();
+  // await deleteAllQRCodeImages();
+  // await deleteUnusedSessions();
 });
 
 // app.listen(port, async () => {
