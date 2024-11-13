@@ -2493,30 +2493,23 @@ app.get("/listAllFiles", (req, res) => {
 
 app.use("/media", express.static(mediaDataPath));
 
-// const privateKey = fs.readFileSync(
-//   "/etc/letsencrypt/live/whatsapp.cobrance.online/privkey.pem",
-//   "utf8"
-// );
-// const certificate = fs.readFileSync(
-//   "/etc/letsencrypt/live/whatsapp.cobrance.online/fullchain.pem",
-//   "utf8"
-// );
-// const ca = fs.readFileSync(
-//   "/etc/letsencrypt/live/whatsapp.cobrance.online/chain.pem",
-//   "utf8"
-// );
-// const credentials = { key: privateKey, cert: certificate, ca };
-// const httpsServer = https.createServer(credentials, app);
+const privateKey = fs.readFileSync(
+  "/etc/letsencrypt/live/whatsapp.cobrance.online/privkey.pem",
+  "utf8"
+);
+const certificate = fs.readFileSync(
+  "/etc/letsencrypt/live/whatsapp.cobrance.online/fullchain.pem",
+  "utf8"
+);
+const ca = fs.readFileSync(
+  "/etc/letsencrypt/live/whatsapp.cobrance.online/chain.pem",
+  "utf8"
+);
+const credentials = { key: privateKey, cert: certificate, ca };
+const httpsServer = https.createServer(credentials, app);
 
-// httpsServer.listen(port, async () => {
-//   console.log(`Servidor HTTPS iniciado na porta ${port}`);
-
-//   initializeConnectionStatus();
-//   await restoreAllSessions();
-// });
-
-app.listen(port, async () => {
-  console.log(`Servidor HTTP iniciado na porta ${port}`);
+httpsServer.listen(port, async () => {
+  console.log(`Servidor HTTPS iniciado na porta ${port}`);
 
   // Inicialize e restaure sessões
   await initializeConnectionStatus();
@@ -2526,3 +2519,15 @@ app.listen(port, async () => {
   await deleteAllQRCodeImages();
   await deleteUnusedSessions();
 });
+
+// app.listen(port, async () => {
+//   console.log(`Servidor HTTP iniciado na porta ${port}`);
+
+//   // Inicialize e restaure sessões
+//   await initializeConnectionStatus();
+//   await restoreAllSessions();
+
+//   // Após completar as funções acima, execute as seguintes funções
+//   await deleteAllQRCodeImages();
+//   await deleteUnusedSessions();
+// });
