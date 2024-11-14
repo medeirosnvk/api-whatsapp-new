@@ -2364,7 +2364,16 @@ app.get("/instance/fetchAllInstances", (req, res) => {
 app.get("/instance/connectionState/:instanceName", (req, res) => {
   const { instanceName } = req.params;
   const state = getConnectionStatus(instanceName);
-  console.log("sessions -", JSON.stringify(sessions, null, 2)); // Corrigido para exibir sessions com indentação
+
+  // Extrair informações relevantes do objeto `sessions` sem causar uma referência circular
+  const simplifiedSessions = Object.keys(sessions).reduce((result, key) => {
+    const { sessionName, connectionState } = sessions[key];
+    result[key] = { sessionName, connectionState };
+    return result;
+  }, {});
+
+  console.log("sessions -", JSON.stringify(simplifiedSessions, null, 2));
+
   res.json({ instanceName, state });
 });
 
