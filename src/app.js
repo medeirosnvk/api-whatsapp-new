@@ -2364,16 +2364,7 @@ app.get("/instance/fetchAllInstances", (req, res) => {
 app.get("/instance/connectionState/:instanceName", (req, res) => {
   const { instanceName } = req.params;
   const state = getConnectionStatus(instanceName);
-
-  // Extrair informações relevantes do objeto `sessions` sem causar uma referência circular
-  const simplifiedSessions = Object.keys(sessions).reduce((result, key) => {
-    const { sessionName, connectionState } = sessions[key];
-    result[key] = { sessionName, connectionState };
-    return result;
-  }, {});
-
-  console.log("sessions -", JSON.stringify(simplifiedSessions, null, 2));
-
+  console.log("sessions -", sessions);
   res.json({ instanceName, state });
 });
 
