@@ -1234,7 +1234,7 @@ const createSession = async (sessionName) => {
             new Error(`Sessão ${sessionName} desconectada por tempo limite.`)
           );
         }
-      }, 30 * 60 * 1000); // 30 minutos
+      }, 2 * 60 * 1000); // 30 minutos
 
       client.on("loading_screen", async (percent, message) => {
         console.log("Carregando...", percent, message);
