@@ -2066,7 +2066,6 @@ app.post("/instance/create", (req, res) => {
 
   if (sessions[instanceName]) {
     console.log(`Session ${instanceName} already exists`);
-    console.log(sessions);
 
     return res
       .status(400)
@@ -2075,9 +2074,6 @@ app.post("/instance/create", (req, res) => {
 
   if (fs.existsSync(qrCodeFilePath)) {
     console.log(`QR Code image for session ${instanceName} already exists`);
-    // return res.status(400).json({
-    //   error: `QR Code image for session ${instanceName} already exists`,
-    // });
   }
 
   console.log("Creating a new session...");
