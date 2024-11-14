@@ -1500,6 +1500,8 @@ const createSession = async (sessionName) => {
       console.error(`Erro ao criar a sessão ${sessionName}:`, error);
       reject(error); // Rejeita a Promise em caso de erro na inicialização do cliente
     }
+
+    return client;
   });
 };
 
@@ -2362,6 +2364,7 @@ app.get("/instance/fetchAllInstances", (req, res) => {
 app.get("/instance/connectionState/:instanceName", (req, res) => {
   const { instanceName } = req.params;
   const state = getConnectionStatus(instanceName);
+  console.log("sessions -", JSON.stringify(sessions, null, 2)); // Corrigido para exibir sessions com indentação
   res.json({ instanceName, state });
 });
 
