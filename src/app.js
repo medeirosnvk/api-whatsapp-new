@@ -2361,10 +2361,11 @@ app.get("/instance/fetchAllInstances", (req, res) => {
   }
 });
 
-app.get("/instance/connectionState/:instanceName", (req, res) => {
+app.get("/instance/connectionState/:instanceName", async (req, res) => {
   const { instanceName } = req.params;
-  const state = getConnectionStatus(instanceName);
-  console.log("sessions -", sessions);
+
+  const state = await getConnectionStatus(instanceName);
+
   res.json({ instanceName, state });
 });
 
