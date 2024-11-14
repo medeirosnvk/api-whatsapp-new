@@ -1,3 +1,4 @@
+/* eslint-disable no-async-promise-executor */
 /* eslint-disable indent */
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
@@ -16,7 +17,6 @@ const { executeQuery } = require("./dbconfig");
 const requests = require("./services/requests");
 const utils = require("./services/utils");
 
-let redirectSentMap = new Map();
 let sessions = {};
 let stateMachines = {};
 
@@ -1169,373 +1169,480 @@ const reconnectSession = async (sessionName) => {
 };
 
 const createSession = async (sessionName) => {
-  if (sessions[sessionName]?.connectionState === "open") {
-    console.log(`A instância ${sessionName} já está conectada.`);
-    return;
-  }
+  return new Promise(async (resolve, reject) => {
+    if (sessions[sessionName]?.connectionState === "open") {
+      console.log(`A instância ${sessionName} já está conectada.`);
+      return resolve(sessions[sessionName]);
+    }
 
-  let client;
-  let isQRFunctionExposed = false;
+    let client;
+    let isQRFunctionExposed = false;
 
-  try {
-    const localAuth = new LocalAuth({ clientId: sessionName });
+    try {
+      const localAuth = new LocalAuth({ clientId: sessionName });
 
-    delete localAuth.logout;
-    localAuth.logout = async () => {
-      try {
-        console.log("Executando logout...");
+      delete localAuth.logout;
+      localAuth.logout = async () => {
+        try {
+          console.log("Executando logout...");
 
-        if (this.userDataDir) {
-          await fs.promises.rm(this.userDataDir, {
-            recursive: true,
-            force: true,
-          });
-          console.log(
-            `Diretório de dados do usuário ${this.userDataDir} removido com sucesso.`
-          );
-        }
-      } catch (error) {
-        console.error(
-          "Erro ao remover o diretório de dados do usuário:",
-          error
-        );
-      }
-    };
-
-    client = new Client({
-      authStrategy: localAuth,
-      puppeteer: {
-        headless: true,
-        args: [
-          "--no-default-browser-check",
-          "--disable-session-crashed-bubble",
-          "--disable-dev-shm-usage",
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-accelerated-2d-canvas",
-          "--no-first-run",
-        ],
-      },
-    });
-
-    client.connectionState = "connecting";
-    client.sessionName = sessionName;
-
-    const qrTimeout = setTimeout(() => {
-      if (client.connectionState !== "open") {
-        client.connectionState = "disconnected";
-        console.log(
-          `Tempo esgotado para a sessão ${sessionName}. Desconectando...`
-        );
-        client.destroy();
-      }
-    }, 30 * 60 * 1000); // 30 minutos
-
-    client.on("loading_screen", (percent, message) => {
-      console.log("Carregando...", percent, message);
-    });
-
-    client.on("qr", async (qr) => {
-      try {
-        if (!isQRFunctionExposed) {
-          console.log(`QR Code para a sessão ${sessionName}:`);
-          qrcode.generate(qr, { small: true });
-          await saveQRCodeImage(qr, sessionName);
-          isQRFunctionExposed = true;
-        }
-      } catch (error) {
-        console.error("Erro ao lidar com QR Code:", error.message);
-      }
-    });
-
-    client.on("disconnected", async (data) => {
-      try {
-        console.log("DISCONNECTED -", JSON.stringify(data, undefined, 2));
-
-        clearTimeout(qrTimeout);
-        console.log(`Sessão ${sessionName} foi desconectada.`);
-
-        await client.logout();
-        client.connectionState = "disconnected";
-      } catch (error) {
-        console.error("Erro ao lidar com desconexão:", error.message);
-
-        if (
-          error.message.includes("Cannot read properties of undefined") ||
-          error.message.includes("ENOTEMPTY") ||
-          error.message.includes(
-            "Protocol error (Runtime.callFunctionOn): Target closed"
-          )
-        ) {
-          console.error(
-            "Erro ao acessar propriedades indefinidas ou diretório não vazio durante a desconexão:",
-            error.message
-          );
-
-          client.connectionState = "banned";
-          saveClientData(client);
-        } else {
-          // Caso contrário, marque como desconectado
-          client.connectionState = "disconnected";
-          saveClientData(client);
-        }
-      }
-    });
-
-    client.on("authenticated", (data) => {
-      console.log("AUTHENTICATED -", JSON.stringify(data, undefined, 2));
-      clearTimeout(qrTimeout);
-
-      sessions[client.sessionName] = client;
-      console.log(`Conexão bem-sucedida na sessão ${client.sessionName}!`);
-
-      try {
-        const stateMachine = new StateMachine(client, client.sessionName);
-        stateMachines[client.sessionName] = stateMachine;
-      } catch (error) {
-        console.error("Erro ao criar StateMachine:", error);
-      }
-    });
-
-    client.on("auth_failure", (data) => {
-      console.log("AUTH_FAILURE -", JSON.stringify(data, undefined, 2));
-
-      clearTimeout(qrTimeout);
-      client.connectionState = "disconnected";
-      console.error(
-        `Falha de autenticação na sessão ${sessionName}. Verifique suas credenciais.`
-      );
-
-      if (data.includes("ban")) {
-        client.connectionState = "banned";
-        console.error(`A sessão ${client.sessionName} foi banida.`);
-        sessions[sessionName].connectionState === "banned";
-      } else {
-        client.connectionState = "disconnected";
-      }
-    });
-
-    client.on("ready", async () => {
-      clearTimeout(qrTimeout);
-      client.connectionState = "open";
-      console.log(`Sessão ${sessionName} está pronta!`);
-
-      const debugWWebVersion = await client.getWWebVersion();
-      console.log(`WWebVersion = ${debugWWebVersion}`);
-
-      client.pupPage.on("load", async (err) => {
-        // console.log("loadError: " + err.toString());
-      });
-
-      client.pupPage.on("pageerror", function (err) {
-        // console.log("pageError: " + err.toString());
-      });
-
-      client.pupPage.on("error", function (err) {
-        // console.log("error: " + err.toString());
-      });
-
-      try {
-        saveClientData(client);
-        const stateMachine = new StateMachine(client, client.sessionName);
-        stateMachines[client.sessionName] = stateMachine;
-      } catch (error) {
-        console.error("Erro ao criar arquivo clientData.json:", error);
-      }
-    });
-
-    client.on("change_state", (data) => {
-      console.log(
-        `Mudando status da Sessão ${sessionName} -`,
-        JSON.stringify(data, undefined, 2)
-      );
-    });
-
-    client.on("message", async (message) => {
-      try {
-        if (client.connectionState !== "open") {
-          console.log(
-            `Sessão ${sessionName} está desconectada. Ignorando mensagem.`
-          );
-          return;
-        }
-
-        console.log(
-          `Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${
-            message.from
-          } no horário ${new Date()}`
-        );
-
-        let mediaName = "";
-        let mediaUrl = "";
-        let mediaBase64 = "";
-        let ticketId;
-        let bot_idstatus;
-
-        const stateMachine = stateMachines[sessionName];
-        const { body, from, to } = message;
-
-        if (!stateMachine) {
-          console.error(
-            `StateMachine não encontrada para a sessão ${sessionName}`
-          );
-          return;
-        }
-
-        const response = {
-          from: message.from,
-          body: message.body,
-        };
-
-        const fromPhoneNumber = utils.formatPhoneNumber(message.from);
-        const webhookUrl =
-          "https://www.cobrance.com.br/codechat/webhook_cobrance.php";
-
-        if (message.hasMedia) {
-          try {
-            const media = await message.downloadMedia();
-            const mediaPath = path.join(__dirname, "media", fromPhoneNumber);
-
-            if (!fs.existsSync(mediaPath)) {
-              fs.mkdirSync(mediaPath, { recursive: true });
-            }
-
-            const fileName = `${new Date().getTime()}.${
-              media.mimetype.split("/")[1]
-            }`;
-            const filePath = path.join(mediaPath, fileName);
-
-            fs.writeFileSync(filePath, media.data, "base64");
-            console.log(`Arquivo recebido e salvo em: ${filePath}`);
-
-            mediaName = fileName;
-            mediaUrl = `http://191.252.214.9:3060/media/${fromPhoneNumber}/${fileName}`;
-            mediaBase64 = media.data;
-          } catch (error) {
-            console.error(
-              `Erro ao processar mídia para a sessão ${sessionName}:`,
-              error
+          if (this.userDataDir) {
+            await fs.promises.rm(this.userDataDir, {
+              recursive: true,
+              force: true,
+            });
+            console.log(
+              `Diretório de dados do usuário ${this.userDataDir} removido com sucesso.`
             );
           }
-        }
-
-        try {
-          await axios.post(webhookUrl, {
-            sessionName,
-            message: {
-              ...message,
-              body: mediaName || message.body,
-              mediaName,
-              mediaUrl,
-              mediaBase64,
-            },
-          });
         } catch (error) {
           console.error(
-            `Erro ao enviar dados para o webhook para a sessão ${sessionName}:`,
+            "Erro ao remover o diretório de dados do usuário:",
             error
           );
         }
+      };
 
-        if (!fromPhoneNumber || !response) {
-          console.log("Mensagem inválida recebida", message.body);
-          return;
+      client = new Client({
+        authStrategy: localAuth,
+        puppeteer: {
+          timeout: 60000,
+          headless: true,
+          args: [
+            "--no-default-browser-check",
+            "--disable-session-crashed-bubble",
+            "--disable-dev-shm-usage",
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-accelerated-2d-canvas",
+            "--no-first-run",
+          ],
+        },
+      });
+
+      client.connectionState = "connecting";
+      client.sessionName = sessionName;
+
+      const qrTimeout = setTimeout(() => {
+        if (client.connectionState !== "open") {
+          client.connectionState = "disconnected";
+          console.log(
+            `Tempo esgotado para a sessão ${sessionName}. Desconectando...`
+          );
+          client.destroy();
+          reject(
+            new Error(`Sessão ${sessionName} desconectada por tempo limite.`)
+          );
         }
+      }, 30 * 60 * 1000); // 30 minutos
+
+      client.on("loading_screen", async (percent, message) => {
+        console.log("Carregando...", percent, message);
+      });
+
+      client.on("qr", async (qr) => {
+        try {
+          if (!isQRFunctionExposed) {
+            console.log(`QR Code para a sessão ${sessionName}:`);
+            qrcode.generate(qr, { small: true });
+            await saveQRCodeImage(qr, sessionName);
+            isQRFunctionExposed = true;
+          }
+        } catch (error) {
+          console.error("Erro ao lidar com QR Code:", error.message);
+        }
+      });
+
+      client.on("change_state", async (data) => {
+        console.log(
+          `Mudando status da Sessão ${sessionName} -`,
+          JSON.stringify(data, undefined, 2)
+        );
+      });
+
+      client.on("disconnected", async (data) => {
+        try {
+          console.log("DISCONNECTED -", JSON.stringify(data, undefined, 2));
+          clearTimeout(qrTimeout);
+          await client.logout();
+          client.connectionState = "disconnected";
+          reject(new Error(`Sessão ${sessionName} foi desconectada.`));
+        } catch (error) {
+          console.error("Erro ao lidar com desconexão:", error.message);
+          client.connectionState = error.message.includes("ENOTEMPTY")
+            ? "banned"
+            : "disconnected";
+          saveClientData(client);
+          reject(error);
+        }
+      });
+
+      client.on("authenticated", async (data) => {
+        console.log("AUTHENTICATED -", JSON.stringify(data, undefined, 2));
+        clearTimeout(qrTimeout);
+
+        sessions[client.sessionName] = client;
+        console.log(`Conexão bem-sucedida na sessão ${client.sessionName}!`);
 
         try {
-          const credorExistsFromDB = await stateMachine._getCredorFromDB(
-            fromPhoneNumber
-          );
-          if (!credorExistsFromDB) {
+          const stateMachine = new StateMachine(client, client.sessionName);
+          stateMachines[client.sessionName] = stateMachine;
+        } catch (error) {
+          console.error("Erro ao criar StateMachine:", error);
+        }
+      });
+
+      client.on("auth_failure", async (data) => {
+        console.log("AUTH_FAILURE -", JSON.stringify(data, undefined, 2));
+        clearTimeout(qrTimeout);
+        client.connectionState = data.includes("ban")
+          ? "banned"
+          : "disconnected";
+        reject(new Error(`Falha de autenticação na sessão ${sessionName}.`));
+      });
+
+      client.on("ready", async () => {
+        clearTimeout(qrTimeout);
+        client.connectionState = "open";
+        console.log(`Sessão ${sessionName} está pronta!`);
+        try {
+          saveClientData(client);
+          const stateMachine = new StateMachine(client, client.sessionName);
+          stateMachines[client.sessionName] = stateMachine;
+          resolve(client); // Resolve a Promise quando a sessão está pronta
+        } catch (error) {
+          console.error("Erro ao criar arquivo clientData.json:", error);
+          reject(error); // Rejeita em caso de erro ao salvar dados do cliente
+        }
+      });
+
+      client.on("message", async (message) => {
+        try {
+          if (client.connectionState !== "open") {
             console.log(
-              "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
-              fromPhoneNumber
+              `Sessão ${sessionName} está desconectada. Ignorando mensagem.`
             );
             return;
           }
 
-          const statusAtendimento = await requests.getStatusAtendimento(
-            fromPhoneNumber
+          console.log(
+            `Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${
+              message.from
+            } no horário ${new Date()}`
           );
-          const bot_idstatus = statusAtendimento[0]?.bot_idstatus;
 
-          if (!bot_idstatus) {
-            console.log(
-              "Status de atendimento não encontrado para o usuário -",
-              fromPhoneNumber
+          let mediaName = "";
+          let mediaUrl = "";
+          let mediaBase64 = "";
+          let ticketId;
+          let bot_idstatus;
+
+          const stateMachine = stateMachines[sessionName];
+          const { body, from, to } = message;
+
+          if (!stateMachine) {
+            console.error(
+              `StateMachine não encontrada para a sessão ${sessionName}`
             );
-          } else if (bot_idstatus === 2) {
-            console.log("Usuário em atendimento humano -", bot_idstatus);
+            return;
+          }
 
-            if (!redirectSentMap.get(fromPhoneNumber)) {
-              await client.sendMessage(
-                from,
-                "Estamos redirecionando seu atendimento para um atendente humano, por favor aguarde..."
+          const response = {
+            from: message.from,
+            body: message.body,
+          };
+
+          const fromPhoneNumber = utils.formatPhoneNumber(message.from);
+          const webhookUrl =
+            "https://www.cobrance.com.br/codechat/webhook_cobrance.php";
+
+          if (message.hasMedia) {
+            try {
+              const media = await message.downloadMedia();
+              const mediaPath = path.join(__dirname, "media", fromPhoneNumber);
+
+              if (!fs.existsSync(mediaPath)) {
+                fs.mkdirSync(mediaPath, { recursive: true });
+              }
+
+              const fileName = `${new Date().getTime()}.${
+                media.mimetype.split("/")[1]
+              }`;
+              const filePath = path.join(mediaPath, fileName);
+
+              fs.writeFileSync(filePath, media.data, "base64");
+              console.log(`Arquivo recebido e salvo em: ${filePath}`);
+
+              mediaName = fileName;
+              mediaUrl = `https://whatsapp.cobrance.online:3060/media/${fromPhoneNumber}/${fileName}`;
+              mediaBase64 = media.data;
+            } catch (error) {
+              console.error(
+                `Erro ao processar mídia para a sessão ${sessionName}:`,
+                error
               );
-              redirectSentMap.set(fromPhoneNumber, true);
             }
-            return;
-          } else if ([1, 3].includes(bot_idstatus) || bot_idstatus === "") {
-            console.log("Usuário em atendimento automático -", bot_idstatus);
           }
 
-          const ticketStatus = await requests.getTicketStatusByPhoneNumber(
-            fromPhoneNumber
-          );
-
-          if (ticketStatus && ticketStatus.length > 0) {
-            ticketId = ticketStatus[0].id;
-            await requests.getAbrirAtendimentoBot(ticketId);
-            console.log(
-              `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId}`
+          try {
+            await axios.post(webhookUrl, {
+              sessionName,
+              message: {
+                ...message,
+                body: mediaName || message.body,
+                mediaName,
+                mediaUrl,
+                mediaBase64,
+              },
+            });
+          } catch (error) {
+            console.error(
+              `Erro ao enviar dados para o webhook para a sessão ${sessionName}:`,
+              error
             );
-          } else {
-            await requests.getInserirNumeroCliente(fromPhoneNumber);
+          }
 
-            const insertNovoTicket = await requests.getInserirNovoTicket(
+          if (!fromPhoneNumber || !response) {
+            console.log("Mensagem inválida recebida", message.body);
+            return;
+          }
+
+          try {
+            const credorExistsFromDB = await stateMachine._getCredorFromDB(
               fromPhoneNumber
             );
-            if (insertNovoTicket && insertNovoTicket.insertId) {
-              ticketId = insertNovoTicket.insertId;
-              await requests.getAbrirAtendimentoBot(ticketId);
+            if (!credorExistsFromDB) {
               console.log(
-                `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId} (NOVO)`
+                "Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -",
+                fromPhoneNumber
               );
-            } else {
-              console.log("Erro ao criar novo número de Ticket no banco.");
               return;
             }
+
+            const statusAtendimento = await requests.getStatusAtendimento(
+              fromPhoneNumber
+            );
+            const bot_idstatus = statusAtendimento[0]?.bot_idstatus;
+
+            if (!bot_idstatus) {
+              console.log(
+                "Status de atendimento não encontrado para o usuário -",
+                fromPhoneNumber
+              );
+            } else if (bot_idstatus === 2) {
+              console.log("Usuário em atendimento humano -", bot_idstatus);
+
+              if (!redirectSentMap.get(fromPhoneNumber)) {
+                await client.sendMessage(
+                  from,
+                  "Estamos redirecionando seu atendimento para um atendente humano, por favor aguarde..."
+                );
+                redirectSentMap.set(fromPhoneNumber, true);
+              }
+              return;
+            } else if ([1, 3].includes(bot_idstatus) || bot_idstatus === "") {
+              console.log("Usuário em atendimento automático -", bot_idstatus);
+            }
+
+            const ticketStatus = await requests.getTicketStatusByPhoneNumber(
+              fromPhoneNumber
+            );
+
+            if (ticketStatus && ticketStatus.length > 0) {
+              ticketId = ticketStatus[0].id;
+              await requests.getAbrirAtendimentoBot(ticketId);
+              console.log(
+                `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId}`
+              );
+            } else {
+              await requests.getInserirNumeroCliente(fromPhoneNumber);
+
+              const insertNovoTicket = await requests.getInserirNovoTicket(
+                fromPhoneNumber
+              );
+              if (insertNovoTicket && insertNovoTicket.insertId) {
+                ticketId = insertNovoTicket.insertId;
+                await requests.getAbrirAtendimentoBot(ticketId);
+                console.log(
+                  `Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId} (NOVO)`
+                );
+              } else {
+                console.log("Erro ao criar novo número de Ticket no banco.");
+                return;
+              }
+            }
+
+            const demim = 0;
+
+            stateMachine._setTicketId(ticketId);
+            stateMachine._setFromNumber(from);
+            stateMachine._setToNumber(to);
+
+            await stateMachine._getRegisterMessagesDB(
+              from,
+              to,
+              message.body,
+              ticketId,
+              demim
+            );
+            await stateMachine.handleMessage(fromPhoneNumber, response);
+          } catch (error) {
+            console.error("Erro ao processar a mensagem:", error);
           }
-
-          const demim = 0;
-
-          stateMachine._setTicketId(ticketId);
-          stateMachine._setFromNumber(from);
-          stateMachine._setToNumber(to);
-
-          await stateMachine._getRegisterMessagesDB(
-            from,
-            to,
-            message.body,
-            ticketId,
-            demim
-          );
-          await stateMachine.handleMessage(fromPhoneNumber, response);
         } catch (error) {
-          console.error("Erro ao processar a mensagem:", error);
+          console.error("Erro ao lidar com a mensagem:", error);
         }
-      } catch (error) {
-        console.error("Erro ao lidar com a mensagem:", error);
-      }
-    });
+      });
 
-    client.initialize();
-    sessions[sessionName] = client;
-  } catch (error) {
-    console.error(`Erro ao criar a sessão ${sessionName}:`, error);
-  }
+      client.initialize();
+      sessions[sessionName] = client;
+    } catch (error) {
+      console.error(`Erro ao criar a sessão ${sessionName}:`, error);
+      reject(error); // Rejeita a Promise em caso de erro na inicialização do cliente
+    }
+  });
+};
 
-  return client;
+const createSessionPromisse = (sessionName) => {
+  return new Promise(async (resolve, reject) => {
+    if (sessions[sessionName]?.connectionState === "open") {
+      console.log(`A instância ${sessionName} já está conectada.`);
+      return resolve(sessions[sessionName]);
+    }
+
+    let client;
+    let isQRFunctionExposed = false;
+
+    try {
+      const localAuth = new LocalAuth({ clientId: sessionName });
+      delete localAuth.logout;
+      localAuth.logout = async () => {
+        try {
+          console.log("Executando logout...");
+          if (this.userDataDir) {
+            await fs.promises.rm(this.userDataDir, {
+              recursive: true,
+              force: true,
+            });
+            console.log(
+              `Diretório de dados do usuário ${this.userDataDir} removido com sucesso.`
+            );
+          }
+        } catch (error) {
+          console.error(
+            "Erro ao remover o diretório de dados do usuário:",
+            error
+          );
+        }
+      };
+
+      client = new Client({
+        authStrategy: localAuth,
+        puppeteer: {
+          timeout: 60000,
+          headless: true,
+          args: [
+            "--no-default-browser-check",
+            "--disable-session-crashed-bubble",
+            "--disable-dev-shm-usage",
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-accelerated-2d-canvas",
+            "--no-first-run",
+          ],
+        },
+      });
+
+      client.connectionState = "connecting";
+      client.sessionName = sessionName;
+
+      const qrTimeout = setTimeout(() => {
+        if (client.connectionState !== "open") {
+          client.connectionState = "disconnected";
+          console.log(
+            `Tempo esgotado para a sessão ${sessionName}. Desconectando...`
+          );
+          client.destroy();
+          reject(
+            new Error(`Sessão ${sessionName} desconectada por tempo limite.`)
+          );
+        }
+      }, 1 * 60 * 1000); // 30 minutos
+
+      client.on("qr", async (qr) => {
+        try {
+          if (!isQRFunctionExposed) {
+            console.log(`QR Code para a sessão ${sessionName}:`);
+            qrcode.generate(qr, { small: true });
+            await saveQRCodeImage(qr, sessionName);
+            isQRFunctionExposed = true;
+          }
+        } catch (error) {
+          console.error("Erro ao lidar com QR Code:", error.message);
+        }
+      });
+
+      client.on("disconnected", async (data) => {
+        try {
+          console.log("DISCONNECTED -", JSON.stringify(data, undefined, 2));
+          clearTimeout(qrTimeout);
+          await client.logout();
+          client.connectionState = "disconnected";
+          reject(new Error(`Sessão ${sessionName} foi desconectada.`));
+        } catch (error) {
+          console.error("Erro ao lidar com desconexão:", error.message);
+          client.connectionState = error.message.includes("ENOTEMPTY")
+            ? "banned"
+            : "disconnected";
+          saveClientData(client);
+          reject(error);
+        }
+      });
+
+      client.on("authenticated", (data) => {
+        console.log("AUTHENTICATED -", JSON.stringify(data, undefined, 2));
+        clearTimeout(qrTimeout);
+        sessions[client.sessionName] = client;
+        console.log(`Conexão bem-sucedida na sessão ${client.sessionName}!`);
+      });
+
+      client.on("auth_failure", (data) => {
+        console.log("AUTH_FAILURE -", JSON.stringify(data, undefined, 2));
+        clearTimeout(qrTimeout);
+        client.connectionState = data.includes("ban")
+          ? "banned"
+          : "disconnected";
+        reject(new Error(`Falha de autenticação na sessão ${sessionName}.`));
+      });
+
+      client.on("ready", async () => {
+        clearTimeout(qrTimeout);
+        client.connectionState = "open";
+        console.log(`Sessão ${sessionName} está pronta!`);
+        try {
+          saveClientData(client);
+          resolve(client); // Resolve a Promise quando a sessão está pronta
+        } catch (error) {
+          console.error("Erro ao criar arquivo clientData.json:", error);
+          reject(error); // Rejeita em caso de erro ao salvar dados do cliente
+        }
+      });
+
+      client.on("message", async (msg) => {
+        console.log(`Mensagem recebida de ${msg.from} - ${msg.body}`);
+
+        if (msg.body === "!ping") {
+          msg.reply("pong");
+        }
+      });
+
+      client.initialize();
+      sessions[sessionName] = client;
+    } catch (error) {
+      console.error(`Erro ao criar a sessão ${sessionName}:`, error);
+      reject(error); // Rejeita a Promise em caso de erro na inicialização do cliente
+    }
+  });
 };
 
 const saveClientData = async (client) => {
@@ -1718,9 +1825,7 @@ const restoreSession = async (sessionName) => {
       console.log(`Restaurando sessão de ${sessionName}...`);
       createSession(sessionName);
     } catch (error) {
-      console.error(
-        `Erro ao tentar reconectar a instancia ${sessionName}: ${error.message}`
-      );
+      console.error(`Error na sessão ${sessionName}: ${error.message}`);
     }
   } else {
     console.error(`O diretório ${sessionPath} não existe.`);
@@ -1751,7 +1856,7 @@ const restoreAllSessions = async () => {
 
     // Aguarda que todas as promessas sejam resolvidas
     await Promise.all(restorePromises);
-    console.log("Todas as sessões foram restauradas.");
+    console.log("Todas as sessões foram restauradas ou atualizadas.");
   } else {
     console.error(`O diretório ${authDir} não existe.`);
   }
@@ -1930,6 +2035,7 @@ const deleteUnusedSessions = async () => {
           fs.lstatSync(sessionDirPath).isDirectory()
         ) {
           deleteFolderRecursive(sessionDirPath, sessionName);
+          delete sessions[sessionName];
         }
       }
     }
@@ -1960,6 +2066,8 @@ app.post("/instance/create", (req, res) => {
 
   if (sessions[instanceName]) {
     console.log(`Session ${instanceName} already exists`);
+    console.log(sessions);
+
     return res
       .status(400)
       .json({ error: `Session ${instanceName} already exists` });
@@ -2496,41 +2604,41 @@ app.get("/listAllFiles", (req, res) => {
 
 app.use("/media", express.static(mediaDataPath));
 
-const privateKey = fs.readFileSync(
-  "/etc/letsencrypt/live/whatsapp.cobrance.online/privkey.pem",
-  "utf8"
-);
-const certificate = fs.readFileSync(
-  "/etc/letsencrypt/live/whatsapp.cobrance.online/fullchain.pem",
-  "utf8"
-);
-const ca = fs.readFileSync(
-  "/etc/letsencrypt/live/whatsapp.cobrance.online/chain.pem",
-  "utf8"
-);
-const credentials = { key: privateKey, cert: certificate, ca };
-const httpsServer = https.createServer(credentials, app);
+// const privateKey = fs.readFileSync(
+//   "/etc/letsencrypt/live/whatsapp.cobrance.online/privkey.pem",
+//   "utf8"
+// );
+// const certificate = fs.readFileSync(
+//   "/etc/letsencrypt/live/whatsapp.cobrance.online/fullchain.pem",
+//   "utf8"
+// );
+// const ca = fs.readFileSync(
+//   "/etc/letsencrypt/live/whatsapp.cobrance.online/chain.pem",
+//   "utf8"
+// );
+// const credentials = { key: privateKey, cert: certificate, ca };
+// const httpsServer = https.createServer(credentials, app);
 
-httpsServer.listen(port, async () => {
-  console.log(`Servidor HTTPS iniciado na porta ${port}`);
-
-  // Inicialize e restaure sessões
-  await initializeConnectionStatus();
-  await restoreAllSessions();
-
-  // Após completar as funções acima, execute as seguintes funções
-  // await deleteAllQRCodeImages();
-  // await deleteUnusedSessions();
-});
-
-// app.listen(port, async () => {
-//   console.log(`Servidor HTTP iniciado na porta ${port}`);
+// httpsServer.listen(port, async () => {
+//   console.log(`Servidor HTTPS iniciado na porta ${port}`);
 
 //   // Inicialize e restaure sessões
 //   await initializeConnectionStatus();
 //   await restoreAllSessions();
 
 //   // Após completar as funções acima, execute as seguintes funções
-//   await deleteAllQRCodeImages();
-//   await deleteUnusedSessions();
+//   // await deleteAllQRCodeImages();
+//   // await deleteUnusedSessions();
 // });
+
+app.listen(port, async () => {
+  console.log(`Servidor HTTP iniciado na porta ${port}`);
+
+  // Inicialize e restaure sessões
+  await initializeConnectionStatus();
+  await restoreAllSessions();
+
+  // Após completar as funções acima, execute as seguintes funções
+  await deleteAllQRCodeImages();
+  await deleteUnusedSessions();
+});
