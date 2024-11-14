@@ -1866,34 +1866,37 @@ const restoreAllSessions = async () => {
 
 const validateAndFormatNumber = async (number) => {
   if (typeof number !== "string") {
-    throw new Error("Number must be a string");
+    throw new Error("O número de telefone deve ser uma string");
   }
 
   // Remove qualquer caractere não numérico
   const cleanedNumber = number.replace(/\D/g, "");
 
   // Valida o comprimento do número (deve ser 12 ou 13 dígitos)
-  if (cleanedNumber.length < 12 || cleanedNumber.length > 13) {
-    throw new Error("Invalid phone number length: must be 12 or 13 digits");
+  if (cleanedNumber.length !== 12 && cleanedNumber.length !== 13) {
+    throw new Error(
+      "Comprimento inválido do número: deve ter 12 ou 13 dígitos"
+    );
+  }
+
+  // Garante que o número começa com o código do país "55"
+  if (!cleanedNumber.startsWith("55")) {
+    throw new Error("Código de país inválido: deve começar com 55");
   }
 
   let formattedNumber;
 
-  // Se o número tiver 13 dígitos, remove o nono dígito extra
+  // Se o número tiver 13 dígitos, remove o nono dígito extra após o código do estado
   if (cleanedNumber.length === 13) {
-    // Mantém o código do país e do estado, e remove o nono dígito extra
-    formattedNumber = cleanedNumber.slice(0, 4) + cleanedNumber.slice(5);
+    const countryCode = cleanedNumber.slice(0, 2); // Código do país (55)
+    const stateCode = cleanedNumber.slice(2, 4); // Código do estado (e.g., 51)
+    const localNumber = cleanedNumber.slice(5); // Número local sem o nono dígito
+    formattedNumber = countryCode + stateCode + localNumber;
   } else {
     // Se o número tem 12 dígitos, usa como está
     formattedNumber = cleanedNumber;
   }
 
-  // Garante que o número começa com o código do país
-  if (!formattedNumber.startsWith("55")) {
-    throw new Error("Invalid country code: must start with 55");
-  }
-
-  // Retorna o número formatado
   return formattedNumber;
 };
 
@@ -2507,7 +2510,14 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
 app.post("/message/sendMedia/:instanceName", async (req, res) => {
   const { number, mediaMessage } = req.body;
   const { instanceName } = req.params;
-  const client = sessions[instanceName];
+  let client;
+
+  if (!sessions[instanceName]) {
+    console.error(`Instance "${instanceName}" not found in sessions.`);
+  } else {
+    client = sessions[instanceName];
+    console.log(`Found client for instance:`, sessions[instanceName]);
+  }
 
   if (!instanceName || !number || !mediaMessage || !mediaMessage.media) {
     return res
