@@ -1388,7 +1388,7 @@ const createSession = async (sessionName) => {
 
         const fromPhoneNumber = utils.formatPhoneNumber(message.from);
         const webhookUrl =
-          "https://www.cobrance.com.br/codechat/webhook_cobrance.php";
+          "http://www.cobrance.com.br/codechat/webhook_cobrance.php";
 
         if (message.hasMedia) {
           try {
