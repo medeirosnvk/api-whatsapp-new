@@ -1175,6 +1175,7 @@ const createSession = async (sessionName) => {
   }
 
   let client;
+  let isQRFunctionExposed = false;
 
   try {
     const localAuth = new LocalAuth({ clientId: sessionName });
@@ -1228,13 +1229,11 @@ const createSession = async (sessionName) => {
         );
         client.destroy();
       }
-    }, 30 * 60 * 1000); // 30 minutos
+    }, 3 * 60 * 1000); // 3 minutos
 
     client.on("loading_screen", (percent, message) => {
       console.log("Carregando...", percent, message);
     });
-
-    let isQRFunctionExposed = false;
 
     client.on("qr", async (qr) => {
       try {
@@ -1350,6 +1349,13 @@ const createSession = async (sessionName) => {
       }
     });
 
+    client.on("change_state", (data) => {
+      console.log(
+        `Mudando status da Sessão ${sessionName} -`,
+        JSON.stringify(data, undefined, 2)
+      );
+    });
+
     client.on("message", async (message) => {
       try {
         if (client.connectionState !== "open") {
@@ -1368,11 +1374,15 @@ const createSession = async (sessionName) => {
         let mediaName = "";
         let mediaUrl = "";
         let mediaBase64 = "";
+        let userProfilePicBase64 = "";
         let ticketId;
-        let bot_idstatus;
 
         const stateMachine = stateMachines[sessionName];
-        const { body, from, to } = message;
+        const { from, to } = message;
+        const response = {
+          from: message.from,
+          body: message.body,
+        };
 
         if (!stateMachine) {
           console.error(
@@ -1381,15 +1391,31 @@ const createSession = async (sessionName) => {
           return;
         }
 
-        const response = {
-          from: message.from,
-          body: message.body,
-        };
-
         const fromPhoneNumber = utils.formatPhoneNumber(message.from);
         const webhookUrl =
           "http://www.cobrance.com.br/codechat/webhook_cobrance.php";
 
+        // Obter a foto do perfil do usuário
+        try {
+          const profilePicUrl = await client.getProfilePicUrl(message.from);
+          if (profilePicUrl) {
+            const picResponse = await axios.get(profilePicUrl, {
+              responseType: "arraybuffer",
+            });
+            userProfilePicBase64 = Buffer.from(picResponse.data).toString(
+              "base64"
+            );
+          } else {
+            console.log(`Usuário ${message.from} não possui foto de perfil.`);
+          }
+        } catch (error) {
+          console.error(
+            `Erro ao obter foto do perfil para o usuário ${message.from}:`,
+            error
+          );
+        }
+
+        // Se existir media, salva e registra
         if (message.hasMedia) {
           try {
             const media = await message.downloadMedia();
@@ -1427,6 +1453,7 @@ const createSession = async (sessionName) => {
               mediaName,
               mediaUrl,
               mediaBase64,
+              userProfilePicBase64, // Incluindo a foto de perfil em base64
             },
           });
         } catch (error) {
@@ -1526,13 +1553,6 @@ const createSession = async (sessionName) => {
       } catch (error) {
         console.error("Erro ao lidar com a mensagem:", error);
       }
-    });
-
-    client.on("change_state", (data) => {
-      console.log(
-        `Mudando status da Sessão ${sessionName} -`,
-        JSON.stringify(data, undefined, 2)
-      );
     });
 
     client.initialize();
