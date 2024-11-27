@@ -2467,12 +2467,6 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
       .send("instanceName, number, and mediaMessage.media are required");
   }
 
-  // if (!client || client.connectionState !== "open") {
-  //   return res
-  //     .status(400)
-  //     .send(`Session ${instanceName} is disconnected or does not exist`);
-  // }
-
   try {
     let processedNumber = number;
     const brazilCountryCode = "55";
@@ -2489,15 +2483,33 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
     }
 
     const { media, fileName, caption } = mediaMessage;
+    console.log(`Tentando acessar URL de mídia: ${media}`);
 
     // Obter o arquivo de mídia
-    const response = await axios.get(media, {
-      responseType: "arraybuffer",
-    });
+    try {
+      const response = await axios.get(media, {
+        responseType: "arraybuffer",
+        timeout: 5000, // 5 segundos
+      });
+
+      if (response.status !== 200) {
+        throw new Error(
+          `Media URL is not accessible. Status code: ${response.status}`
+        );
+      }
+    } catch (err) {
+      return res.status(400).send(`Invalid media URL: ${err.message}`);
+    }
+
+    // const response = await axios.get(media, {
+    //   responseType: "arraybuffer",
+    //   timeout: 5000, // 5 segundos
+    // });
+
     const mimeType = response.headers["content-type"];
     const mediaData = Buffer.from(response.data, "binary").toString("base64");
-
     const messageMedia = new MessageMedia(mimeType, mediaData, fileName);
+    console.log("messageMedia -", messageMedia);
 
     await client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
       caption: caption,
@@ -2508,19 +2520,19 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
     );
     res.status(200).json({ status: "PENDING" });
   } catch (error) {
-    if (error.message.includes("disconnected")) {
-      console.error(`Erro: A sessão ${instanceName} está desconectada.`);
-    } else if (error.message.includes("ban")) {
-      console.error(`Erro: A sessão ${instanceName} foi banida.`);
+    if (error.code === "ECONNREFUSED") {
+      console.error(`Conexão recusada ao tentar acessar ${media}`);
+      return res.status(500).json({
+        status: "error",
+        message: `Não foi possível conectar ao servidor remoto: ${error.message}`,
+      });
     } else {
-      console.error(`Erro desconhecido ao enviar mensagem: ${error.message}`);
+      console.error(`Erro desconhecido: ${error.message}`);
+      return res.status(500).json({
+        status: "error",
+        message: `Erro ao processar a requisição: ${error.message}`,
+      });
     }
-
-    res.status(404).send({
-      status: 404,
-      error: "Not Found",
-      message: [`The "${instanceName}" instance does not exist`],
-    });
   }
 });
 
