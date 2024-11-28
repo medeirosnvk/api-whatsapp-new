@@ -34,7 +34,7 @@
     "fluent-ffmpeg": "2.1.2",
     "mime": "^3.0.0",
     "node-fetch": "^2.6.9",
-    "node-webpmux": "3.1.7",
+    "node-webpmux": "3.2.0",
     "nodemon": "^3.1.4",
     "puppeteer": "^18.2.1",
     "qrcode-terminal": "^0.12.0",
