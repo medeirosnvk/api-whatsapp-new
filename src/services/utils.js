@@ -62,15 +62,12 @@ function formatarMoeda(valorString) {
 function formatCredorOfertas(ofertas) {
   return ofertas
     .map((detalhe, index) => {
-      const total =
-        parseFloat(detalhe.valor_parcela) + parseFloat(detalhe.tarifa_boleto);
+      const total = parseFloat(detalhe.valor_parcela) + parseFloat(detalhe.tarifa_boleto);
       const totalFormatado = formatarMoeda(total.toFixed(2));
       if (index === 0) {
         return `*${index + 1}*) À vista ${totalFormatado}`;
       } else {
-        return `*${index + 1}*) Parcelamento em ${
-          index + 1
-        } x ${totalFormatado}`;
+        return `*${index + 1}*) Parcelamento em ${index + 1} x ${totalFormatado}`;
       }
     })
     .join("\n");
@@ -80,10 +77,7 @@ function formatCredorInfo(creditorInfo) {
   return creditorInfo
     .map(
       (info, index) =>
-        `*${index + 1}*)\n` +
-        `Empresa: ${info.empresa}\n` +
-        `Seu Código na Cobrance: ${info.iddevedor}\n` +
-        `Saldo Principal: ${formatValue(info.saldo)}`
+        `*${index + 1}*)\n` + `Empresa: ${info.empresa}\n` + `Seu Código na Cobrance: ${info.iddevedor}\n` + `Saldo Principal: ${formatValue(info.saldo)}`
     )
     .join("\n\n");
 }
@@ -125,9 +119,7 @@ function formatCodigoBoleto(creditorBoleto) {
   const isArrayofArrays = Array.isArray(creditorBoleto[0]);
 
   // Se for um array de array de objetos, achatamos o array
-  const flattenedArray = isArrayofArrays
-    ? creditorBoleto.flat()
-    : creditorBoleto;
+  const flattenedArray = isArrayofArrays ? creditorBoleto.flat() : creditorBoleto;
 
   return flattenedArray
     .map(
@@ -152,9 +144,7 @@ function formatCodigoPix(creditorBoleto) {
   const isArrayofArrays = Array.isArray(creditorBoleto[0]);
 
   // Se for um array de array de objetos, achatamos o array
-  const flattenedArray = isArrayofArrays
-    ? creditorBoleto.flat()
-    : creditorBoleto;
+  const flattenedArray = isArrayofArrays ? creditorBoleto.flat() : creditorBoleto;
 
   return flattenedArray
     .map(
@@ -297,18 +287,10 @@ Data Base.: ${currentDataBase}
       };
 
       const valor = formatNumber(Number(dividas.saldo)).padStart(10, " ");
-      const juros = formatNumber(Number(dividas.juros_calculado)).padStart(
-        10,
-        " "
-      );
-      const multa = formatNumber(Number(dividas.multa_calculada)).padStart(
-        10,
-        " "
-      );
+      const juros = formatNumber(Number(dividas.juros_calculado)).padStart(10, " ");
+      const multa = formatNumber(Number(dividas.multa_calculada)).padStart(10, " ");
       const desconto = "0,00".padStart(10, " ");
-      const honorarios = formatNumber(
-        Number(dividas.honorarios_calculado)
-      ).padStart(10, " ");
+      const honorarios = formatNumber(Number(dividas.honorarios_calculado)).padStart(10, " ");
       const total = formatNumber(Number(dividas.total)).padStart(10, " ");
 
       if (index === array.length - 1) {
@@ -344,10 +326,7 @@ Data Base.: ${currentDataBase}
     const totalJuros = formatNumber(somaJurosCalculado).padStart(10, " ");
     const totalMulta = formatNumber(somaMultaCalculada).padStart(10, " ");
     const desconto = "0,00".padStart(10, " ");
-    const totalHonorarios = formatNumber(somaHonorariosCalculado).padStart(
-      10,
-      " "
-    );
+    const totalHonorarios = formatNumber(somaHonorariosCalculado).padStart(10, " ");
     const totalGeral = formatNumber(somaTotal).padStart(10, " ");
 
     const messageTotais = `${totalSaldo} ${totalJuros} ${totalMulta} ${desconto} ${totalHonorarios} ${totalGeral}`;
@@ -362,12 +341,7 @@ ${messageTotais}
 \nINCLUÍDO POR: API CHATBOT EM ${currentDateFormat} ${currentTimeFormat}.
 ---------------------------------------------------------------------------`;
 
-    return (
-      message +
-      dynamicMessage +
-      sumMessageTotais +
-      bottomMessage
-    ).trimStart();
+    return (message + dynamicMessage + sumMessageTotais + bottomMessage).trimStart();
   };
 
   const mensagem = insertMessageAcordo();
@@ -445,12 +419,7 @@ function parseDadosPromessa(props) {
   };
 }
 
-async function criarPromessas(
-  parsedData2,
-  responseDividasCredores,
-  parcelasArray,
-  plano
-) {
+async function criarPromessas(parsedData2, responseDividasCredores, parcelasArray, plano) {
   let contratos = "";
   const contratosIncluidos = new Set();
 
@@ -641,10 +610,7 @@ function handleCopyPix() {
       navigator.clipboard
         .writeText(emvContent)
         .then(() => {
-          console.log(
-            "Valor copiado para a área de transferência:",
-            emvContent
-          );
+          console.log("Valor copiado para a área de transferência:", emvContent);
           alert(`Valor copiado para a área de transferência: ${emvContent}`);
         })
         .catch((error) => {
@@ -688,9 +654,7 @@ async function saveQRCodeImageToLocal(url, idboleto) {
 
     // Verifica se a resposta está ok
     if (!response.ok) {
-      throw new Error(
-        `Erro ao baixar a imagem do QR Code. Status: ${response.status} - ${response.statusText}`
-      );
+      throw new Error(`Erro ao baixar a imagem do QR Code. Status: ${response.status} - ${response.statusText}`);
     }
 
     const buffer = await response.buffer();

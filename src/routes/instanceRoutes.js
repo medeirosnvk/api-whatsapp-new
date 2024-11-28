@@ -1,12 +1,23 @@
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+
+const sessionsManager = require("../sessionsManager");
 const { createSession } = require("../services/InstanceServices/createSessionService");
 const { disconnectSession } = require("../services/InstanceServices/disconnectSessionService");
+const { disconnectAllSessions } = require("../services/InstanceServices/disconnectAllSessionsService");
 const { restoreAllSessions } = require("../services/InstanceServices/restoreAllSessionsService");
 const { restoreSession } = require("../services/InstanceServices/restoreSessionService");
+const { deleteSession } = require("../services/InstanceServices/deleteSessionService");
+const { deleteUnusedSessions } = require("../services/InstanceServices/deleteUnusedSessionsService");
 
-const app = express();
+const instanceRoutes = express.Router();
 
-app.post("/instance/create", (req, res) => {
+const qrCodeDataPath = path.join(__dirname, "qrcodes");
+
+instanceRoutes.post("/instance/create", (req, res) => {
   const { instanceName } = req.body;
+  const session = sessionsManager.getSession(instanceName);
 
   const qrCodeFilePath = path.join(qrCodeDataPath, `qrcode_${instanceName}.png`);
 
@@ -14,7 +25,7 @@ app.post("/instance/create", (req, res) => {
     return res.status(400).json({ error: "instanceName is required" });
   }
 
-  if (sessions[instanceName]) {
+  if (session) {
     console.log(`Session ${instanceName} already exists`);
     return res.status(400).json({ error: `Session ${instanceName} already exists` });
   }
@@ -40,7 +51,7 @@ app.post("/instance/create", (req, res) => {
   }
 });
 
-app.post("/instance/restore/:sessionName", (req, res) => {
+instanceRoutes.post("/instance/restore/:sessionName", (req, res) => {
   const { sessionName } = req.params;
 
   if (!sessionName) {
@@ -60,7 +71,7 @@ app.post("/instance/restore/:sessionName", (req, res) => {
   }
 });
 
-app.post("/instance/restoreAll", (req, res) => {
+instanceRoutes.post("/instance/restoreAll", (req, res) => {
   try {
     restoreAllSessions();
 
@@ -75,7 +86,7 @@ app.post("/instance/restoreAll", (req, res) => {
   }
 });
 
-app.delete("/instance/logout/:sessionName", async (req, res) => {
+instanceRoutes.delete("/instance/logout/:sessionName", async (req, res) => {
   const { sessionName } = req.params;
 
   if (!sessionName) {
@@ -96,7 +107,7 @@ app.delete("/instance/logout/:sessionName", async (req, res) => {
   }
 });
 
-app.delete("/instance/logoutAll", async (req, res) => {
+instanceRoutes.delete("/instance/logoutAll", async (req, res) => {
   try {
     await disconnectAllSessions();
     res.json({
@@ -110,7 +121,7 @@ app.delete("/instance/logoutAll", async (req, res) => {
   }
 });
 
-app.delete("/instance/deleteSession/:sessionName", (req, res) => {
+instanceRoutes.delete("/instance/deleteSession/:sessionName", (req, res) => {
   const sessionName = req.params.sessionName;
 
   try {
@@ -126,7 +137,7 @@ app.delete("/instance/deleteSession/:sessionName", (req, res) => {
   }
 });
 
-app.delete("/instance/clearUnusedSessions", (req, res) => {
+instanceRoutes.delete("/instance/clearUnusedSessions", (req, res) => {
   try {
     deleteUnusedSessions();
     res.status(200).json("Sessões não utilizadas foram removidas com sucesso.");
@@ -136,7 +147,7 @@ app.delete("/instance/clearUnusedSessions", (req, res) => {
   }
 });
 
-app.get("/instance/listFolders", (req, res) => {
+instanceRoutes.get("/instance/listFolders", (req, res) => {
   const authDir = path.join(__dirname, "../.wwebjs_auth"); // Ajuste no caminho para a pasta raiz
   console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
 
@@ -150,7 +161,7 @@ app.get("/instance/listFolders", (req, res) => {
   }
 });
 
-app.get("/instance/fetchInstances", (req, res) => {
+instanceRoutes.get("/instance/fetchInstances", (req, res) => {
   const clientDataPath = path.join(__dirname, "clientData.json"); // Caminho para o arquivo clientData.json
 
   // Verificar se o arquivo clientData.json existe
@@ -182,7 +193,7 @@ app.get("/instance/fetchInstances", (req, res) => {
   }
 });
 
-app.get("/instance/fetchAllInstances", (req, res) => {
+instanceRoutes.get("/instance/fetchAllInstances", (req, res) => {
   const clientDataPath = path.join(__dirname, "clientData.json"); // Caminho para o arquivo clientData.json
 
   // Verificar se o arquivo clientData.json existe
@@ -216,8 +227,22 @@ app.get("/instance/fetchAllInstances", (req, res) => {
   }
 });
 
-app.get("/instance/connectionState/:instanceName", (req, res) => {
+instanceRoutes.get("/instance/connectionState/:instanceName", (req, res) => {
   const { instanceName } = req.params;
-  const state = getConnectionStatus(instanceName);
-  res.json({ instanceName, state });
+
+  const session = sessionsManager.getSession(instanceName);
+
+  if (session) {
+    res.json({
+      instanceName,
+      state: session.connectionState || "unknown", // Valor padrão caso não exista connectionState
+    });
+  } else {
+    res.status(404).json({
+      error: "Instance not found",
+      instanceName,
+    });
+  }
 });
+
+module.exports = instanceRoutes;

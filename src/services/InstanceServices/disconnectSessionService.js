@@ -1,6 +1,7 @@
-const sessionsManager = require("./sessionsManager"); // Importa o gerenciador de sessões
+const sessionsManager = require("../../sessionsManager"); // Importa o gerenciador de sessões
 const fs = require("fs");
 const path = require("path");
+const StateMachine = require("../../services/InstanceServices/stateMachineService");
 
 const clientDataPath = path.join(__dirname, "clientData.json");
 
@@ -51,7 +52,7 @@ const disconnectSession = async (sessionName) => {
       await client.destroy();
       sessionsManager.removeSession(sessionName);
 
-      delete stateMachines[sessionName];
+      StateMachine.deleteStateMachine(sessionName);
       console.log(`Sessão ${sessionName} removida da memória com sucesso.`);
 
       // Remover a sessão do arquivo clientData.json

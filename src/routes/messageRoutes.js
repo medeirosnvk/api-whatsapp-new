@@ -3,9 +3,7 @@ const express = require("express");
 const axios = require("axios");
 const { MessageMedia } = require("whatsapp-web.js");
 const sessionsManager = require("../sessionsManager");
-const {
-  validateAndFormatNumber,
-} = require("../services/MessageServices/validateNumberService");
+const { validateAndFormatNumber } = require("../services/MessageServices/validateNumberService");
 
 const messageRoutes = express.Router();
 
@@ -14,9 +12,7 @@ messageRoutes.post("/sendMessage", async (req, res) => {
   const client = sessionsManager.getSession(instanceName);
 
   if (!instanceName || !number || !mediaMessage) {
-    return res
-      .status(400)
-      .send("instanceName, number, and mediaMessage are required");
+    return res.status(400).send("instanceName, number, and mediaMessage are required");
   }
 
   try {
@@ -25,10 +21,7 @@ messageRoutes.post("/sendMessage", async (req, res) => {
     let processedNumber = number;
     const brazilCountryCode = "55";
 
-    if (
-      processedNumber.startsWith(brazilCountryCode) &&
-      processedNumber.length === 13
-    ) {
+    if (processedNumber.startsWith(brazilCountryCode) && processedNumber.length === 13) {
       processedNumber = processedNumber.slice(0, -1);
     }
 
@@ -62,9 +55,7 @@ messageRoutes.post("/message/sendText/:instanceName", async (req, res) => {
   const client = sessionsManager.getSession(instanceName); // Obtém a sessão específica
 
   if (!instanceName || !number || !textMessage || !textMessage.text) {
-    return res
-      .status(400)
-      .send("instanceName, number, and textMessage.text are required");
+    return res.status(400).send("instanceName, number, and textMessage.text are required");
   }
 
   try {
@@ -75,18 +66,13 @@ messageRoutes.post("/message/sendText/:instanceName", async (req, res) => {
       const localNumber = processedNumber.slice(4);
 
       if (localNumber.length === 9 && localNumber.startsWith("9")) {
-        processedNumber =
-          brazilCountryCode +
-          processedNumber.slice(2, 4) +
-          localNumber.slice(1);
+        processedNumber = brazilCountryCode + processedNumber.slice(2, 4) + localNumber.slice(1);
       }
     }
 
     await client.sendMessage(`${processedNumber}@c.us`, textMessage.text);
 
-    console.log(
-      `Mensagem de texto enviada com sucesso ao numero ${number} pela instancia ${instanceName} no horário ${new Date()}!`
-    );
+    console.log(`Mensagem de texto enviada com sucesso ao numero ${number} pela instancia ${instanceName} no horário ${new Date()}!`);
     res.status(200).json({ status: "PENDING" });
   } catch (error) {
     res.status(404).send({
@@ -103,9 +89,7 @@ messageRoutes.post("/message/sendMedia/:instanceName", async (req, res) => {
   const client = sessionsManager.getSession(instanceName); // Obtém a sessão específica
 
   if (!instanceName || !number || !mediaMessage || !mediaMessage.media) {
-    return res
-      .status(400)
-      .send("instanceName, number, and mediaMessage.media are required");
+    return res.status(400).send("instanceName, number, and mediaMessage.media are required");
   }
 
   try {
@@ -116,10 +100,7 @@ messageRoutes.post("/message/sendMedia/:instanceName", async (req, res) => {
       const localNumber = processedNumber.slice(4);
 
       if (localNumber.length === 9 && localNumber.startsWith("9")) {
-        processedNumber =
-          brazilCountryCode +
-          processedNumber.slice(2, 4) +
-          localNumber.slice(1);
+        processedNumber = brazilCountryCode + processedNumber.slice(2, 4) + localNumber.slice(1);
       }
     }
 
@@ -138,9 +119,7 @@ messageRoutes.post("/message/sendMedia/:instanceName", async (req, res) => {
       caption: caption,
     });
 
-    console.log(
-      `Mensagem de media enviada com sucesso ao numero ${number} pela instancia ${instanceName} no horário ${new Date()}!`
-    );
+    console.log(`Mensagem de media enviada com sucesso ao numero ${number} pela instancia ${instanceName} no horário ${new Date()}!`);
     res.status(200).json({ status: "PENDING" });
   } catch (error) {
     if (error.message.includes("disconnected")) {
@@ -167,16 +146,13 @@ messageRoutes.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
     const client = sessionsManager.getSession(sessionName);
 
     if (!client) {
-      return res
-        .status(500)
-        .json({ success: false, message: "Client is not initialized" });
+      return res.status(500).json({ success: false, message: "Client is not initialized" });
     }
 
     if (!Array.isArray(numbers) || numbers.length !== 1) {
       return res.status(400).json({
         success: false,
-        message:
-          'Invalid input format. "numbers" should be an array containing exactly one number.',
+        message: 'Invalid input format. "numbers" should be an array containing exactly one number.',
       });
     }
 
@@ -189,20 +165,14 @@ messageRoutes.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
       const isRegistered = await client.isRegisteredUser(formattedNumber);
 
       if (isRegistered === true) {
-        console.log(
-          `Número ${number} existe no WhatsApp, isRegistered -`,
-          isRegistered
-        );
+        console.log(`Número ${number} existe no WhatsApp, isRegistered -`, isRegistered);
         return res.status(200).json([
           {
             exists: isRegistered,
           },
         ]);
       } else {
-        console.log(
-          `Número ${number} NÃO existe no WhatsApp, isRegistered -`,
-          isRegistered
-        );
+        console.log(`Número ${number} NÃO existe no WhatsApp, isRegistered -`, isRegistered);
         return res.status(404).json([
           {
             exists: isRegistered,
@@ -227,4 +197,4 @@ messageRoutes.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
   }
 });
 
-module.exports = { messageRoutes };
+module.exports = messageRoutes;

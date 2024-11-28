@@ -1,10 +1,10 @@
 /* eslint-disable quotes */
 const fs = require("fs");
-const { pathExists } = require("fs-extra");
+const path = require("path"); // Certifique-se de importar o módulo 'path'
 const { createSession } = require("./createSessionService");
 
 const restoreAllSessions = async () => {
-  const authDir = pathExists.join(__dirname, "../.wwebjs_auth");
+  const authDir = path.join(__dirname, "../../.wwebjs_auth"); // Subindo 2 níveis até a raiz
   console.log("Diretório de autenticação:", authDir);
 
   if (fs.existsSync(authDir)) {

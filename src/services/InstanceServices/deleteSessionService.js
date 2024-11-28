@@ -1,7 +1,12 @@
-const deleteSession = (sessionName) => {
-  const clientDataFilePath = path.join(__dirname, "clientData.json");
-  let clientData = {};
+const fs = require("fs");
+const path = require("path");
 
+let clientData = {};
+
+const clientDataFilePath = path.join(__dirname, "clientData.json");
+const sessionDataPath = path.join(__dirname, "../.wwebjs_auth");
+
+const deleteSession = (sessionName) => {
   // Tente ler o arquivo existente
   try {
     if (fs.existsSync(clientDataFilePath)) {
@@ -14,10 +19,7 @@ const deleteSession = (sessionName) => {
   }
 
   // Verifica se a sessão existe e está desconectada
-  if (
-    clientData[sessionName] &&
-    clientData[sessionName].connectionState === "disconnected"
-  ) {
+  if (clientData[sessionName] && clientData[sessionName].connectionState === "disconnected") {
     const sessionDirPath = path.join(sessionDataPath, `session-${sessionName}`);
 
     // Remove o diretório da sessão
@@ -27,10 +29,7 @@ const deleteSession = (sessionName) => {
         console.log(`Diretório da sessão ${sessionName} removido com sucesso.`);
       }
     } catch (error) {
-      console.error(
-        `Erro ao remover o diretório da sessão ${sessionName}:`,
-        error
-      );
+      console.error(`Erro ao remover o diretório da sessão ${sessionName}:`, error);
       return {
         error: `Erro ao remover o diretório da sessão ${sessionName}.`,
       };

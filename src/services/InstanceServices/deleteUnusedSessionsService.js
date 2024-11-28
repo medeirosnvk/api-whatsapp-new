@@ -1,3 +1,8 @@
+const sessionsManager = require("../../sessionsManager");
+
+const path = require("path");
+const fs = require("fs");
+
 const deleteUnusedSessions = async () => {
   const clientDataFilePath = path.join(__dirname, "clientData.json");
   let clientData = {};
@@ -16,9 +21,7 @@ const deleteUnusedSessions = async () => {
         }
       });
       fs.rmdirSync(folderPath);
-      console.log(
-        `Diretório de autenticação da sessão ${sessionName} excluído com sucesso!`
-      );
+      console.log(`Diretório de autenticação da sessão ${sessionName} excluído com sucesso!`);
     }
   };
 
@@ -37,11 +40,7 @@ const deleteUnusedSessions = async () => {
   // Filtra as sessões desconectadas e remove os diretórios e dados correspondentes
   for (const sessionName of Object.keys(clientData)) {
     if (clientData[sessionName].connectionState !== "open") {
-      const sessionPath = path.join(
-        __dirname,
-        "../.wwebjs_auth",
-        `session-${sessionName}`
-      );
+      const sessionPath = path.join(__dirname, "../.wwebjs_auth", `session-${sessionName}`);
 
       // Remove o diretório da sessão usando deleteFolderRecursive
       deleteFolderRecursive(sessionPath, sessionName);
@@ -60,12 +59,9 @@ const deleteUnusedSessions = async () => {
         const sessionDirPath = path.join(__dirname, "../.wwebjs_auth", dir);
 
         // Verifica se a sessão não existe no clientData e remove o diretório se necessário
-        if (
-          !clientData[sessionName] &&
-          fs.lstatSync(sessionDirPath).isDirectory()
-        ) {
+        if (!clientData[sessionName] && fs.lstatSync(sessionDirPath).isDirectory()) {
           deleteFolderRecursive(sessionDirPath, sessionName);
-          delete sessions[sessionName];
+          sessionsManager.deleteSession(sessionName);
         }
       }
     }

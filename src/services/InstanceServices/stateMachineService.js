@@ -1,5 +1,15 @@
 /* eslint-disable no-undef */
 /* eslint-disable indent */
+const customDbConfig = {
+  host: process.env.DB2_MY_SQL_HOST,
+  user: process.env.MY_SQL_USER,
+  password: process.env.DB2_MY_SQL_PASSWORD,
+  port: process.env.MY_SQL_PORT,
+  database: process.env.DB2_MY_SQL_DATABASE,
+  connectionLimit: parseInt(process.env.MY_SQL_CONNECTION_LIMIT),
+  charset: process.env.MY_SQL_CHARSET,
+  connectTimeout: 60000,
+};
 class StateMachine {
   static stateMachines = {};
 
@@ -58,15 +68,15 @@ class StateMachine {
     }
   }
 
-  _setTicketId(ticketId) {
+  static async setTicketId(ticketId) {
     this.ticketId = ticketId;
   }
 
-  _setFromNumber(from) {
+  static async setFromNumber(from) {
     this.fromNumber = from;
   }
 
-  _setToNumber(to) {
+  static async setToNumber(to) {
     this.toNumber = to;
   }
 
@@ -166,7 +176,7 @@ class StateMachine {
     }
   }
 
-  async _getCredorFromDB(phoneNumber) {
+  static async getCredorFromDB(phoneNumber) {
     try {
       if (!this.userStates[phoneNumber]) {
         this.userStates[phoneNumber] = {}; // Inicialize o objeto se não existir
@@ -291,7 +301,7 @@ class StateMachine {
     return dbResponse;
   }
 
-  async _getRegisterMessagesDB(from, to, message, ticketId, demim) {
+  static async getRegisterMessagesDB(from, to, message, ticketId, demim) {
     if (!this.userStates[from]) {
       this.userStates[from] = {}; // inicialize o objeto se não existir
     }
@@ -352,7 +362,7 @@ class StateMachine {
   }
 
   async _handleInitialState(origin, phoneNumber) {
-    const credor = await this._getCredorFromDB(phoneNumber);
+    const credor = await this.getCredorFromDB(phoneNumber);
 
     if (!credor || credor.length === 0) {
       console.log("Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -", phoneNumber);
@@ -724,7 +734,7 @@ class StateMachine {
 
   async _handleAcordoState(origin, phoneNumber, response) {
     try {
-      const { cpfcnpj: document } = await this._getCredorFromDB(phoneNumber);
+      const { cpfcnpj: document } = await this.getCredorFromDB(phoneNumber);
 
       const acordosFirmados = await requests.getAcordosFirmados(document);
 
@@ -747,7 +757,7 @@ class StateMachine {
 
   async _handleBoletoState(origin, phoneNumber, response) {
     try {
-      const { cpfcnpj: document } = await this._getCredorFromDB(phoneNumber);
+      const { cpfcnpj: document } = await this.getCredorFromDB(phoneNumber);
 
       const acordosFirmados = await requests.getAcordosFirmados(document);
 
@@ -793,7 +803,7 @@ class StateMachine {
 
   async _handlePixState(origin, phoneNumber, response) {
     try {
-      const { cpfcnpj: document } = await this._getCredorFromDB(phoneNumber);
+      const { cpfcnpj: document } = await this.getCredorFromDB(phoneNumber);
 
       const acordosFirmados = await requests.getAcordosFirmados(document);
 
@@ -839,7 +849,7 @@ class StateMachine {
     }
   }
 
-  async handleMessage(phoneNumber, response) {
+  static async handleMessage(phoneNumber, response) {
     try {
       let { currentState } = this._getState(phoneNumber);
       const origin = response.from;

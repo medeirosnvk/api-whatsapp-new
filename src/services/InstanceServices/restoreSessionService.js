@@ -1,3 +1,8 @@
+const fs = require("fs");
+const path = require("path");
+
+const { createSession } = require("./createSessionService");
+
 const restoreSession = (sessionName) => {
   const sessionFolder = `session-${sessionName}`;
   const sessionPath = path.join(__dirname, "../.wwebjs_auth", sessionFolder);
@@ -7,9 +12,7 @@ const restoreSession = (sessionName) => {
       console.log(`Restaurando sessão de ${sessionName}...`);
       createSession(sessionName);
     } catch (error) {
-      console.error(
-        `Erro ao tentar reconectar a instancia ${sessionName}: ${error.message}`
-      );
+      console.error(`Erro ao tentar reconectar a instancia ${sessionName}: ${error.message}`);
     }
   } else {
     console.error(`O diretório ${sessionPath} não existe.`);

@@ -4,32 +4,34 @@ function getAllSessions() {
   return sessions;
 }
 
-function getSession(instanceName) {
-  return sessions[instanceName] || null;
+function getSession(sessionName) {
+  return sessions[sessionName] || null;
 }
 
-function addSession(instanceName, sessionData) {
-  if (!sessions[instanceName]) {
-    sessions[instanceName] = sessionData;
+function addSession(sessionName, client) {
+  if (!sessions[sessionName]) {
+    sessions[sessionName] = client; // Adiciona os dados do cliente diretamente
+    console.log(`Sessão '${sessionName}' criada com sucesso.`);
   } else {
-    console.error(`A sessão '${instanceName}' já existe.`);
+    console.error(`A sessão '${sessionName}' já existe. Dados atuais:`, JSON.stringify(sessions[sessionName], null, 2));
   }
 }
 
-function updateSession(instanceName, sessionData) {
-  if (sessions[instanceName]) {
-    sessions[instanceName] = {
-      ...sessions[instanceName], // Mantém os dados existentes
-      ...sessionData, // Atualiza com os novos dados
+function updateSession(sessionName, updates) {
+  if (sessions[sessionName]) {
+    sessions[sessionName] = {
+      ...sessions[sessionName], // Mantém os dados existentes
+      ...updates, // Aplica as atualizações fornecidas
     };
+    console.log(`Sessão '${sessionName}' atualizada com sucesso.`);
   } else {
-    console.error(`A sessão '${instanceName}' não foi encontrada.`);
+    console.error(`A sessão '${sessionName}' não foi encontrada. Não foi possível atualizar.`);
   }
 }
 
-function removeSession(instanceName) {
-  if (sessions[instanceName]) {
-    delete sessions[instanceName];
+function deleteSession(sessionName) {
+  if (sessions[sessionName]) {
+    delete sessions[sessionName];
     return true;
   }
   return false;
@@ -40,5 +42,5 @@ module.exports = {
   getSession,
   addSession,
   updateSession,
-  removeSession,
+  deleteSession,
 };
