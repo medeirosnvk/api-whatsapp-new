@@ -2420,13 +2420,13 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
       .send("instanceName, number, and textMessage.text are required");
   }
 
-  // if (!client || client.connectionState !== "open") {
-  //   return res
-  //     .status(400)
-  //     .send(`Session ${instanceName} is disconnected or does not exist`);
-  // }
+  // Timeout de 10 segundos
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("Request timed out")), 10000)
+  );
 
-  try {
+  // Função principal da rota
+  const mainLogic = async () => {
     let processedNumber = number;
     const brazilCountryCode = "55";
 
@@ -2447,12 +2447,26 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
       `Mensagem de texto enviada com sucesso ao numero ${number} pela instancia ${instanceName} no horário ${new Date()}!`
     );
     res.status(200).json({ status: "PENDING" });
+  };
+
+  try {
+    await Promise.race([mainLogic(), timeoutPromise]); // Executa a lógica com o timeout
   } catch (error) {
-    res.status(404).send({
-      status: 404,
-      error: "Not Found",
-      message: [`The "${instanceName}" instance does not exist`],
-    });
+    if (error.message === "Request timed out") {
+      res
+        .status(504)
+        .send({
+          status: 504,
+          error: "Timeout",
+          message: "Request timed out after 10 seconds",
+        });
+    } else {
+      res.status(404).send({
+        status: 404,
+        error: "Not Found",
+        message: [`The "${instanceName}" instance does not exist`],
+      });
+    }
   }
 });
 
