@@ -22,10 +22,12 @@ let sessions = {};
 
 const initializeDirectories = () => {
   if (!fs.existsSync(qrCodeDataPath)) {
+    console.log("Diretório 'qrcodes' não existe, criando...");
     fs.mkdirSync(qrCodeDataPath);
   }
 
   if (!fs.existsSync(mediaDataPath)) {
+    console.log("Diretório 'media' não existe, criando...");
     fs.mkdirSync(mediaDataPath);
   }
 };
@@ -36,6 +38,7 @@ const loadSessions = () => {
     Object.keys(sessions).forEach((instanceName) => {
       sessions[instanceName].connectionState = "disconnected";
     });
+    console.log("Diretório 'media' não existe, criando...");
     fs.writeFileSync(clientDataPath, JSON.stringify(sessions, null, 2));
   }
 };

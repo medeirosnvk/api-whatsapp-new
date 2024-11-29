@@ -9,7 +9,7 @@ const qrCodeRoutes = express.Router();
 qrCodeRoutes.get("/instance/connect/:sessionName", (req, res) => {
   const { sessionName } = req.params;
 
-  const qrCodeFilePath = path.join(__dirname, "qrcodes", `qrcode_${sessionName}.png`);
+  const qrCodeFilePath = path.join(__dirname, "../../qrcodes", `qrcode_${sessionName}.png`);
 
   if (fs.existsSync(qrCodeFilePath)) {
     const image = fs.readFileSync(qrCodeFilePath, { encoding: "base64" });
@@ -26,7 +26,7 @@ qrCodeRoutes.get("/instance/connect/:sessionName", (req, res) => {
 qrCodeRoutes.get("/instance/connect/image/:sessionName", (req, res) => {
   const { sessionName } = req.params;
 
-  const qrCodeFilePath = path.join(__dirname, "qrcodes", `qrcode_${sessionName}.png`);
+  const qrCodeFilePath = path.join(__dirname, "../../qrcodes", `qrcode_${sessionName}.png`);
 
   if (fs.existsSync(qrCodeFilePath)) {
     // Define o tipo de conteúdo da resposta como imagem/png
