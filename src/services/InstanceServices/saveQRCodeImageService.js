@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const qrImage = require("qr-image");
 
-const qrCodeDataPath = path.join(__dirname, "../../qrcodes");
+const qrCodeDataPath = path.join(__dirname, "../../../qrcodes");
 
 const saveQRCodeImage = async (qr, sessionName) => {
   try {
