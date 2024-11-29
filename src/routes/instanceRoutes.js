@@ -13,13 +13,14 @@ const { deleteUnusedSessions } = require("../services/InstanceServices/deleteUnu
 
 const instanceRoutes = express.Router();
 
-const qrCodeDataPath = path.join(__dirname, "qrcodes");
+const qrCodeDir = path.join(__dirname, "../../qrcodes");
+const authDir = path.join(__dirname, "../../.wwebjs_auth"); // Ajuste no caminho para a pasta raiz
 
 instanceRoutes.post("/instance/create", (req, res) => {
   const { instanceName } = req.body;
   const session = sessionsManager.getSession(instanceName);
 
-  const qrCodeFilePath = path.join(qrCodeDataPath, `qrcode_${instanceName}.png`);
+  const qrCodeFilePath = path.join(qrCodeDir, `qrcode_${instanceName}.png`);
 
   if (!instanceName) {
     return res.status(400).json({ error: "instanceName is required" });
@@ -34,9 +35,9 @@ instanceRoutes.post("/instance/create", (req, res) => {
     console.log(`QR Code image for session ${instanceName} already exists`);
   }
 
-  console.log("Creating a new session...");
-
   try {
+    console.log("Creating a new session...");
+
     createSession(instanceName);
     res.status(201).json({
       instance: {
@@ -148,7 +149,6 @@ instanceRoutes.delete("/instance/clearUnusedSessions", (req, res) => {
 });
 
 instanceRoutes.get("/instance/listFolders", (req, res) => {
-  const authDir = path.join(__dirname, "../.wwebjs_auth"); // Ajuste no caminho para a pasta raiz
   console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
 
   if (fs.existsSync(authDir)) {

@@ -5,7 +5,7 @@ const { createSession } = require("./createSessionService");
 
 const restoreSession = (sessionName) => {
   const sessionFolder = `session-${sessionName}`;
-  const sessionPath = path.join(__dirname, "../.wwebjs_auth", sessionFolder);
+  const sessionPath = path.join(__dirname, "../../../.wwebjs_auth", sessionFolder);
 
   if (fs.existsSync(sessionPath)) {
     try {

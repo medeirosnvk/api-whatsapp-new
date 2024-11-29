@@ -10,7 +10,9 @@ const customDbConfig = {
   charset: process.env.MY_SQL_CHARSET,
   connectTimeout: 60000,
 };
+
 class StateMachine {
+  // Armazena todas as máquinas de estado
   static stateMachines = {};
 
   constructor(client, sessionName) {
@@ -24,7 +26,8 @@ class StateMachine {
     this.toNumber = null;
     this.sessionName = sessionName;
 
-    stateMachineManager.stateMachines[sessionName] = this;
+    // Registra no stateMachines da própria classe
+    StateMachine.stateMachines[sessionName] = this;
     console.log(`StateMachine criada e registrada para a sessão: ${sessionName}`);
   }
 

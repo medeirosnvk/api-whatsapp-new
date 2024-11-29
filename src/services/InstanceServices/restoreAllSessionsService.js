@@ -3,8 +3,9 @@ const fs = require("fs");
 const path = require("path"); // Certifique-se de importar o módulo 'path'
 const { createSession } = require("./createSessionService");
 
+const authDir = path.join(__dirname, "../../../.wwebjs_auth"); // Subindo 2 níveis até a raiz
+
 const restoreAllSessions = async () => {
-  const authDir = path.join(__dirname, "../../.wwebjs_auth"); // Subindo 2 níveis até a raiz
   console.log("Diretório de autenticação:", authDir);
 
   if (fs.existsSync(authDir)) {

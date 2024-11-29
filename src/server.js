@@ -1,9 +1,9 @@
 require("dotenv").config();
 const fs = require("fs");
-const path = require("path");
-const express = require("express");
 const https = require("https");
+const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const fileRoutes = require("../src/routes/fileRoutes");
 const instanceRoutes = require("../src/routes/instanceRoutes");
 const messageRoutes = require("../src/routes/messageRoutes");
@@ -27,16 +27,6 @@ const initializeDirectories = () => {
 
   if (!fs.existsSync(mediaDataPath)) {
     fs.mkdirSync(mediaDataPath);
-  }
-
-  if (fs.existsSync(clientDataPath)) {
-    sessions = JSON.parse(fs.readFileSync(clientDataPath, "utf8"));
-
-    // Atualiza o estado de todas as sessões para "disconnected" e salva o arquivo
-    Object.keys(sessions).forEach((instanceName) => {
-      sessions[instanceName].connectionState = "disconnected";
-    });
-    fs.writeFileSync(clientDataPath, JSON.stringify(sessions, null, 2));
   }
 };
 
@@ -79,6 +69,8 @@ const handleRejectionError = (reason) => {
 const startHttpServer = () => {
   app.listen(port, () => {
     console.log(`Servidor HTTP LOCALHOST iniciado na porta ${port}`);
+
+    restoreAllSessions();
   });
 };
 
@@ -91,6 +83,8 @@ const startHttpsServer = () => {
 
   httpsServer.listen(port, async () => {
     console.log(`Servidor HTTPS iniciado na porta ${port}`);
+
+    restoreAllSessions();
   });
 };
 
@@ -98,10 +92,10 @@ const startServer = () => {
   app.use(express.json());
   app.use(cors());
 
-  app.use(fileRoutes);
   app.use(instanceRoutes);
-  app.use(messageRoutes);
   app.use(qrCodeRoutes);
+  app.use(messageRoutes);
+  app.use(fileRoutes);
 
   if (environment === "production") {
     startHttpsServer();
@@ -114,4 +108,3 @@ initializeDirectories();
 loadSessions();
 configureErrorHandlers();
 startServer();
-restoreAllSessions();
