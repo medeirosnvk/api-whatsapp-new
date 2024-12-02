@@ -64,6 +64,8 @@ const loadClientData = () => {
   try {
     if (fs.existsSync(filePath)) {
       const fileContent = fs.readFileSync(filePath, "utf-8");
+      console.log("Arquivo clientData.json encontrado e lido corretamente.");
+
       return JSON.parse(fileContent);
     }
   } catch (error) {
@@ -80,7 +82,7 @@ const saveClientData = (clientData) => {
   fs.promises
     .writeFile("clientData.json", sanitizedData, "utf8")
     .then(() => {
-      console.log("Dados salvos com sucesso!");
+      console.log("Dados salvos com sucesso em clientData.json.");
     })
     .catch((err) => {
       console.error("Erro ao salvar os dados do cliente:", err);
