@@ -2,6 +2,7 @@
 const express = require("express");
 const axios = require("axios");
 const { MessageMedia } = require("whatsapp-web.js");
+
 const sessionsManager = require("../sessionsManager");
 const { validateAndFormatNumber } = require("../services/MessageServices/validateNumberService");
 
@@ -53,6 +54,7 @@ messageRoutes.post("/message/sendText/:instanceName", async (req, res) => {
   const { number, textMessage } = req.body;
   const { instanceName } = req.params;
   const client = sessionsManager.getSession(instanceName); // Obtém a sessão específica
+  console.log("client -", client);
 
   if (!instanceName || !number || !textMessage || !textMessage.text) {
     return res.status(400).send("instanceName, number, and textMessage.text are required");
