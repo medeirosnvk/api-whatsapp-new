@@ -24,6 +24,7 @@ const createSession = async (sessionName) => {
 
   let client;
   let isQRFunctionExposed = false;
+  let isSessionTimedOut = false;
 
   try {
     const localAuth = new LocalAuth({ clientId: sessionName });
@@ -65,19 +66,16 @@ const createSession = async (sessionName) => {
     client.sessionName = sessionName;
 
     const qrTimeout = setTimeout(() => {
-      const sessionData = sessionsManager.getSession(sessionName);
-
-      if (sessionData && sessionData.connectionState !== "open") {
-        console.log(`Tempo esgotado para a sessão ${sessionName}. Desconectando...`);
+      if (!isSessionTimedOut && client.connectionState !== "open") {
+        console.log(`Tempo esgotado para a sessão ${sessionName}. Finalizando...`);
+        isSessionTimedOut = true;
 
         client.connectionState = "disconnected";
         sessionsManager.updateSession(sessionName, { connectionState: "disconnected" });
 
-        if (sessionData.client) {
-          sessionData.client.destroy();
-        }
+        client.destroy(); // Finaliza o cliente
       }
-    }, 30 * 60 * 1000); // 30 minutos
+    }, 30 * 60 * 1000);
 
     client.on("loading_screen", (percent, message) => {
       console.log("Carregando...", percent, message);
@@ -134,9 +132,10 @@ const createSession = async (sessionName) => {
 
     client.on("authenticated", (data) => {
       clearTimeout(qrTimeout);
-      console.log(`Conexão bem-sucedida na sessão ${client.sessionName}!`);
+      console.log(`Cliente ${client.sessionName} autenticado com sucesso.`);
 
       try {
+        client.connectionState = "authenticated"; // Atualiza o estado
         sessionsManager.addSession(sessionName, client);
         new StateMachine(client, client.sessionName);
       } catch (error) {
@@ -164,11 +163,17 @@ const createSession = async (sessionName) => {
     });
 
     client.on("ready", async () => {
-      clearTimeout(qrTimeout);
+      if (!isSessionTimedOut) {
+        clearTimeout(qrTimeout);
+        console.log(`QR Timeout limpo para a sessão ${sessionName}.`);
+      }
+
       console.log(`Sessão ${sessionName} está pronta!`);
       client.connectionState = "open";
 
       try {
+        sessionsManager.addSession(sessionName, client);
+
         const clientData = saveClientDataService.addOrUpdateDataSession(client);
         sessionsManager.updateSession(sessionName, {
           connectionState: "open",
