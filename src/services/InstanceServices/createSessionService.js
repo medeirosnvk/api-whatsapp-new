@@ -15,12 +15,12 @@ let sessions = {};
 let stateMachines = {};
 
 const createSession = async (sessionName) => {
-  const existingSession = sessionsManager.getSession(sessionName);
+  // const existingSession = sessionsManager.getSession(sessionName);
 
-  if (existingSession && existingSession.connectionState === "open") {
-    console.log(`A instância ${sessionName} já está conectada.`);
-    return;
-  }
+  // if (existingSession && existingSession.connectionState === "open") {
+  //   console.log(`A instância ${sessionName} já está conectada.`);
+  //   return;
+  // }
 
   let client;
   let isQRFunctionExposed = false;
