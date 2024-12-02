@@ -11,6 +11,9 @@ const { saveQRCodeImage } = require("./saveQRCodeImageService");
 const saveClientDataService = require("../../services/InstanceServices/saveClientDataService");
 const StateMachine = require("../../services/InstanceServices/stateMachineService");
 
+let sessions = {};
+let stateMachines = {};
+
 const createSession = async (sessionName) => {
   const existingSession = sessionsManager.getSession(sessionName);
 
