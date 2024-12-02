@@ -9,13 +9,8 @@ function getSession(sessionName) {
 }
 
 function addSession(sessionName, client) {
-  if (!sessions[sessionName]) {
-    sessions[client.sessionName] = client;
-
-    console.log(`Sessão '${sessionName}' salva com sucesso em sessionsManager.`);
-  } else {
-    console.error(`A sessão '${sessionName}' já existe.`);
-  }
+  sessions[client.sessionName] = client;
+  console.log(`Sessão '${sessionName}' salva com sucesso em sessionsManager.`);
 }
 
 function updateSession(sessionName, updates) {
