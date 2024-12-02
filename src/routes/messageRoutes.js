@@ -104,6 +104,25 @@ messageRoutes.post("/message/sendMedia/:instanceName", async (req, res) => {
     console.log(`Sessão encontrada para ${instanceName}`);
   }
 
+  if (!client || typeof client.sendMessage !== "function") {
+    console.error(`Cliente inválido ou não inicializado corretamente para a instância "${instanceName}".`);
+    return res.status(500).send({
+      status: 500,
+      error: "Client Not Ready",
+      message: `O cliente para a instância "${instanceName}" não está pronto ou é inválido.`,
+    });
+  }
+
+  console.log("Estado do cliente:", {
+    client,
+    connectionState: client.connectionState,
+    sessionName: client.sessionName,
+    availableMethods: Object.keys(client),
+  });
+
+  console.log("Sessões ativas no sessionsManager:", sessionsManager.getAllSessions());
+  console.log("Tipo do client:", client.constructor?.name);
+
   if (!instanceName || !number || !mediaMessage || !mediaMessage.media) {
     return res.status(400).send("instanceName, number, and mediaMessage.media are required");
   }
