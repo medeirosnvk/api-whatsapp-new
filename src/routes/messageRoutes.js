@@ -126,7 +126,7 @@ messageRoutes.post("/message/sendMedia/:instanceName", async (req, res) => {
     const response = await axios.get(media, { responseType: "arraybuffer" }).catch((error) => {
       if (error.response && error.response.status === 404) {
         console.error(`Mídia não encontrada no URL fornecido: ${media}`);
-        res.status(404).send({ error: "Mídia não encontrada. Verifique o URL fornecido." });
+        res.status(404).send({ error: "Mídia não encontrada. Verifique a URL fornecida." });
       } else {
         console.error(`Erro ao obter a mídia: ${error.message}`);
         res.status(500).send({ error: "Erro interno ao obter a mídia." });
@@ -148,18 +148,12 @@ messageRoutes.post("/message/sendMedia/:instanceName", async (req, res) => {
     console.log(`Mensagem de media enviada com sucesso ao numero ${number} pela instancia ${instanceName} no horário ${new Date()}!`);
     res.status(200).json({ status: "PENDING" });
   } catch (error) {
-    if (error.message.includes("disconnected")) {
-      console.error(`Erro: A sessão ${instanceName} está desconectada.`);
-    } else if (error.message.includes("ban")) {
-      console.error(`Erro: A sessão ${instanceName} foi banida.`);
-    } else {
-      console.error(`Erro desconhecido ao enviar mensagem: ${error.message}`);
-    }
-
-    res.status(404).send({
-      status: 404,
-      error: "Not Found",
-      message: [`The "${instanceName}" instance does not exist`],
+    console.error("Erro ao enviar mensagem:", error); // Loga o erro detalhado no console
+    res.status(500).send({
+      status: 500,
+      error: "Internal Server Error",
+      message: [`Erro ao enviar mensagem para a instância "${instanceName}": ${error.message}`],
+      details: error.stack, // Inclui o stack trace completo (opcional)
     });
   }
 });
