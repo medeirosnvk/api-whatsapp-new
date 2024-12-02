@@ -3,8 +3,9 @@ const sessionsManager = require("../../sessionsManager");
 const path = require("path");
 const fs = require("fs");
 
+const clientDataDir = path.join(__dirname, "../../../clientData.json");
+
 const deleteUnusedSessions = async () => {
-  const clientDataFilePath = path.join(__dirname, "clientData.json");
   let clientData = {};
 
   // Função para excluir a pasta da sessão
@@ -27,9 +28,9 @@ const deleteUnusedSessions = async () => {
 
   // Tente ler o arquivo existente
   try {
-    if (fs.existsSync(clientDataFilePath)) {
+    if (fs.existsSync(clientDataDir)) {
       console.log("Arquivo clientData.json encontrado e lido corretamente.");
-      const fileContent = fs.readFileSync(clientDataFilePath, "utf-8");
+      const fileContent = fs.readFileSync(clientDataDir, "utf-8");
       clientData = JSON.parse(fileContent);
     }
   } catch (error) {
@@ -40,7 +41,7 @@ const deleteUnusedSessions = async () => {
   // Filtra as sessões desconectadas e remove os diretórios e dados correspondentes
   for (const sessionName of Object.keys(clientData)) {
     if (clientData[sessionName].connectionState !== "open") {
-      const sessionPath = path.join(__dirname, "../.wwebjs_auth", `session-${sessionName}`);
+      const sessionPath = path.join(__dirname, "../../../.wwebjs_auth", `session-${sessionName}`);
 
       // Remove o diretório da sessão usando deleteFolderRecursive
       deleteFolderRecursive(sessionPath, sessionName);
@@ -52,7 +53,7 @@ const deleteUnusedSessions = async () => {
 
   // Verifica por diretórios de sessões que não estão em clientData e os remove
   try {
-    const sessionDirs = fs.readdirSync(path.join(__dirname, "../.wwebjs_auth"));
+    const sessionDirs = fs.readdirSync(path.join(__dirname, "../../../.wwebjs_auth"));
     for (const dir of sessionDirs) {
       if (dir.startsWith("session-")) {
         const sessionName = dir.replace("session-", "");
@@ -71,7 +72,7 @@ const deleteUnusedSessions = async () => {
 
   // Atualiza o arquivo JSON
   try {
-    fs.writeFileSync(clientDataFilePath, JSON.stringify(clientData, null, 2));
+    fs.writeFileSync(clientDataDir, JSON.stringify(clientData, null, 2));
     console.log("Dados das sessões atualizados no arquivo JSON.");
   } catch (error) {
     console.error("Erro ao salvar os dados do cliente:", error);

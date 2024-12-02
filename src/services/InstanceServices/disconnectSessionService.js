@@ -50,7 +50,7 @@ const disconnectSession = async (sessionName) => {
 
       // Destruir o cliente e remover a sessão da memória
       await client.destroy();
-      sessionsManager.removeSession(sessionName);
+      sessionsManager.deleteSession(sessionName);
 
       StateMachine.deleteStateMachine(sessionName);
       console.log(`Sessão ${sessionName} removida da memória com sucesso.`);
