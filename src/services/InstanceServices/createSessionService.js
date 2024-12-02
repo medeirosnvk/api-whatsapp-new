@@ -14,6 +14,13 @@ const StateMachine = require("../../services/InstanceServices/stateMachineServic
 let sessions = {};
 let stateMachines = {};
 
+function removeCircularReferences(key, value) {
+  if (key === "client") {
+    return undefined; // Remover a propriedade client, que é circular
+  }
+  return value; // Deixa as outras propriedades como estão
+}
+
 const createSession = async (sessionName) => {
   const existingSession = sessionsManager.getSession(sessionName);
 
@@ -177,12 +184,17 @@ const createSession = async (sessionName) => {
 
         // Cria o clientData e adiciona dentro do sessionsManager
         const clientData = saveClientDataService.addOrUpdateDataSession(client);
+
+        // Serializa os dados do clientData, removendo referências circulares
+        const sanitizedClientData = JSON.stringify(clientData, removeCircularReferences);
+
+        // Atualiza a sessão no sessionsManager com os dados sanitizados
         sessionsManager.updateSession(sessionName, {
           connectionState: "open",
-          clientData,
+          clientData: sanitizedClientData, // Usando o clientData sem referências circulares
         });
 
-        // Cria nova instancia no StateMachine
+        // Cria nova instância no StateMachine
         new StateMachine(client, client.sessionName);
       } catch (error) {
         console.error("Erro ao criar arquivo clientData.json:", error);
