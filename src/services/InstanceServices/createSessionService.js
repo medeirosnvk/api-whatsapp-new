@@ -64,8 +64,6 @@ const createSession = async (sessionName) => {
     client.connectionState = "connecting";
     client.sessionName = sessionName;
 
-    sessionsManager.addSession(sessionName, client);
-
     const qrTimeout = setTimeout(() => {
       const sessionData = sessionsManager.getSession(sessionName);
 
@@ -139,10 +137,7 @@ const createSession = async (sessionName) => {
       console.log(`Conexão bem-sucedida na sessão ${client.sessionName}!`);
 
       try {
-        sessionsManager.updateSession(sessionName, {
-          connectionState: "authenticated",
-        });
-
+        sessionsManager.addSession(sessionName, client);
         new StateMachine(client, client.sessionName);
       } catch (error) {
         console.error("Erro ao criar StateMachine ou atualizar sessão:", error);
