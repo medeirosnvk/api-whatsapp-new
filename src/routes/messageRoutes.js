@@ -123,9 +123,19 @@ messageRoutes.post("/message/sendMedia/:instanceName", async (req, res) => {
     const { media, fileName, caption } = mediaMessage;
 
     // Obter o arquivo de mídia
-    const response = await axios.get(media, {
-      responseType: "arraybuffer",
+    const response = await axios.get(media, { responseType: "arraybuffer" }).catch((error) => {
+      if (error.response && error.response.status === 404) {
+        console.error(`Mídia não encontrada no URL fornecido: ${media}`);
+        res.status(404).send({ error: "Mídia não encontrada. Verifique o URL fornecido." });
+      } else {
+        console.error(`Erro ao obter a mídia: ${error.message}`);
+        res.status(500).send({ error: "Erro interno ao obter a mídia." });
+      }
+      return null; // Impede processamento adicional
     });
+
+    if (!response) return; // Sai se houve erro na obtenção da mídia
+
     const mimeType = response.headers["content-type"];
     const mediaData = Buffer.from(response.data, "binary").toString("base64");
 
