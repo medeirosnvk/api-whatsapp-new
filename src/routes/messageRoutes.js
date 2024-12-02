@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 /* eslint-disable quotes */
 const express = require("express");
 const axios = require("axios");
@@ -51,15 +50,15 @@ messageRoutes.post("/sendMessage", async (req, res) => {
 });
 
 messageRoutes.post("/message/sendText/:instanceName", async (req, res) => {
+  const { number, textMessage } = req.body;
+  const { instanceName } = req.params;
+  const client = sessionsManager.getSession(instanceName); // Obtém a sessão específica
+
+  if (!instanceName || !number || !textMessage || !textMessage.text) {
+    return res.status(400).send("instanceName, number, and textMessage.text are required");
+  }
+
   try {
-    const { number, textMessage } = req.body;
-    const { instanceName } = req.params;
-    const client = sessionsManager.getSession(instanceName); // Obtém a sessão específica
-
-    if (!instanceName || !number || !textMessage || !textMessage.text) {
-      return res.status(400).send("instanceName, number, and textMessage.text are required");
-    }
-
     let processedNumber = number;
     const brazilCountryCode = "55";
 
