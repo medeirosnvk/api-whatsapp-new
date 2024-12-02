@@ -9,7 +9,7 @@ function getSession(sessionName) {
 }
 
 function addSession(sessionName, client) {
-  sessions[client.sessionName] = client;
+  sessions[sessionName] = client;
   console.log(`Sessão '${sessionName}' salva com sucesso em sessionsManager.`);
 }
 

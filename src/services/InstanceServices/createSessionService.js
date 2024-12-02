@@ -136,7 +136,6 @@ const createSession = async (sessionName) => {
 
       try {
         client.connectionState = "authenticated"; // Atualiza o estado
-        sessionsManager.addSession(sessionName, client);
         new StateMachine(client, client.sessionName);
       } catch (error) {
         console.error("Erro ao criar StateMachine ou atualizar sessão:", error);
