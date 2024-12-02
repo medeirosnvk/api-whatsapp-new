@@ -13,8 +13,9 @@ const { deleteUnusedSessions } = require("../services/InstanceServices/deleteUnu
 
 const instanceRoutes = express.Router();
 
+const authDir = path.join(__dirname, "../../.wwebjs_auth");
 const qrCodeDir = path.join(__dirname, "../../qrcodes");
-const authDir = path.join(__dirname, "../../.wwebjs_auth"); // Ajuste no caminho para a pasta raiz
+const clientDataDir = path.join(__dirname, "../../clientData.json");
 
 instanceRoutes.post("/instance/create", (req, res) => {
   const { instanceName } = req.body;
@@ -194,13 +195,11 @@ instanceRoutes.get("/instance/fetchInstances", (req, res) => {
 });
 
 instanceRoutes.get("/instance/fetchAllInstances", (req, res) => {
-  const clientDataPath = path.join(__dirname, "clientData.json"); // Caminho para o arquivo clientData.json
-
   // Verificar se o arquivo clientData.json existe
-  if (fs.existsSync(clientDataPath)) {
+  if (fs.existsSync(clientDataDir)) {
     try {
       // Leitura do arquivo clientData.json
-      const clientData = JSON.parse(fs.readFileSync(clientDataPath, "utf8"));
+      const clientData = JSON.parse(fs.readFileSync(clientDataDir, "utf8"));
 
       // Extrair informações para cada instância com connectionState: 'open'
       const instances = Object.keys(clientData).map((key) => ({
@@ -222,7 +221,7 @@ instanceRoutes.get("/instance/fetchAllInstances", (req, res) => {
       res.status(500).json({ error: "Erro interno do servidor" });
     }
   } else {
-    console.log("Arquivo clientData.json não encontrado em:", clientDataPath);
+    console.log("Arquivo clientData.json não encontrado em:", clientDataDir);
     res.status(404).json([]); // Se o arquivo não existe, retornar um array vazio
   }
 });
