@@ -2504,7 +2504,6 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
     const mimeType = response.headers["content-type"];
     const mediaData = Buffer.from(response.data, "binary").toString("base64");
     const messageMedia = new MessageMedia(mimeType, mediaData, fileName);
-    console.log("messageMedia -", messageMedia);
 
     await client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
       caption: caption,
