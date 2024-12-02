@@ -5,17 +5,12 @@ function getAllSessions() {
 }
 
 function getSession(sessionName) {
-  const client = sessions[sessionName];
-  if (!client || typeof client.sendMessage !== "function") {
-    console.error(`Cliente inválido ou não inicializado corretamente para a sessão '${sessionName}'.`);
-    return null;
-  }
-  return client;
+  return sessions[sessionName] || null;
 }
 
 function addSession(sessionName, client) {
   sessions[sessionName] = client;
-  console.log(`Sessão '${sessionName}' salva com sucesso em sessionsManager.`);
+  console.log(`Sessão '${sessionName}' salva com sucesso em sessionsManager: ${client}`);
 }
 
 function updateSession(sessionName, updates) {

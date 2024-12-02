@@ -15,12 +15,12 @@ let sessions = {};
 let stateMachines = {};
 
 const createSession = async (sessionName) => {
-  // const existingSession = sessionsManager.getSession(sessionName);
+  const existingSession = sessionsManager.getSession(sessionName);
 
-  // if (existingSession && existingSession.connectionState === "open") {
-  //   console.log(`A instância ${sessionName} já está conectada.`);
-  //   return;
-  // }
+  if (existingSession && existingSession.connectionState === "open") {
+    console.log(`A instância ${sessionName} já está conectada.`);
+    return existingSession;
+  }
 
   let client;
   let isQRFunctionExposed = false;
@@ -171,10 +171,10 @@ const createSession = async (sessionName) => {
         console.log(`Sessão ${sessionName} está pronta!`);
         client.connectionState = "open";
 
-        // Adicione a sessão no manager apenas quando estiver pronta
+        // Adicionar sessão ao sessionsManager
         sessionsManager.addSession(sessionName, client);
 
-        // Persistência de dados do cliente
+        // Atualizar informações adicionais da sessão
         const clientData = saveClientDataService.addOrUpdateDataSession(client);
         sessionsManager.updateSession(sessionName, {
           connectionState: "open",
@@ -182,7 +182,7 @@ const createSession = async (sessionName) => {
         });
 
         // Configuração da máquina de estado
-        new StateMachine(client, client.sessionName);
+        new StateMachine(client, sessionName);
       } catch (error) {
         console.error(`Erro ao configurar a sessão "${sessionName}":`, error);
       }
