@@ -51,6 +51,14 @@ const path = require("path");
 
 const filePath = path.join(__dirname, "../../../clientData.json");
 
+// Função para remover referências circulares durante a serialização
+function removeCircularReferences(key, value) {
+  if (key === "client") {
+    return undefined; // Remove qualquer propriedade de 'client' que possa ser circular
+  }
+  return value; // Deixa as outras propriedades como estão
+}
+
 // Função para carregar os dados do arquivo
 const loadClientData = () => {
   try {
@@ -66,12 +74,17 @@ const loadClientData = () => {
 
 // Função para salvar os dados no arquivo
 const saveClientData = (clientData) => {
-  try {
-    fs.writeFileSync(filePath, JSON.stringify(clientData, null, 2));
-    console.log(`Dados salvos com sucesso em ${filePath}`);
-  } catch (error) {
-    console.error("Erro ao salvar os dados do cliente:", error);
-  }
+  const sanitizedData = JSON.stringify(clientData, removeCircularReferences);
+
+  // Agora você pode salvar o clientData sanitizado sem referências circulares
+  fs.promises
+    .writeFile("clientData.json", sanitizedData, "utf8")
+    .then(() => {
+      console.log("Dados salvos com sucesso!");
+    })
+    .catch((err) => {
+      console.error("Erro ao salvar os dados do cliente:", err);
+    });
 };
 
 // Função para adicionar ou atualizar uma sessão
