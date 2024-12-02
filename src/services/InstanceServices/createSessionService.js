@@ -172,14 +172,17 @@ const createSession = async (sessionName) => {
       client.connectionState = "open";
 
       try {
+        // Adiciona o client ao sessionsManager
         sessionsManager.addSession(sessionName, client);
 
+        // Cria o clientData e adiciona dentro do sessionsManager
         const clientData = saveClientDataService.addOrUpdateDataSession(client);
         sessionsManager.updateSession(sessionName, {
           connectionState: "open",
           clientData,
         });
 
+        // Cria nova instancia no StateMachine
         new StateMachine(client, client.sessionName);
       } catch (error) {
         console.error("Erro ao criar arquivo clientData.json:", error);

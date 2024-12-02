@@ -54,14 +54,11 @@ messageRoutes.post("/message/sendText/:instanceName", async (req, res) => {
   const { instanceName } = req.params;
   const client = sessionsManager.getSession(instanceName);
 
-  console.log(instanceName, number, textMessage);
-
   if (!client || client.connectionState !== "open") {
     console.error(`Sessão "${instanceName}" não encontrada no sessionsManager ou não conectada.`);
     return res.status(404).send(`Sessão "${instanceName}" não encontrada no sessionsManager ou não conectada.`);
   } else {
-    console.log(`Sessão encontrada:`, client);
-    console.log("Métodos disponíveis no client:", Object.keys(client || {}));
+    console.log(`Sessão encontrada para ${instanceName}`);
   }
 
   if (!instanceName || !number || !textMessage?.text) {
@@ -98,7 +95,14 @@ messageRoutes.post("/message/sendText/:instanceName", async (req, res) => {
 messageRoutes.post("/message/sendMedia/:instanceName", async (req, res) => {
   const { number, mediaMessage } = req.body;
   const { instanceName } = req.params;
-  const client = sessionsManager.getSession(instanceName); // Obtém a sessão específica
+  const client = sessionsManager.getSession(instanceName);
+
+  if (!client || client.connectionState !== "open") {
+    console.error(`Sessão "${instanceName}" não encontrada no sessionsManager ou não conectada.`);
+    return res.status(404).send(`Sessão "${instanceName}" não encontrada no sessionsManager ou não conectada.`);
+  } else {
+    console.log(`Sessão encontrada para ${instanceName}`);
+  }
 
   if (!instanceName || !number || !mediaMessage || !mediaMessage.media) {
     return res.status(400).send("instanceName, number, and mediaMessage.media are required");
