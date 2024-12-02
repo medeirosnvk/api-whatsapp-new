@@ -61,6 +61,8 @@ messageRoutes.post("/message/sendText/:instanceName", async (req, res) => {
     console.log(`Sessão encontrada para ${instanceName}`);
   }
 
+  console.log("Tipo de client:", client.constructor?.name);
+
   if (!instanceName || !number || !textMessage?.text) {
     return res.status(400).send("instanceName, number, e textMessage.text são obrigatórios");
   }
@@ -75,6 +77,15 @@ messageRoutes.post("/message/sendText/:instanceName", async (req, res) => {
       if (localNumber.length === 9 && localNumber.startsWith("9")) {
         processedNumber = brazilCountryCode + processedNumber.slice(2, 4) + localNumber.slice(1);
       }
+    }
+
+    if (typeof client.sendMessage !== "function") {
+      console.error(`O método sendMessage não está disponível para a instância "${instanceName}".`);
+      return res.status(500).send({
+        status: 500,
+        error: "Client Not Ready",
+        message: `O cliente para a instância "${instanceName}" não possui o método sendMessage.`,
+      });
     }
 
     await client.sendMessage(`${processedNumber}@c.us`, textMessage.text);
