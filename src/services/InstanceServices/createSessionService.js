@@ -162,27 +162,29 @@ const createSession = async (sessionName) => {
     });
 
     client.on("ready", async () => {
-      if (!isSessionTimedOut) {
-        clearTimeout(qrTimeout);
-        console.log(`QR Timeout limpo para a sessão ${sessionName}.`);
-      }
-
-      console.log(`Sessão ${sessionName} está pronta!`);
-      client.connectionState = "open";
-
       try {
+        if (!isSessionTimedOut) {
+          clearTimeout(qrTimeout);
+          console.log(`QR Timeout limpo para a sessão ${sessionName}.`);
+        }
+
+        console.log(`Sessão ${sessionName} está pronta!`);
+        client.connectionState = "open";
+
         // Adicione a sessão no manager apenas quando estiver pronta
         sessionsManager.addSession(sessionName, client);
 
+        // Persistência de dados do cliente
         const clientData = saveClientDataService.addOrUpdateDataSession(client);
         sessionsManager.updateSession(sessionName, {
           connectionState: "open",
           clientData,
         });
 
+        // Configuração da máquina de estado
         new StateMachine(client, client.sessionName);
       } catch (error) {
-        console.error("Erro ao criar arquivo clientData.json:", error);
+        console.error(`Erro ao configurar a sessão "${sessionName}":`, error);
       }
     });
 
