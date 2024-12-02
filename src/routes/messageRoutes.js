@@ -2,7 +2,6 @@
 const express = require("express");
 const axios = require("axios");
 const { MessageMedia } = require("whatsapp-web.js");
-
 const sessionsManager = require("../sessionsManager");
 const { validateAndFormatNumber } = require("../services/MessageServices/validateNumberService");
 
@@ -62,6 +61,7 @@ messageRoutes.post("/message/sendText/:instanceName", async (req, res) => {
     return res.status(404).send(`Sessão "${instanceName}" não encontrada no sessionsManager ou não conectada.`);
   } else {
     console.log(`Sessão encontrada:`, client);
+    console.log("Métodos disponíveis no client:", Object.keys(client || {}));
   }
 
   if (!instanceName || !number || !textMessage?.text) {
