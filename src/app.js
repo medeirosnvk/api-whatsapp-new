@@ -2485,20 +2485,15 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
     const { media, fileName, caption } = mediaMessage;
     console.log(`Tentando acessar URL de mídia: ${media}`);
 
-    // Obter o arquivo de mídia
-    try {
-      const response = await axios.get(media, {
-        responseType: "arraybuffer",
-        timeout: 5000, // 5 segundos
-      });
+    const response = await axios.get(media, {
+      responseType: "arraybuffer",
+      timeout: 5000, // 5 segundos
+    });
 
-      if (response.status !== 200) {
-        throw new Error(
-          `Media URL is not accessible. Status code: ${response.status}`
-        );
-      }
-    } catch (err) {
-      return res.status(400).send(`Invalid media URL: ${err.message}`);
+    if (response.status !== 200) {
+      throw new Error(
+        `Media URL is not accessible. Status code: ${response.status}`
+      );
     }
 
     // const response = await axios.get(media, {
