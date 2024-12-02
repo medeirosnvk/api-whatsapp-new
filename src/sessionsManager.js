@@ -14,7 +14,7 @@ function addSession(sessionName, client) {
 
     console.log(`Sessão '${sessionName}' salva com sucesso em sessionsManager.`);
   } else {
-    console.error(`A sessão '${sessionName}' já existe. Dados atuais:`, JSON.stringify(sessions[sessionName], null, 2));
+    console.error(`A sessão '${sessionName}' já existe.`);
   }
 }
 
