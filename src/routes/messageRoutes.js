@@ -55,6 +55,8 @@ messageRoutes.post("/message/sendText/:instanceName", async (req, res) => {
   const { instanceName } = req.params;
   const client = sessionsManager.getSession(instanceName);
 
+  console.log(instanceName, number, textMessage);
+
   if (!client || client.connectionState !== "open") {
     console.error(`Sessão "${instanceName}" não encontrada no sessionsManager ou não conectada.`);
     return res.status(404).send(`Sessão "${instanceName}" não encontrada no sessionsManager ou não conectada.`);
@@ -83,10 +85,12 @@ messageRoutes.post("/message/sendText/:instanceName", async (req, res) => {
     console.log(`Mensagem de texto enviada com sucesso ao numero ${number} pela instancia ${instanceName} no horário ${new Date()}!`);
     res.status(200).json({ status: "PENDING" });
   } catch (error) {
-    res.status(404).send({
-      status: 404,
-      error: "Not Found",
-      message: [`The "${instanceName}" instance does not exist`],
+    console.error("Erro ao enviar mensagem:", error); // Loga o erro detalhado no console
+    res.status(500).send({
+      status: 500,
+      error: "Internal Server Error",
+      message: [`Erro ao enviar mensagem para a instância "${instanceName}": ${error.message}`],
+      details: error.stack, // Inclui o stack trace completo (opcional)
     });
   }
 });
