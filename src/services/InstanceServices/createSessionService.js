@@ -335,10 +335,11 @@ const createSession = async (sessionName) => {
     });
 
     client.initialize();
-    return client;
   } catch (error) {
     console.error(`Erro ao criar a sessão ${sessionName}:`, error);
   }
+
+  return client;
 };
 
 module.exports = {
