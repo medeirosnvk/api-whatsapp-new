@@ -58,10 +58,8 @@ messageRoutes.post("/message/sendText/:instanceName", async (req, res) => {
     console.error(`Sessão "${instanceName}" não encontrada no sessionsManager ou não conectada.`);
     return res.status(404).send(`Sessão "${instanceName}" não encontrada no sessionsManager ou não conectada.`);
   } else {
-    console.log(`Sessão encontrada para ${instanceName}`);
+    console.log(`Sessão encontrada para ${instanceName}: ${client}`);
   }
-
-  console.log("Tipo de client:", client.constructor?.name);
 
   if (!instanceName || !number || !textMessage?.text) {
     return res.status(400).send("instanceName, number, e textMessage.text são obrigatórios");

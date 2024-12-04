@@ -131,11 +131,12 @@ const createSession = async (sessionName) => {
     });
 
     client.on("authenticated", (data) => {
-      clearTimeout(qrTimeout);
       console.log(`Cliente ${client.sessionName} autenticado com sucesso.`);
 
       try {
         client.connectionState = "authenticated"; // Atualiza o estado
+        sessionsManager.updateSession(sessionName, { connectionState: "authenticated" });
+
         new StateMachine(client, client.sessionName);
       } catch (error) {
         console.error("Erro ao criar StateMachine ou atualizar sessão:", error);
