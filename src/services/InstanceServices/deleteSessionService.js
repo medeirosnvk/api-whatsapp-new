@@ -3,14 +3,14 @@ const path = require("path");
 
 let clientData = {};
 
-const clientDataFilePath = path.join(__dirname, "clientData.json");
-const sessionDataPath = path.join(__dirname, "../.wwebjs_auth");
+const clientDataFile = path.join(__dirname, "../../../clientData.json");
+const authDir = path.join(__dirname, "../../../.wwebjs_auth"); // Subindo 2 níveis até a raiz
 
 const deleteSession = (sessionName) => {
   // Tente ler o arquivo existente
   try {
-    if (fs.existsSync(clientDataFilePath)) {
-      const fileContent = fs.readFileSync(clientDataFilePath, "utf-8");
+    if (fs.existsSync(clientDataFile)) {
+      const fileContent = fs.readFileSync(clientDataFile, "utf-8");
       clientData = JSON.parse(fileContent);
     }
   } catch (error) {
@@ -20,7 +20,7 @@ const deleteSession = (sessionName) => {
 
   // Verifica se a sessão existe e está desconectada
   if (clientData[sessionName] && clientData[sessionName].connectionState === "disconnected") {
-    const sessionDirPath = path.join(sessionDataPath, `session-${sessionName}`);
+    const sessionDirPath = path.join(authDir, `session-${sessionName}`);
 
     // Remove o diretório da sessão
     try {
@@ -40,7 +40,7 @@ const deleteSession = (sessionName) => {
 
     // Atualiza o arquivo JSON
     try {
-      fs.writeFileSync(clientDataFilePath, JSON.stringify(clientData, null, 2));
+      fs.writeFileSync(clientDataFile, JSON.stringify(clientData, null, 2));
       console.log("Dados das sessões atualizados no arquivo JSON.");
     } catch (error) {
       console.error("Erro ao salvar os dados do cliente:", error);

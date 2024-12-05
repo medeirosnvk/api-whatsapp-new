@@ -1,14 +1,14 @@
 /* eslint-disable quotes */
 const fs = require("fs");
-const sessionsManager = require("./sessionsManager");
+const sessionsManager = require("../../services/sessionsManager");
 
 const getConnectionStatus = (sessionName) => {
-  const client = sessionsManager.getSession(sessionName);
+  const session = sessionsManager.getSession(sessionName);
 
-  if (!client) {
+  if (!session.client) {
     return "disconnected";
   }
-  return client.connectionState || "unknown";
+  return session.client.connectionState || "unknown";
 };
 
 const initializeConnectionStatus = (clientDataPath) => {
@@ -16,18 +16,14 @@ const initializeConnectionStatus = (clientDataPath) => {
 
   Object.keys(sessions).forEach((sessionName) => {
     const state = getConnectionStatus(sessionName); // Função que obtém o estado da conexão
-    sessionsManager.addOrUpdateSession(sessionName, {
+    sessionsManager.updateSession(sessionName, {
       ...sessions[sessionName],
       connectionState: state, // Atualiza o estado da conexão
     });
   });
 
   // Salva as atualizações de volta para clientData.json
-  fs.writeFileSync(
-    clientDataPath,
-    JSON.stringify(sessionsManager.getAllSessions(), null, 2),
-    "utf8"
-  );
+  fs.writeFileSync(clientDataPath, JSON.stringify(sessionsManager.getAllSessions(), null, 2), "utf8");
 };
 
 module.exports = { initializeConnectionStatus };

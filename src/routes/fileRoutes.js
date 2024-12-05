@@ -11,7 +11,7 @@ const mediaDataPath = path.join(__dirname, "media");
 fileRoutes.use(express.urlencoded({ extended: true }));
 fileRoutes.use(express.static("qrcodes"));
 
-fileRoutes.get("/listAllFiles", (req, res) => {
+fileRoutes.get("/listAllFiles", async (req, res) => {
   try {
     // Verificar se o diretório existe
     if (!fs.existsSync(mediaDataPath)) {

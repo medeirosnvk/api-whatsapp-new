@@ -6,7 +6,7 @@ const { deleteAllQRCodeImages } = require("../services/QrCodeServices/deleteAllQ
 
 const qrCodeRoutes = express.Router();
 
-qrCodeRoutes.get("/instance/connect/:sessionName", (req, res) => {
+qrCodeRoutes.get("/instance/connect/:sessionName", async (req, res) => {
   const { sessionName } = req.params;
 
   const qrCodeFilePath = path.join(__dirname, "../../qrcodes", `qrcode_${sessionName}.png`);
@@ -23,7 +23,7 @@ qrCodeRoutes.get("/instance/connect/:sessionName", (req, res) => {
   }
 });
 
-qrCodeRoutes.get("/instance/connect/image/:sessionName", (req, res) => {
+qrCodeRoutes.get("/instance/connect/image/:sessionName", async (req, res) => {
   const { sessionName } = req.params;
 
   const qrCodeFilePath = path.join(__dirname, "../../qrcodes", `qrcode_${sessionName}.png`);
@@ -39,7 +39,7 @@ qrCodeRoutes.get("/instance/connect/image/:sessionName", (req, res) => {
   }
 });
 
-qrCodeRoutes.delete("/qrcodes", (req, res) => {
+qrCodeRoutes.delete("/qrcodes", async (req, res) => {
   try {
     deleteAllQRCodeImages();
     res.json({

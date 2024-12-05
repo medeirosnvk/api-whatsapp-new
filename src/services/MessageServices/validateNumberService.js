@@ -1,5 +1,5 @@
 /* eslint-disable quotes */
-const validateAndFormatNumber = (number) => {
+const validateAndFormatNumber = async (number) => {
   if (typeof number !== "string") {
     throw new Error("Number must be a string");
   }

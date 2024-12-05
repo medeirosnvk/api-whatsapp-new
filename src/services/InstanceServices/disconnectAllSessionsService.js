@@ -2,12 +2,12 @@ const fs = require("fs");
 const path = require("path");
 const { disconnectSession } = require("./disconnectSessionService");
 
-const disconnectAllSessions = async () => {
-  const sessionsPath = path.join(__dirname, "../.wwebjs_auth");
+const authDir = path.join(__dirname, "../../../.wwebjs_auth"); // Subindo 2 níveis até a raiz
 
+const disconnectAllSessions = async () => {
   try {
-    const files = fs.readdirSync(sessionsPath);
-    const sessionDirs = files.filter((file) => fs.lstatSync(path.join(sessionsPath, file)).isDirectory() && file.startsWith("session-"));
+    const files = fs.readdirSync(authDir);
+    const sessionDirs = files.filter((file) => fs.lstatSync(path.join(authDir, file)).isDirectory() && file.startsWith("session-"));
 
     for (const dir of sessionDirs) {
       const sessionName = dir.substring("session-".length); // Remove o prefixo "session-"

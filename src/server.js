@@ -10,9 +10,9 @@ const messageRoutes = require("../src/routes/messageRoutes");
 const qrCodeRoutes = require("../src/routes/qrCodeRoutes");
 const { restoreAllSessions } = require("../src/services/InstanceServices/restoreAllSessionsService");
 
-const qrCodeDataPath = path.join(__dirname, "qrcodes");
-const clientDataPath = path.join(__dirname, "clientData.json");
-const mediaDataPath = path.join(__dirname, "media");
+const qrCodeDir = path.join(__dirname, "qrcodes");
+const mediaDir = path.join(__dirname, "media");
+const clientDataFile = path.join(__dirname, "clientData.json");
 
 const port = process.env.PORT;
 const environment = process.env.NODE_ENV;
@@ -21,30 +21,30 @@ const app = express();
 
 let sessions = {};
 
-const initializeDirectories = () => {
-  if (!fs.existsSync(qrCodeDataPath)) {
+const initializeDirectories = async () => {
+  if (!fs.existsSync(qrCodeDir)) {
     console.log("Diretório 'qrcodes' não existe, criando...");
-    fs.mkdirSync(qrCodeDataPath);
+    fs.mkdirSync(qrCodeDir);
   }
 
-  if (!fs.existsSync(mediaDataPath)) {
+  if (!fs.existsSync(mediaDir)) {
     console.log("Diretório 'media' não existe, criando...");
-    fs.mkdirSync(mediaDataPath);
+    fs.mkdirSync(mediaDir);
   }
 };
 
-const loadSessions = () => {
-  if (fs.existsSync(clientDataPath)) {
-    sessions = JSON.parse(fs.readFileSync(clientDataPath, "utf8"));
+const loadSessions = async () => {
+  if (fs.existsSync(clientDataFile)) {
+    sessions = JSON.parse(fs.readFileSync(clientDataFile, "utf8"));
     Object.keys(sessions).forEach((instanceName) => {
       sessions[instanceName].connectionState = "disconnected";
     });
     console.log("Diretório 'media' não existe, criando...");
-    fs.writeFileSync(clientDataPath, JSON.stringify(sessions, null, 2));
+    fs.writeFileSync(clientDataFile, JSON.stringify(sessions, null, 2));
   }
 };
 
-const configureErrorHandlers = () => {
+const configureErrorHandlers = async () => {
   process.on("uncaughtException", (err) => {
     console.error("Exceção Não Tratada:", err);
     process.exit(1); // Encerra o processo
@@ -56,7 +56,7 @@ const configureErrorHandlers = () => {
   });
 };
 
-const handleRejectionError = (reason) => {
+const handleRejectionError = async (reason) => {
   if (reason.code === "ENOTEMPTY") {
     console.error("Diretório não está vazio. Tentando nova operação...");
   } else if (reason instanceof TypeError && reason.message.includes("Cannot read properties of undefined (reading 'AppState')")) {
@@ -70,7 +70,7 @@ const handleRejectionError = (reason) => {
   }
 };
 
-const startHttpServer = () => {
+const startHttpServer = async () => {
   app.listen(port, () => {
     console.log(`Servidor HTTP LOCALHOST iniciado na porta ${port}`);
 
@@ -78,7 +78,7 @@ const startHttpServer = () => {
   });
 };
 
-const startHttpsServer = () => {
+const startHttpsServer = async () => {
   const privateKey = fs.readFileSync("/etc/letsencrypt/live/whatsapp.cobrance.online/privkey.pem", "utf8");
   const certificate = fs.readFileSync("/etc/letsencrypt/live/whatsapp.cobrance.online/fullchain.pem", "utf8");
   const ca = fs.readFileSync("/etc/letsencrypt/live/whatsapp.cobrance.online/chain.pem", "utf8");
@@ -92,7 +92,7 @@ const startHttpsServer = () => {
   });
 };
 
-const startServer = () => {
+const startServer = async () => {
   app.use(express.json());
   app.use(cors());
 
@@ -108,7 +108,13 @@ const startServer = () => {
   }
 };
 
-initializeDirectories();
-loadSessions();
-configureErrorHandlers();
-startServer();
+(async () => {
+  try {
+    await initializeDirectories();
+    await loadSessions();
+    await configureErrorHandlers();
+    await startServer();
+  } catch (error) {
+    console.error("Erro ao iniciar a aplicação:", error);
+  }
+})();

@@ -2,7 +2,6 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 
-const sessionsManager = require("../sessionsManager");
 const { createSession } = require("../services/InstanceServices/createSessionService");
 const { disconnectSession } = require("../services/InstanceServices/disconnectSessionService");
 const { disconnectAllSessions } = require("../services/InstanceServices/disconnectAllSessionsService");
@@ -10,50 +9,26 @@ const { restoreAllSessions } = require("../services/InstanceServices/restoreAllS
 const { restoreSession } = require("../services/InstanceServices/restoreSessionService");
 const { deleteSession } = require("../services/InstanceServices/deleteSessionService");
 const { deleteUnusedSessions } = require("../services/InstanceServices/deleteUnusedSessionsService");
+const sessionsManager = require("../services/sessionsManager");
 
 const instanceRoutes = express.Router();
 
 const authDir = path.join(__dirname, "../../.wwebjs_auth");
-const qrCodeDir = path.join(__dirname, "../../qrcodes");
 const clientDataDir = path.join(__dirname, "../../clientData.json");
 
-instanceRoutes.post("/instance/create", (req, res) => {
+instanceRoutes.post("/instance/create", async (req, res) => {
   const { instanceName } = req.body;
-  const session = sessionsManager.getSession(instanceName);
-
-  const qrCodeFilePath = path.join(qrCodeDir, `qrcode_${instanceName}.png`);
-
-  if (!instanceName) {
-    return res.status(400).json({ error: "instanceName is required" });
-  }
-
-  if (session) {
-    console.log(`Session ${instanceName} already exists`);
-    return res.status(400).json({ error: `Session ${instanceName} already exists` });
-  }
-
-  if (fs.existsSync(qrCodeFilePath)) {
-    console.log(`QR Code image for session ${instanceName} already exists`);
-  }
 
   try {
-    console.log("Creating a new session...");
-
-    createSession(instanceName);
-    res.status(201).json({
-      instance: {
-        instanceName,
-        status: "created",
-      },
-    });
+    await createSession(instanceName);
+    res.status(200).json({ message: `Sessão ${instanceName} criada com sucesso.` });
   } catch (error) {
-    res.status(500).json({
-      error: `Error creating session: ${error.message}`,
-    });
+    console.error("Erro ao criar sessão:", error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 
-instanceRoutes.post("/instance/restore/:sessionName", (req, res) => {
+instanceRoutes.post("/instance/restore/:sessionName", async (req, res) => {
   const { sessionName } = req.params;
 
   if (!sessionName) {
@@ -61,7 +36,7 @@ instanceRoutes.post("/instance/restore/:sessionName", (req, res) => {
   }
 
   try {
-    restoreSession(sessionName);
+    await restoreSession(sessionName);
     res.json({
       success: true,
       message: `Session ${sessionName} restored successfully`,
@@ -73,7 +48,7 @@ instanceRoutes.post("/instance/restore/:sessionName", (req, res) => {
   }
 });
 
-instanceRoutes.post("/instance/restoreAll", (req, res) => {
+instanceRoutes.post("/instance/restoreAll", async (req, res) => {
   try {
     restoreAllSessions();
 
@@ -123,7 +98,7 @@ instanceRoutes.delete("/instance/logoutAll", async (req, res) => {
   }
 });
 
-instanceRoutes.delete("/instance/deleteSession/:sessionName", (req, res) => {
+instanceRoutes.delete("/instance/deleteSession/:sessionName", async (req, res) => {
   const sessionName = req.params.sessionName;
 
   try {
@@ -139,7 +114,7 @@ instanceRoutes.delete("/instance/deleteSession/:sessionName", (req, res) => {
   }
 });
 
-instanceRoutes.delete("/instance/clearUnusedSessions", (req, res) => {
+instanceRoutes.delete("/instance/clearUnusedSessions", async (req, res) => {
   try {
     deleteUnusedSessions();
     res.status(200).json("Sessões não utilizadas foram removidas com sucesso.");
@@ -149,7 +124,7 @@ instanceRoutes.delete("/instance/clearUnusedSessions", (req, res) => {
   }
 });
 
-instanceRoutes.get("/instance/listFolders", (req, res) => {
+instanceRoutes.get("/instance/listFolders", async (req, res) => {
   console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
 
   if (fs.existsSync(authDir)) {
@@ -162,14 +137,12 @@ instanceRoutes.get("/instance/listFolders", (req, res) => {
   }
 });
 
-instanceRoutes.get("/instance/fetchInstances", (req, res) => {
-  const clientDataPath = path.join(__dirname, "clientData.json"); // Caminho para o arquivo clientData.json
-
+instanceRoutes.get("/instance/fetchInstances", async (req, res) => {
   // Verificar se o arquivo clientData.json existe
-  if (fs.existsSync(clientDataPath)) {
+  if (fs.existsSync(clientDataDir)) {
     try {
       // Leitura do arquivo clientData.json
-      const clientData = JSON.parse(fs.readFileSync(clientDataPath, "utf8"));
+      const clientData = JSON.parse(fs.readFileSync(clientDataDir, "utf8"));
 
       // Extrair informações para cada instância com connectionState: 'open'
       const instances = Object.keys(clientData)
@@ -189,12 +162,12 @@ instanceRoutes.get("/instance/fetchInstances", (req, res) => {
       res.status(500).json({ error: "Erro interno do servidor" });
     }
   } else {
-    console.log("Arquivo clientData.json não encontrado em:", clientDataPath);
+    console.log("Arquivo clientData.json não encontrado em:", clientDataDir);
     res.status(404).json([]); // Se o arquivo não existe, retornar um array vazio
   }
 });
 
-instanceRoutes.get("/instance/fetchAllInstances", (req, res) => {
+instanceRoutes.get("/instance/fetchAllInstances", async (req, res) => {
   // Verificar se o arquivo clientData.json existe
   if (fs.existsSync(clientDataDir)) {
     try {
@@ -226,7 +199,7 @@ instanceRoutes.get("/instance/fetchAllInstances", (req, res) => {
   }
 });
 
-instanceRoutes.get("/instance/connectionState/:instanceName", (req, res) => {
+instanceRoutes.get("/instance/connectionState/:instanceName", async (req, res) => {
   const { instanceName } = req.params;
 
   const session = sessionsManager.getSession(instanceName);

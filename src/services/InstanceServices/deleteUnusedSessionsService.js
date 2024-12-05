@@ -1,9 +1,9 @@
-const sessionsManager = require("../../sessionsManager");
+const sessionsManager = require("../../services/sessionsManager");
 
 const path = require("path");
 const fs = require("fs");
 
-const clientDataDir = path.join(__dirname, "../../../clientData.json");
+const clientDataFile = path.join(__dirname, "../../../clientData.json");
 
 const deleteUnusedSessions = async () => {
   let clientData = {};
@@ -28,9 +28,9 @@ const deleteUnusedSessions = async () => {
 
   // Tente ler o arquivo existente
   try {
-    if (fs.existsSync(clientDataDir)) {
+    if (fs.existsSync(clientDataFile)) {
       console.log("Arquivo clientData.json encontrado e lido corretamente.");
-      const fileContent = fs.readFileSync(clientDataDir, "utf-8");
+      const fileContent = fs.readFileSync(clientDataFile, "utf-8");
       clientData = JSON.parse(fileContent);
     }
   } catch (error) {
@@ -72,7 +72,7 @@ const deleteUnusedSessions = async () => {
 
   // Atualiza o arquivo JSON
   try {
-    fs.writeFileSync(clientDataDir, JSON.stringify(clientData, null, 2));
+    fs.writeFileSync(clientDataFile, JSON.stringify(clientData, null, 2));
     console.log("Dados das sessões atualizados no arquivo JSON.");
   } catch (error) {
     console.error("Erro ao salvar os dados do cliente:", error);

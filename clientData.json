@@ -1,11 +1,1 @@
-{
-  "kevin": {
-    "lastLoggedOut": null,
-    "connectionState": "open",
-    "sessionName": "kevin",
-    "wid": {
-      "user": "555185071891"
-    },
-    "connectionDateTime": "11/29/2024, 1:43:56 PM"
-  }
-}
+{"undefined":{"lastLoggedOut":null,"connectionState":"open","wid":{"user":"555185071891"},"connectionDateTime":"12/5/2024, 12:57:30 PM"}}

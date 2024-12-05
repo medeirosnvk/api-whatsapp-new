@@ -1,24 +1,24 @@
-const sessionsManager = require("../../sessionsManager"); // Importa o gerenciador de sessões
+const sessionsManager = require("../../services/sessionsManager");
 const fs = require("fs");
 const path = require("path");
 const StateMachine = require("../../services/InstanceServices/stateMachineService");
 
-const clientDataPath = path.join(__dirname, "clientData.json");
+const clientDataFile = path.join(__dirname, "../../../clientData.json");
 
 const disconnectSession = async (sessionName) => {
-  const client = sessionsManager.getSession(sessionName);
+  const session = sessionsManager.getSession(sessionName);
 
-  if (client && client.info) {
+  if (session.client && session.client.info) {
     console.log(`Cliente ${sessionName} está ativo e pronto para logout.`);
   } else {
     console.log(`Cliente ${sessionName} não está inicializado ou já foi destruído.`);
   }
 
-  if (client) {
+  if (session.client) {
     try {
       try {
         // Tente realizar o logout
-        await client.logout();
+        await session.client.logout();
         console.log(`Logout da sessão ${sessionName} realizado com sucesso.`);
       } catch (logoutError) {
         // Se o logout falhar, registrar o erro, mas continuar o processo
@@ -49,16 +49,16 @@ const disconnectSession = async (sessionName) => {
       deleteFolderRecursive(sessionPath);
 
       // Destruir o cliente e remover a sessão da memória
-      await client.destroy();
+      await session.client.destroy();
       sessionsManager.deleteSession(sessionName);
 
       StateMachine.deleteStateMachine(sessionName);
       console.log(`Sessão ${sessionName} removida da memória com sucesso.`);
 
       // Remover a sessão do arquivo clientData.json
-      const clientData = JSON.parse(fs.readFileSync(clientDataPath, "utf8"));
+      const clientData = JSON.parse(fs.readFileSync(clientDataFile, "utf8"));
       delete clientData[sessionName];
-      fs.writeFileSync(clientDataPath, JSON.stringify(clientData, null, 2));
+      fs.writeFileSync(clientDataFile, JSON.stringify(clientData, null, 2));
       console.log(`Sessão ${sessionName} removida do clientData.json.`);
     } catch (error) {
       console.error(`Erro ao desconectar a sessão ${sessionName}:`, error);
