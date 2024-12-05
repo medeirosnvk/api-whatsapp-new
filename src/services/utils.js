@@ -1,3 +1,6 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
+/* eslint-disable quotes */
 const requests = require("./requests");
 
 const fs = require("fs");
@@ -13,16 +16,23 @@ function getBrazilTimeFormatted(date) {
 function formatPhoneNumber(phoneNumber) {
   if (!phoneNumber) {
     console.error("Phone number is undefined or null");
-    return ""; // Ou outra ação apropriada, dependendo do seu caso
+    return "outros"; // Retorna "outros" para números inválidos
   }
 
-  // Realizar formatação apenas se phoneNumber for uma string
-  if (typeof phoneNumber === "string") {
-    return phoneNumber.replace(/[^\d]/g, "").replace(/^.*?(\d{8})$/, "$1");
-  } else {
-    console.error("Phone number is not a string");
-    return ""; // Ou outra ação apropriada, dependendo do seu caso
+  // Convertendo para string, se necessário
+  const phoneStr = String(phoneNumber);
+
+  // Removendo caracteres não numéricos
+  const numericPhone = phoneStr.replace(/[^\d]/g, "");
+
+  // Garantindo que o número tem pelo menos 8 dígitos
+  if (numericPhone.length < 8) {
+    console.error("Phone number has less than 8 digits:", numericPhone);
+    return "outros"; // Retorna "outros" para números inválidos
   }
+
+  // Retornando o número formatado completo
+  return numericPhone; // Retorna o número limpo
 }
 
 function getCurrentDateTime() {
@@ -584,13 +594,13 @@ function parseDadosBoleto(props) {
     ESPECIE: "'RC'",
     ACEITE: "'N'",
     IMP: "'N'",
-    inclusao: `curdate()`,
+    inclusao: "curdate()",
     responsavel: "'API CHATBOT'",
     destino: "'e-mail'",
     email: `left(BuscaEmailConcat(${cpfcnpj}),100)`,
     chave: `${chave}`,
     sistema: "'COBRANCE'",
-    hora: `curtime()`,
+    hora: "curtime()",
     enddestino: "''",
     idescritorio: "'PA'",
     idcredor: `${idcredor}`,
