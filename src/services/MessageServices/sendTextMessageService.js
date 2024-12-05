@@ -2,13 +2,13 @@ const sessionManager = require("../../services/sessionsManager");
 
 const sendTextMessage = async (sessionName, phoneNumber, message) => {
   const session = sessionManager.getSession(sessionName);
-  console.log("session -", session);
+  console.log(`sendTextMessage session - ${session}`);
 
-  if (!session) {
+  if (!session.client) {
     throw new Error(`Sessão ${sessionName} não encontrada.`);
   }
 
-  if (session.connectionState !== "open") {
+  if (session.client.connectionState !== "open") {
     throw new Error(`Sessão ${sessionName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
@@ -22,6 +22,9 @@ const sendTextMessage = async (sessionName, phoneNumber, message) => {
       processedNumber = brazilCountryCode + processedNumber.slice(2, 4) + localNumber.slice(1);
     }
   }
+
+  console.log(`Número processado: ${processedNumber}`);
+  console.log(`Texto: ${message.text}`);
 
   await session.client.sendMessage(`${processedNumber}@c.us`, message.text);
   // await client.sendMessage(`${processedNumber}@c.us`, textMessage.text);
