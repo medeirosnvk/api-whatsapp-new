@@ -2453,13 +2453,11 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
     await Promise.race([mainLogic(), timeoutPromise]); // Executa a lógica com o timeout
   } catch (error) {
     if (error.message === "Request timed out") {
-      res
-        .status(504)
-        .send({
-          status: 504,
-          error: "Timeout",
-          message: "Request timed out after 10 seconds",
-        });
+      res.status(504).send({
+        status: 504,
+        error: "Timeout",
+        message: "Request timed out after 10 seconds",
+      });
     } else {
       res.status(404).send({
         status: 404,
@@ -2562,7 +2560,7 @@ app.get("/listAllFiles", (req, res) => {
 
     const fileUrls = fileStats.map(({ file }) => ({
       fileName: path.basename(file),
-      url: `https://whatsapp.cobrance.online:3060/media${file
+      url: `http://191.252.214.9:3060/media${file
         .replace(mediaDataPath, "")
         .replace(/\\/g, "/")}`,
     }));
