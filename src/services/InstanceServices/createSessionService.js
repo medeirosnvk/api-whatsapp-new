@@ -60,6 +60,7 @@ const createSession = async (sessionName) => {
       },
     });
 
+    client.sessionName = sessionName;
     sessionsManager.addSession(sessionName, client, { connectionState: "connecting" });
 
     const resetTimeout = () => {
