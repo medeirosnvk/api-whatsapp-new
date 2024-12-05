@@ -31,8 +31,14 @@ function formatPhoneNumber(phoneNumber) {
     return "outros"; // Retorna "outros" para números inválidos
   }
 
-  // Retornando o número formatado completo
-  return numericPhone; // Retorna o número limpo
+  // Extraindo os últimos 8 dígitos e invertendo-os
+  const lastEightDigitsReversed = numericPhone
+    .slice(-8) // Pegando os últimos 8 dígitos
+    .split("") // Dividindo em um array de caracteres
+    .reverse() // Invertendo a ordem
+    .join(""); // Reconstruindo a string invertida
+
+  return lastEightDigitsReversed; // Retorna os dígitos invertidos
 }
 
 function getCurrentDateTime() {
