@@ -108,13 +108,7 @@ const startServer = async () => {
   }
 };
 
-(async () => {
-  try {
-    await initializeDirectories();
-    await loadSessions();
-    await configureErrorHandlers();
-    await startServer();
-  } catch (error) {
-    console.error("Erro ao iniciar a aplicação:", error);
-  }
-})();
+initializeDirectories();
+loadSessions();
+configureErrorHandlers();
+startServer();
