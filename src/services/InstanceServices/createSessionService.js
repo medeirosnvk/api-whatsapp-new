@@ -75,11 +75,13 @@ const createSession = async (sessionName) => {
 
     client.on("qr", async (qr) => {
       try {
-        console.log(`QR Code para a sessão ${sessionName}:`);
-        qrcode.generate(qr, { small: true });
-        await saveQRCodeImage(qr, sessionName);
-        resetTimeout(); // Redefine o timeout ao gerar um novo QR Code
-        isQRFunctionExposed = true;
+        if (!isQRFunctionExposed) {
+          console.log(`QR Code para a sessão ${sessionName}:`);
+          qrcode.generate(qr, { small: true });
+          await saveQRCodeImage(qr, sessionName);
+          resetTimeout(); // Redefine o timeout ao gerar um novo QR Code
+          isQRFunctionExposed = true;
+        }
       } catch (error) {
         console.error("Erro ao lidar com QR Code:", error.message);
       }

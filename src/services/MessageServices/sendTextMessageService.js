@@ -2,7 +2,6 @@ const sessionManager = require("../../services/sessionsManager");
 
 const sendTextMessage = async (sessionName, phoneNumber, message) => {
   const session = sessionManager.getSession(sessionName);
-  console.log("sendTextMessage session -", session);
 
   if (!session.client) {
     throw new Error(`Sessão ${sessionName} não encontrada.`);
@@ -27,9 +26,8 @@ const sendTextMessage = async (sessionName, phoneNumber, message) => {
   console.log(`Texto: ${message.text}`);
 
   await session.client.sendMessage(`${processedNumber}@c.us`, message.text);
-  // await client.sendMessage(`${processedNumber}@c.us`, textMessage.text);
 
-  console.log(`Mensagem enviada para ${phoneNumber} na sessão ${sessionName}: ${message}`);
+  console.log(`Mensagem enviada para ${phoneNumber} na sessão ${sessionName}: ${message.text}`);
 };
 
 module.exports = { sendTextMessage };
