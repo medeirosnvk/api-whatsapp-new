@@ -25,7 +25,7 @@ const disconnectSession = async (sessionName) => {
         console.error(`Erro ao realizar logout da sessão ${sessionName}. Prosseguindo com a limpeza...`, logoutError);
       }
 
-      const sessionPath = path.join(__dirname, "../.wwebjs_auth", `session-${sessionName}`);
+      const sessionPath = path.join(__dirname, "../../../.wwebjs_auth", `session-${sessionName}`);
 
       // Função para excluir a pasta da sessão
       const deleteFolderRecursive = (folderPath) => {
@@ -50,7 +50,7 @@ const disconnectSession = async (sessionName) => {
 
       // Destruir o cliente e remover a sessão da memória
       await session.client.destroy();
-      sessionsManager.deleteSession(sessionName);
+      sessionsManager.removeSession(sessionName);
 
       StateMachine.deleteStateMachine(sessionName);
       console.log(`Sessão ${sessionName} removida da memória com sucesso.`);
