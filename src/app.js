@@ -1386,13 +1386,13 @@ const createSession = async (sessionName) => {
           body: message.body,
         };
 
+        const fromPhoneNumber = utils.formatPhoneNumber(message.from);
+
         const webhookUrl =
           "http://www.cobrance.com.br/codechat/webhook_cobrance.php";
 
         if (message.hasMedia) {
           try {
-            const fromPhoneNumber = utils.formatPhoneNumber(message.from);
-
             const media = await message.downloadMedia();
             const mediaPath = path.join(__dirname, "media", fromPhoneNumber);
 
