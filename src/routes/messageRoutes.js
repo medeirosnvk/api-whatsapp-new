@@ -16,7 +16,7 @@ messageRoutes.post("/message/sendText/:instanceName", async (req, res) => {
 
   try {
     await sendTextMessage(instanceName, number, textMessage);
-    res.status(200).json({ message: "Mensagem enviada com sucesso!" });
+    res.status(200).json({ status: "PENDING" });
   } catch (error) {
     console.error("Erro ao enviar mensagem:", error.message);
     res.status(500).json({ error: error.message });
