@@ -1396,24 +1396,34 @@ const createSession = async (sessionName) => {
 
         if (message.hasMedia) {
           try {
+            // Fazer o download da mídia
             const media = await message.downloadMedia();
             const mediaPath = path.join(__dirname, "media", fromPhoneNumber);
 
+            // Garantir que o diretório existe
             if (!fs.existsSync(mediaPath)) {
               fs.mkdirSync(mediaPath, { recursive: true });
             }
 
+            // Definir o nome e o caminho do arquivo
             const fileName = `${new Date().getTime()}.${
               media.mimetype.split("/")[1]
             }`;
             const filePath = path.join(mediaPath, fileName);
 
+            // Salvar o arquivo e verificar se foi salvo corretamente
             fs.writeFileSync(filePath, media.data, "base64");
-            console.log(`Arquivo recebido e salvo em: ${filePath}`);
 
-            mediaName = fileName;
-            mediaUrl = `http://191.252.214.9:3060/media/${fromPhoneNumber}/${fileName}`;
-            mediaBase64 = media.data;
+            if (fs.existsSync(filePath)) {
+              console.log(`Arquivo recebido e salvo em: ${filePath}`);
+              mediaName = fileName;
+              mediaUrl = `http://191.252.214.9:3060/media/${fromPhoneNumber}/${fileName}`;
+              mediaBase64 = media.data;
+            } else {
+              console.error(
+                `O arquivo não foi salvo corretamente em ${filePath}`
+              );
+            }
           } catch (error) {
             console.error(
               `Erro ao processar mídia para a sessão ${sessionName}:`,
@@ -1423,6 +1433,7 @@ const createSession = async (sessionName) => {
         }
 
         try {
+          // Enviar os dados para o webhook
           await axios.post(webhookUrl, {
             sessionName,
             message: {
