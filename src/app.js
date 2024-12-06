@@ -1387,6 +1387,9 @@ const createSession = async (sessionName) => {
         };
 
         const fromPhoneNumber = utils.formatPhoneNumber(message.from);
+        console.log(
+          `Numero atual - ${message.from} e Numero formatado - ${fromPhoneNumber}`
+        );
 
         const webhookUrl =
           "http://www.cobrance.com.br/codechat/webhook_cobrance.php";

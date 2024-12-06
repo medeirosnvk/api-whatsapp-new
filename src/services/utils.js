@@ -4,6 +4,7 @@
 const requests = require("./requests");
 
 const fs = require("fs");
+const path = require("path");
 const fetch = require("node-fetch");
 
 function getBrazilTimeFormatted(date) {
@@ -13,32 +14,72 @@ function getBrazilTimeFormatted(date) {
   return brazilDate.toLocaleString("pt-BR", { hour12: false });
 }
 
+function logInvalidPhone(phoneNumber, reason) {
+  const logFilePath = path.join(__dirname, "../../invalid_phones.json");
+
+  // Criar um objeto de log
+  const logEntry = {
+    phoneNumber,
+    reason,
+    timestamp: new Date().toISOString(),
+  };
+
+  // Lendo logs existentes
+  let logs = [];
+  if (fs.existsSync(logFilePath)) {
+    const existingLogs = fs.readFileSync(logFilePath, "utf-8");
+    logs = existingLogs ? JSON.parse(existingLogs) : [];
+  }
+
+  // Adicionar o novo log
+  logs.push(logEntry);
+
+  // Salvar no arquivo
+  fs.writeFileSync(logFilePath, JSON.stringify(logs, null, 2));
+}
+
+// function formatPhoneNumber(phoneNumber) {
+//   if (!phoneNumber) {
+//     console.error("Phone number is undefined or null");
+//     logInvalidPhone(phoneNumber, "Phone number is undefined or null");
+//     return "outros"; // Ou outra ação apropriada, dependendo do seu caso
+//   }
+
+//   // Realizar formatação apenas se phoneNumber for uma string
+//   if (typeof phoneNumber === "string") {
+//     return phoneNumber.replace(/[^\d]/g, "").replace(/^.*?(\d{8})$/, "$1");
+//   } else {
+//     console.error("Phone number is not a string");
+//     logInvalidPhone(phoneNumber, "Phone number is not a string");
+//     return "outros"; // Ou outra ação apropriada, dependendo do seu caso
+//   }
+// }
+
 function formatPhoneNumber(phoneNumber) {
   if (!phoneNumber) {
     console.error("Phone number is undefined or null");
-    return "outros"; // Retorna "outros" para números inválidos
+    logInvalidPhone(phoneNumber, "Phone number is undefined or null");
+    return "outros";
   }
 
-  // Convertendo para string, se necessário
-  const phoneStr = String(phoneNumber);
+  if (typeof phoneNumber === "string") {
+    // Remover caracteres não numéricos
+    const numericPhone = phoneNumber.replace(/[^\d]/g, "");
 
-  // Removendo caracteres não numéricos
-  const numericPhone = phoneStr.replace(/[^\d]/g, "");
+    // Verificar se possui pelo menos 8 dígitos
+    if (numericPhone.length < 8) {
+      console.error("Phone number has less than 8 digits");
+      logInvalidPhone(phoneNumber, "Phone number has less than 8 digits");
+      return "outros";
+    }
 
-  // Garantindo que o número tem pelo menos 8 dígitos
-  if (numericPhone.length < 8) {
-    console.error("Phone number has less than 8 digits:", numericPhone);
-    return "outros"; // Retorna "outros" para números inválidos
+    // Extrair os últimos 8 dígitos mantendo a ordem
+    return numericPhone.slice(-8);
+  } else {
+    console.error("Phone number is not a string");
+    logInvalidPhone(phoneNumber, "Phone number is not a string");
+    return "outros";
   }
-
-  // Extraindo os últimos 8 dígitos e invertendo-os
-  const lastEightDigitsReversed = numericPhone
-    .slice(-8) // Pegando os últimos 8 dígitos
-    .split("") // Dividindo em um array de caracteres
-    .reverse() // Invertendo a ordem
-    .join(""); // Reconstruindo a string invertida
-
-  return lastEightDigitsReversed; // Retorna os dígitos invertidos
 }
 
 function getCurrentDateTime() {
