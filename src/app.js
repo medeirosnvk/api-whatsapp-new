@@ -39,9 +39,9 @@ const customDbConfig = {
   connectTimeout: 60000,
 };
 
-app.use(express.json());
 app.use(cors());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(express.static("qrcodes"));
 
 if (!fs.existsSync(qrCodeDataPath)) {
@@ -2389,13 +2389,11 @@ app.post("/message/sendText/:instanceName", async (req, res) => {
     await Promise.race([mainLogic(), timeoutPromise]); // Executa a lógica com o timeout
   } catch (error) {
     if (error.message === "Request timed out") {
-      res
-        .status(504)
-        .send({
-          status: 504,
-          error: "Timeout",
-          message: "Request timed out after 10 seconds",
-        });
+      res.status(504).send({
+        status: 504,
+        error: "Timeout",
+        message: "Request timed out after 10 seconds",
+      });
     } else {
       res.status(404).send({
         status: 404,
