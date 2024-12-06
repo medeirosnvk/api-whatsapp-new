@@ -2551,6 +2551,61 @@ app.post("/message/sendMedia/:instanceName", async (req, res) => {
   }
 });
 
+app.post("/message/sendBase64/:instanceName", async (req, res) => {
+  const { number, mediaMessage } = req.body;
+  const { instanceName } = req.params;
+  const client = sessions[instanceName];
+
+  if (!instanceName || !number || !mediaMessage || !mediaMessage.base64) {
+    return res
+      .status(400)
+      .send("instanceName, number, and mediaMessage.base64 are required");
+  }
+
+  try {
+    let processedNumber = number;
+    const brazilCountryCode = "55";
+
+    if (processedNumber.startsWith(brazilCountryCode)) {
+      const localNumber = processedNumber.slice(4);
+
+      if (localNumber.length === 9 && localNumber.startsWith("9")) {
+        processedNumber =
+          brazilCountryCode +
+          processedNumber.slice(2, 4) +
+          localNumber.slice(1);
+      }
+    }
+
+    const { base64, fileName, mimeType, caption } = mediaMessage;
+
+    const messageMedia = new MessageMedia(mimeType, base64, fileName);
+
+    await client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
+      caption: caption,
+    });
+
+    console.log(
+      `Mensagem de mídia Base64 enviada com sucesso ao número ${number} pela instância ${instanceName} no horário ${new Date()}!`
+    );
+    res.status(200).json({ status: "PENDING" });
+  } catch (error) {
+    if (error.message.includes("disconnected")) {
+      console.error(`Erro: A sessão ${instanceName} está desconectada.`);
+    } else if (error.message.includes("ban")) {
+      console.error(`Erro: A sessão ${instanceName} foi banida.`);
+    } else {
+      console.error(`Erro desconhecido ao enviar mensagem: ${error.message}`);
+    }
+
+    res.status(404).send({
+      status: 404,
+      error: "Not Found",
+      message: [`The "${instanceName}" instance does not exist`],
+    });
+  }
+});
+
 app.get("/listAllFiles", (req, res) => {
   try {
     // Verificar se o diretório existe
