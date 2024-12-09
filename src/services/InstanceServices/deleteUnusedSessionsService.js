@@ -62,7 +62,7 @@ const deleteUnusedSessions = async () => {
         // Verifica se a sessão não existe no clientData e remove o diretório se necessário
         if (!clientData[sessionName] && fs.lstatSync(sessionDirPath).isDirectory()) {
           deleteFolderRecursive(sessionDirPath, sessionName);
-          sessionsManager.deleteSession(sessionName);
+          sessionsManager.removeSession(sessionName);
         }
       }
     }
