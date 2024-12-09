@@ -218,15 +218,24 @@ instanceRoutes.get("/instance/connectionState/:instanceName", async (req, res) =
 });
 
 instanceRoutes.get("/instance/connectionState/getAllSessions", async (req, res) => {
-  const sessions = sessionsManager.getAllSessions();
+  try {
+    const sessions = sessionsManager.getAllSessions();
+    console.log("getAllSessions -", sessions);
 
-  if (sessions) {
-    res.json({
-      sessions,
-    });
-  } else {
-    res.status(404).json({
-      error: "Sessions not found in sessionsManager.",
+    if (sessions && sessions.length > 0) {
+      res.status(200).json({
+        sessions,
+      });
+    } else {
+      res.status(200).json({
+        message: "No sessions found.",
+        sessions: [],
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching sessions:", error);
+    res.status(500).json({
+      error: "An unexpected error occurred while fetching sessions.",
     });
   }
 });
