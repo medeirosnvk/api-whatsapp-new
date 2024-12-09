@@ -1408,7 +1408,7 @@ const createSession = async (sessionName) => {
             console.log(`Arquivo recebido e salvo em: ${filePath}`);
 
             mediaName = fileName;
-            mediaUrl = `http://191.252.214.9:3060/media/${fromPhoneNumber}/${fileName}`;
+            mediaUrl = `http://10.0.0.2:3030/media/${fromPhoneNumber}/${fileName}`;
             mediaBase64 = media.data;
           } catch (error) {
             console.error(
