@@ -57,7 +57,7 @@ const deleteUnusedSessions = async () => {
     for (const dir of sessionDirs) {
       if (dir.startsWith("session-")) {
         const sessionName = dir.replace("session-", "");
-        const sessionDirPath = path.join(__dirname, "../.wwebjs_auth", dir);
+        const sessionDirPath = path.join(__dirname, "../../../.wwebjs_auth", dir);
 
         // Verifica se a sessão não existe no clientData e remove o diretório se necessário
         if (!clientData[sessionName] && fs.lstatSync(sessionDirPath).isDirectory()) {

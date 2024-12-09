@@ -19,7 +19,6 @@ const createSession = async (sessionName) => {
     }
   }
 
-  let qrTimeout;
   let isQRFunctionExposed = false;
 
   try {
@@ -63,16 +62,23 @@ const createSession = async (sessionName) => {
     client.sessionName = sessionName;
     sessionsManager.addSession(sessionName, client, { connectionState: "connecting" });
 
-    const resetTimeout = () => {
-      if (qrTimeout) clearTimeout(qrTimeout); // Limpa o timeout anterior, se existir
-      qrTimeout = setTimeout(async () => {
-        console.log(`Tempo esgotado para a sessão ${sessionName}. Finalizando...`);
-        client.destroy(); // Finaliza o cliente
-        sessionsManager.removeSession(sessionName); // Remove a sessão do sessionManager
-      }, 5 * 60 * 1000); // Timeout de 5 minutos
-    };
+    // const resetTimeout = () => {
+    //   if (qrTimeout) clearTimeout(qrTimeout); // Limpa o timeout anterior, se existir
+    //   qrTimeout = setTimeout(async () => {
+    //     console.log(`Tempo esgotado para a sessão ${sessionName}. Finalizando...`);
+    //     client.destroy(); // Finaliza o cliente
+    //     sessionsManager.removeSession(sessionName); // Remove a sessão do sessionManager
+    //   }, 5 * 60 * 1000); // Timeout de 5 minutos
+    // };
 
-    resetTimeout();
+    const qrTimeout = setTimeout(() => {
+      if (client.connectionState !== "open") {
+        client.connectionState = "disconnected";
+        console.log(`Tempo esgotado para a sessão ${sessionName}. Desconectando...`);
+        client.destroy();
+        sessionsManager.removeSession(sessionName); // Remove a sessão do sessionManager
+      }
+    }, 3 * 60 * 1000); // 3 minutos
 
     client.on("qr", async (qr) => {
       try {
@@ -80,7 +86,6 @@ const createSession = async (sessionName) => {
           console.log(`QR Code para a sessão ${sessionName}:`);
           qrcode.generate(qr, { small: true });
           await saveQRCodeImage(qr, sessionName);
-          resetTimeout(); // Redefine o timeout ao gerar um novo QR Code
           isQRFunctionExposed = true;
         }
       } catch (error) {
@@ -90,7 +95,7 @@ const createSession = async (sessionName) => {
 
     client.on("disconnected", async (data) => {
       try {
-        if (qrTimeout) clearTimeout(qrTimeout); // Cancela o timeout existente
+        clearTimeout(qrTimeout);
         console.error(`Sessão ${sessionName} foi desconectada.`);
 
         client.connectionState = "disconnected";
@@ -120,7 +125,7 @@ const createSession = async (sessionName) => {
     });
 
     client.on("auth_failure", (data) => {
-      if (qrTimeout) clearTimeout(qrTimeout);
+      clearTimeout(qrTimeout);
       console.error(`Sessão ${sessionName} falhou na autenticação.`);
 
       client.connectionState = "auth_failure";
@@ -143,7 +148,7 @@ const createSession = async (sessionName) => {
 
     client.on("ready", async () => {
       try {
-        if (qrTimeout) clearTimeout(qrTimeout);
+        clearTimeout(qrTimeout);
         console.log(`Sessão ${sessionName} está pronta!`);
 
         client.connectionState = "open";
@@ -314,7 +319,6 @@ const createSession = async (sessionName) => {
     return client;
   } catch (error) {
     console.error(`Erro ao criar a sessão ${sessionName}:`, error);
-    if (qrTimeout) clearTimeout(qrTimeout);
     sessionsManager.removeSession(sessionName);
   }
 };

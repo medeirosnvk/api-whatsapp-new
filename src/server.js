@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 require("dotenv").config();
 const fs = require("fs");
 const https = require("https");
