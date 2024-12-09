@@ -217,7 +217,7 @@ instanceRoutes.get("/instance/connectionState/:instanceName", async (req, res) =
   }
 });
 
-instanceRoutes.get("/instance/connectionState/getAllSessions", async (req, res) => {
+instanceRoutes.get("/instance/getAllSessions", async (req, res) => {
   try {
     const sessions = sessionsManager.getAllSessions();
     console.log("getAllSessions -", sessions);
