@@ -204,15 +204,29 @@ instanceRoutes.get("/instance/connectionState/:instanceName", async (req, res) =
 
   const session = sessionsManager.getSession(instanceName);
 
-  if (session) {
+  if (session.client) {
     res.json({
       instanceName,
-      state: session.connectionState || "unknown", // Valor padrão caso não exista connectionState
+      state: session.client.connectionState || "unknown", // Valor padrão caso não exista connectionState
     });
   } else {
     res.status(404).json({
       error: "Instance not found",
       instanceName,
+    });
+  }
+});
+
+instanceRoutes.get("/instance/connectionState/getAllSessions", async (req, res) => {
+  const sessions = sessionsManager.getAllSessions();
+
+  if (sessions) {
+    res.json({
+      sessions,
+    });
+  } else {
+    res.status(404).json({
+      error: "Sessions not found in sessionsManager.",
     });
   }
 });
