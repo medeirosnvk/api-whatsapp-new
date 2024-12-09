@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const sessions = new Map(); // Armazena as informações das sessões
 
 module.exports = {
@@ -12,10 +13,13 @@ module.exports = {
     return sessions.get(sessionName);
   },
   getAllSessions: () => {
-    return Array.from(sessions.entries()).map(([sessionName, sessionData]) => ({
-      sessionName,
-      ...sessionData,
-    }));
+    return Array.from(sessions.entries()).map(([sessionName, sessionData]) => {
+      const { client, ...safeData } = sessionData; // Remove a propriedade `client`
+      return {
+        sessionName,
+        connectionState: safeData.connectionState, // Apenas retorna sessionName e connectionState
+      };
+    });
   },
   updateSession: (sessionName, updates) => {
     const session = sessions.get(sessionName);
