@@ -22,6 +22,7 @@ let stateMachines = {};
 
 const app = express();
 const port = process.env.PORT;
+const urlWebhook = process.env.URL_WEBHOOK;
 
 const wwebVersion = "2.2412.54";
 const qrCodeDataPath = path.join(__dirname, "qrcodes");
@@ -1408,7 +1409,7 @@ const createSession = async (sessionName) => {
             console.log(`Arquivo recebido e salvo em: ${filePath}`);
 
             mediaName = fileName;
-            mediaUrl = `http://10.0.0.102:3030/media/${fromPhoneNumber}/${fileName}`;
+            mediaUrl = `${urlWebhook}/media/${fromPhoneNumber}/${fileName}`;
             mediaBase64 = media.data;
           } catch (error) {
             console.error(
