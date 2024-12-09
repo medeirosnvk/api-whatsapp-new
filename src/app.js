@@ -2555,7 +2555,7 @@ app.get("/listAllFiles", (req, res) => {
 
     const fileUrls = fileStats.map(({ file }) => ({
       fileName: path.basename(file),
-      url: `https://whatsapp.cobrance.online:3060/media${file
+      url: `${urlWebhook}/media${file
         .replace(mediaDataPath, "")
         .replace(/\\/g, "/")}`,
     }));
