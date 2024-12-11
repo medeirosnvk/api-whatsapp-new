@@ -14,13 +14,18 @@ module.exports = {
   },
   getAllSessions: () => {
     return Array.from(sessions.entries()).map(([sessionName, sessionData]) => {
-      const { client, ...safeData } = sessionData; // Remove a propriedade `client`
+      const { client, ...safeData } = sessionData;
+
+      // Exibe o conteúdo de `client` no console
+      console.log(`Session "${sessionName}" client data:`, client);
+
       return {
         sessionName,
         connectionState: safeData.connectionState, // Apenas retorna sessionName e connectionState
       };
     });
   },
+
   updateSession: (sessionName, updates) => {
     const session = sessions.get(sessionName);
     if (!session) {
