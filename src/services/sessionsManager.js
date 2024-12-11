@@ -30,9 +30,6 @@ module.exports = {
           }
         : null;
 
-      // Exibe o conteúdo de client no console
-      console.log(`Session "${sessionName}" client data:`, client);
-
       return {
         sessionName,
         connectionState: safeData.connectionState, // Retorna sessionName e connectionState
