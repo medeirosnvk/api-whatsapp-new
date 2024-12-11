@@ -3,6 +3,7 @@ const express = require("express");
 const { sendTextMessage } = require("../services/MessageServices/sendTextMessageService");
 const { sendMediaMessage } = require("../services/MessageServices/sendMediaMessageService");
 const { checkWhatsappNumber } = require("../services/MessageServices/checkWhatsappNumberService");
+const { sendBase64Message } = require("../services/MessageServices/sendBase64MessageService");
 
 const messageRoutes = express.Router();
 
@@ -33,6 +34,23 @@ messageRoutes.post("/message/sendMedia/:instanceName", async (req, res) => {
 
   try {
     await sendMediaMessage(instanceName, number, mediaMessage);
+    res.status(200).json({ status: "PENDING" });
+  } catch (error) {
+    console.error("Erro ao enviar mensagem:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+messageRoutes.post("/message/sendBase64/:instanceName", async (req, res) => {
+  const { number, mediaMessage } = req.body;
+  const { instanceName } = req.params;
+
+  if (!instanceName || !number || !mediaMessage || !mediaMessage.media) {
+    return res.status(400).send("instanceName, number, and mediaMessage.media are required");
+  }
+
+  try {
+    await sendBase64Message(instanceName, number, mediaMessage);
     res.status(200).json({ status: "PENDING" });
   } catch (error) {
     console.error("Erro ao enviar mensagem:", error.message);

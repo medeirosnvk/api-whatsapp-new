@@ -94,8 +94,8 @@ const startHttpsServer = async () => {
 };
 
 const startServer = async () => {
-  app.use(express.json());
   app.use(cors());
+  app.use(express.json({ limit: "50mb" }));
 
   app.use(instanceRoutes);
   app.use(qrCodeRoutes);
