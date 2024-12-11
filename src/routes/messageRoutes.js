@@ -45,8 +45,8 @@ messageRoutes.post("/message/sendBase64/:instanceName", async (req, res) => {
   const { number, mediaMessage } = req.body;
   const { instanceName } = req.params;
 
-  if (!instanceName || !number || !mediaMessage || !mediaMessage.media) {
-    return res.status(400).send("instanceName, number, and mediaMessage.media are required");
+  if (!instanceName || !number || !mediaMessage || !mediaMessage.base64) {
+    return res.status(400).send("instanceName, number, and mediaMessage.base64 are required");
   }
 
   try {
