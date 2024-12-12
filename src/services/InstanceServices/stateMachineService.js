@@ -1,5 +1,3 @@
-/* eslint-disable no-undef */
-/* eslint-disable indent */
 const customDbConfig = {
   host: process.env.DB2_MY_SQL_HOST,
   user: process.env.MY_SQL_USER,

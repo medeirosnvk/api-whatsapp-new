@@ -1,4 +1,3 @@
-/* eslint-disable quotes */
 const fs = require("fs");
 const path = require("path"); // Certifique-se de importar o módulo 'path'
 const { createSession } = require("./createSessionService");

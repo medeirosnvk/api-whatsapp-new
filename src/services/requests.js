@@ -1,58 +1,45 @@
+const { axios } = require("axios");
 const utils = require("./utils");
 const axiosApiInstance = require("./api").axiosApiInstance;
 
 async function getAcordosFirmados(document) {
-  const response = await axiosApiInstance.get(
-    `/lista-acordos-firmados?documento=${document}`
-  );
+  const response = await axiosApiInstance.get(`/lista-acordos-firmados?documento=${document}`);
 
   return response.data;
 }
 
 async function getAcordosFirmadosDetalhado(idacordo) {
-  const response = await axiosApiInstance.get(
-    `/lista-acordos-firmados-detalhado?idacordo=${idacordo}`
-  );
+  const response = await axiosApiInstance.get(`/lista-acordos-firmados-detalhado?idacordo=${idacordo}`);
 
   return response.data;
 }
 
 async function getCredorDividas(iddevedor, dataBase) {
-  const response = await axiosApiInstance.get(
-    `/credores/dividas?iddevedor=${iddevedor}&database=${dataBase}`
-  );
+  const response = await axiosApiInstance.get(`/credores/dividas?iddevedor=${iddevedor}&database=${dataBase}`);
 
   return response.data;
 }
 
 async function getCredorDividasTotais(iddevedor, dataBase) {
-  const response = await axiosApiInstance.get(
-    `/credores/dividas/total?iddevedor=${iddevedor}&database=${dataBase}`
-  );
+  const response = await axiosApiInstance.get(`/credores/dividas/total?iddevedor=${iddevedor}&database=${dataBase}`);
 
   return response.data;
 }
 
 async function getCredorInfo(document) {
-  const response = await axiosApiInstance.get(
-    `/lista-credores?documento=${document}`
-  );
+  const response = await axiosApiInstance.get(`/lista-credores?documento=${document}`);
 
   return response.data;
 }
 
 async function getCredorOfertas(iddevedor) {
-  const response = await axiosApiInstance.get(
-    `/credores/oferta-parcelas?iddevedor=${iddevedor}`
-  );
+  const response = await axiosApiInstance.get(`/credores/oferta-parcelas?iddevedor=${iddevedor}`);
 
   return response.data;
 }
 
 async function getCredorVerBoleto(iddevedor) {
-  const response = await axiosApiInstance.get(
-    `/credores/oferta-parcelas?iddevedor=${iddevedor}`
-  );
+  const response = await axiosApiInstance.get(`/credores/oferta-parcelas?iddevedor=${iddevedor}`);
 
   return response.data;
 }
@@ -83,10 +70,7 @@ async function postDadosPromessa(props) {
 
 async function postDadosRecibo(props) {
   try {
-    const { data } = await axiosApiInstance.post(
-      "/insert-recibo/parcelado",
-      props
-    );
+    const { data } = await axiosApiInstance.post("/insert-recibo/parcelado", props);
     return data;
   } catch (error) {
     const errorMessage = "Erro ao inserir dados do recibo";
@@ -98,9 +82,7 @@ async function postDadosRecibo(props) {
 
 async function getAtualizarPromessas(idacordo) {
   try {
-    const { data } = await axiosApiInstance.get(
-      `/atualizar-valores-promessas?idacordo=${idacordo}`
-    );
+    const { data } = await axiosApiInstance.get(`/atualizar-valores-promessas?idacordo=${idacordo}`);
     return data;
   } catch (error) {
     console.error("Erro ao buscar dados no servidor: ", error);
@@ -110,9 +92,7 @@ async function getAtualizarPromessas(idacordo) {
 
 async function getAtualizarValores(idacordo) {
   try {
-    const { data } = await axiosApiInstance.get(
-      `/atualizar-valores?idacordo=${idacordo}`
-    );
+    const { data } = await axiosApiInstance.get(`/atualizar-valores?idacordo=${idacordo}`);
     return data;
   } catch (error) {
     console.error("Erro ao buscar dados no servidor: ", error);
@@ -122,9 +102,7 @@ async function getAtualizarValores(idacordo) {
 
 async function getDataValdoc(idacordo) {
   try {
-    const { data } = await axiosApiInstance.get(
-      `/lista-promessas-datavaldoc?idacordo=${idacordo}`
-    );
+    const { data } = await axiosApiInstance.get(`/lista-promessas-datavaldoc?idacordo=${idacordo}`);
 
     return data;
   } catch (error) {
@@ -160,32 +138,20 @@ async function postBoletoFinal(
   tarifa_boleto
 ) {
   if (!credorInfo.length && contratosDividas === "" && ultimoIdAcordo === "") {
-    console.error(
-      "Informação faltando: credores, ultimoIdAcordo ou contratosDividas",
-      credorInfo
-    );
+    console.error("Informação faltando: credores, ultimoIdAcordo ou contratosDividas", credorInfo);
     return;
   }
 
   const currentDate = new Date().toISOString().slice(0, 10);
 
-  const filterCredoresIdDevedor = await credorInfo.find(
-    (item) => item.iddevedor === iddevedor
-  );
+  const filterCredoresIdDevedor = await credorInfo.find((item) => item.iddevedor === iddevedor);
 
-  const { endres, baires, cidres, cepres, ufres, chave, idcedente, cpfcnpj } =
-    filterCredoresIdDevedor;
+  const { endres, baires, cidres, cepres, ufres, chave, idcedente, cpfcnpj } = filterCredoresIdDevedor;
 
   const responseDataValdoc = await getDataValdoc(ultimoIdAcordo);
 
-  if (
-    responseDataValdoc[0].valdoc === null ||
-    responseDataValdoc[0].valdoc === ""
-  ) {
-    console.error(
-      "Informação faltando: responseDataValdoc",
-      responseDataValdoc
-    );
+  if (responseDataValdoc[0].valdoc === null || responseDataValdoc[0].valdoc === "") {
+    console.error("Informação faltando: responseDataValdoc", responseDataValdoc);
     return;
   }
 
@@ -213,10 +179,7 @@ async function postBoletoFinal(
 
   const responseBoleto = await postDadosBoleto(parsedData5);
 
-  if (
-    responseBoleto &&
-    Object.prototype.hasOwnProperty.call(responseBoleto, "error")
-  ) {
+  if (responseBoleto && Object.prototype.hasOwnProperty.call(responseBoleto, "error")) {
     console.error("Está faltando alguma coisa: ", { responseBoleto });
     return;
   }
@@ -241,9 +204,7 @@ async function postBoletoFinal(
 
 async function getIdBoleto(idacordo) {
   try {
-    const response = await axiosApiInstance.get(
-      `/busca-idboleto?idacordo=${idacordo}`
-    );
+    const response = await axiosApiInstance.get(`/busca-idboleto?idacordo=${idacordo}`);
     return response.data;
   } catch (error) {
     console.error("Erro ao buscar dados no servidor: ", error);
@@ -253,10 +214,7 @@ async function getIdBoleto(idacordo) {
 
 async function postAtualizarValores(props) {
   try {
-    const { data } = await axiosApiInstance.post(
-      "/atualizar-valores-boleto",
-      props
-    );
+    const { data } = await axiosApiInstance.post("/atualizar-valores-boleto", props);
     return data;
   } catch (error) {
     const errorMessage = "Erro ao inserir dados do boleto";
@@ -270,12 +228,9 @@ async function getImagemBoleto(props) {
   try {
     const { idacordo, idboleto, banco } = props;
 
-    const response = await axiosApiInstance.get(
-      `/busca-imagem-boleto?idacordo=${idacordo}&idboleto=${idboleto}&banco=${banco}`,
-      {
-        maxRedirects: 0, // Impede o Axios de seguir redirecionamentos
-      }
-    );
+    const response = await axiosApiInstance.get(`/busca-imagem-boleto?idacordo=${idacordo}&idboleto=${idboleto}&banco=${banco}`, {
+      maxRedirects: 0, // Impede o Axios de seguir redirecionamentos
+    });
 
     // Verifica se a resposta é um redirecionamento (código de status 302)
     if (response.status === 302) {
@@ -298,12 +253,9 @@ async function getImagemBoleto(props) {
 async function getImagemQrCode(props) {
   try {
     const { idboleto } = props;
-    const response = await axiosApiInstance.get(
-      `/busca-qrcode?idboleto=${idboleto}`,
-      {
-        maxRedirects: 0, // Impede o Axios de seguir redirecionamentos
-      }
-    );
+    const response = await axiosApiInstance.get(`/busca-qrcode?idboleto=${idboleto}`, {
+      maxRedirects: 0, // Impede o Axios de seguir redirecionamentos
+    });
 
     // Verifica se a resposta é um redirecionamento (código de status 302)
     if (response.status === 302) {
@@ -326,12 +278,9 @@ async function getImagemQrCode(props) {
 async function getDataEmv(props) {
   try {
     const { idboleto } = props;
-    const response = await axiosApiInstance.get(
-      `/busca-emv?idboleto=${idboleto}`,
-      {
-        maxRedirects: 0, // Impede o Axios de seguir redirecionamentos
-      }
-    );
+    const response = await axiosApiInstance.get(`/busca-emv?idboleto=${idboleto}`, {
+      maxRedirects: 0, // Impede o Axios de seguir redirecionamentos
+    });
 
     // Verifica se a resposta é um redirecionamento (código de status 302)
     if (response.status === 302) {
@@ -353,9 +302,7 @@ async function getDataEmv(props) {
 
 async function getDataBoletoPix(iddevedor) {
   try {
-    const response = await axiosApiInstance.get(
-      `/busca-boleto-pix?iddevedor=${iddevedor}`
-    );
+    const response = await axiosApiInstance.get(`/busca-boleto-pix?iddevedor=${iddevedor}`);
     console.log("getDataBoletoPix iddevedor -", iddevedor);
     console.log("getDataBoletoPix response -", getDataBoletoPix);
 
@@ -368,9 +315,7 @@ async function getDataBoletoPix(iddevedor) {
 
 async function getTicketStatusByPhoneNumber(phoneNumber) {
   try {
-    const response = await axiosApiInstance.get(
-      `/ticket-status-phone-number?phoneNumber=${phoneNumber}`
-    );
+    const response = await axiosApiInstance.get(`/ticket-status-phone-number?phoneNumber=${phoneNumber}`);
     return response.data;
   } catch (error) {
     console.error("Erro ao buscar dados no servidor: ", error);
@@ -380,9 +325,7 @@ async function getTicketStatusByPhoneNumber(phoneNumber) {
 
 async function getAbrirAtendimentoBot(ticketId) {
   try {
-    const response = await axiosApiInstance.get(
-      `/atendimento-bot?id=${ticketId}`
-    );
+    const response = await axiosApiInstance.get(`/atendimento-bot?id=${ticketId}`);
     return response.data;
   } catch (error) {
     console.error("Erro ao buscar dados no servidor: ", error);
@@ -392,9 +335,7 @@ async function getAbrirAtendimentoBot(ticketId) {
 
 async function getAbrirAtendimentoHumano(ticketId) {
   try {
-    const response = await axiosApiInstance.get(
-      `/atendimento-humano-abrir?id=${ticketId}`
-    );
+    const response = await axiosApiInstance.get(`/atendimento-humano-abrir?id=${ticketId}`);
     return response.data;
   } catch (error) {
     console.error("Erro ao buscar dados no servidor: ", error);
@@ -404,9 +345,7 @@ async function getAbrirAtendimentoHumano(ticketId) {
 
 async function getFecharAtendimentoHumano(ticketId) {
   try {
-    const response = await axiosApiInstance.get(
-      `/atendimento-humano-fechar?id=${ticketId}`
-    );
+    const response = await axiosApiInstance.get(`/atendimento-humano-fechar?id=${ticketId}`);
     return response.data;
   } catch (error) {
     console.error("Erro ao buscar dados no servidor: ", error);
@@ -416,9 +355,7 @@ async function getFecharAtendimentoHumano(ticketId) {
 
 async function getInserirNumeroCliente(phoneNumber) {
   try {
-    const response = await axiosApiInstance.get(
-      `/inserir-numero-cliente?phoneNumber=${phoneNumber}`
-    );
+    const response = await axiosApiInstance.get(`/inserir-numero-cliente?phoneNumber=${phoneNumber}`);
     return response.data;
   } catch (error) {
     console.error("Erro ao buscar dados no servidor: ", error);
@@ -428,9 +365,7 @@ async function getInserirNumeroCliente(phoneNumber) {
 
 async function getInserirNovoTicket(phoneNumber) {
   try {
-    const response = await axiosApiInstance.get(
-      `/inserir-numero-ticket?phoneNumber=${phoneNumber}`
-    );
+    const response = await axiosApiInstance.get(`/inserir-numero-ticket?phoneNumber=${phoneNumber}`);
     return response.data;
   } catch (error) {
     console.error("Erro ao buscar dados no servidor: ", error);
@@ -440,9 +375,7 @@ async function getInserirNovoTicket(phoneNumber) {
 
 async function getStatusAtendimento(phoneNumber) {
   try {
-    const response = await axiosApiInstance.get(
-      `/status-atendimento?phoneNumber=${phoneNumber}`
-    );
+    const response = await axiosApiInstance.get(`/status-atendimento?phoneNumber=${phoneNumber}`);
     return response.data;
   } catch (error) {
     console.error("Erro ao buscar dados no servidor: ", error);
@@ -452,9 +385,7 @@ async function getStatusAtendimento(phoneNumber) {
 
 async function getCredorByPhoneNumber(phoneNumber) {
   try {
-    const response = await axiosApiInstance.get(
-      `/credor-db?phoneNumber=${phoneNumber}`
-    );
+    const response = await axiosApiInstance.get(`/credor-db?phoneNumber=${phoneNumber}`);
     return response.data;
   } catch (error) {
     console.error("Erro ao buscar dados no servidor: ", error);

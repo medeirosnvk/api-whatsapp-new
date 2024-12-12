@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 require("dotenv").config();
 const fs = require("fs");
 const https = require("https");
@@ -19,8 +18,6 @@ const port = process.env.PORT;
 const environment = process.env.NODE_ENV;
 
 const app = express();
-
-let sessions = {};
 
 const initializeDirectories = async () => {
   if (!fs.existsSync(qrCodeDir)) {

@@ -3,7 +3,6 @@ const path = require("path");
 
 const filePath = path.join(__dirname, "../../../clientData.json");
 
-// Função para carregar os dados do arquivo
 const loadClientData = () => {
   try {
     if (fs.existsSync(filePath)) {
@@ -17,7 +16,6 @@ const loadClientData = () => {
   return {}; // Retorna um objeto vazio se o arquivo não existir ou houver erro
 };
 
-// Função para salvar os dados no arquivo
 const saveClientData = (clientData) => {
   try {
     fs.writeFileSync(filePath, JSON.stringify(clientData, null, 2), "utf8");
@@ -27,7 +25,6 @@ const saveClientData = (clientData) => {
   }
 };
 
-// Função para adicionar ou atualizar uma sessão
 const addOrUpdateDataSession = (client) => {
   const clientData = loadClientData();
 
@@ -56,7 +53,6 @@ const addOrUpdateDataSession = (client) => {
   saveClientData(clientData);
 };
 
-// Função para excluir uma sessão
 const deleteDataSession = (sessionName) => {
   const clientData = loadClientData();
 
@@ -69,13 +65,11 @@ const deleteDataSession = (sessionName) => {
   }
 };
 
-// Função para obter uma sessão específica
 const getDataSession = (sessionName) => {
   const clientData = loadClientData();
   return clientData[sessionName] || null;
 };
 
-// Função para listar todas as sessões
 const listDataSessions = () => {
   const clientData = loadClientData();
   return Object.keys(clientData);

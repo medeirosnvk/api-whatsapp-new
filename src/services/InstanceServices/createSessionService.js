@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 const qrcode = require("qrcode-terminal");
 const fs = require("fs");
 const { Client, LocalAuth } = require("whatsapp-web.js");

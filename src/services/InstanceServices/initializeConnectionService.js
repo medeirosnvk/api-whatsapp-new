@@ -1,4 +1,3 @@
-/* eslint-disable quotes */
 const fs = require("fs");
 const sessionsManager = require("../../services/sessionsManager");
 
