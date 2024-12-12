@@ -23,7 +23,7 @@ const sendBase64Message = async (sessionName, phoneNumber, message) => {
     }
   }
 
-  const { base64, fileName, mimeType, caption } = message;
+  const { base64, fileName, caption, mimeType } = message;
 
   const messageMedia = new MessageMedia(mimeType, base64, fileName);
 
@@ -56,10 +56,7 @@ const sendAudioBase64Message = async (sessionName, phoneNumber, message) => {
     }
   }
 
-  const { base64, fileName, caption } = message;
-
-  // Alterando o MIME type para "video/webm" ao invés de "audio/mp3"
-  const mimeType = "video/webm";
+  const { base64, fileName, caption, mimeType } = message;
 
   // Criando o objeto de mídia com o MIME type adequado
   const messageMedia = new MessageMedia(mimeType, base64, fileName);
