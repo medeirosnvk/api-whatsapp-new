@@ -57,33 +57,48 @@ const sendAudioBase64Message = async (sessionName, phoneNumber, message) => {
     }
   }
 
-  let { base64, fileName, caption, mimeType } = message;
+  let { base64, fileName, caption } = message;
 
   // Verificar e ajustar Base64
   if (base64.includes(",")) {
     base64 = base64.split(",")[1]; // Remove prefixo 'data:<mime>;base64,'
   }
 
-  // Validar e ajustar MIME Type para áudio
-  const supportedMimeTypes = ["audio/webm", "audio/ogg", "audio/mp3"];
-  if (!supportedMimeTypes.includes(mimeType)) {
-    console.warn(`MIME type ${mimeType} não é suportado. Alterando para audio/webm.`);
-    mimeType = "audio/webm"; // Alterar para um MIME padrão suportado
-  }
+  // Definir todos os MIME types possíveis para os testes
+  const mimeTypesToTest = [
+    "audio/webm", // WebM Audio
+    "audio/ogg", // Ogg Audio
+    "audio/mp3", // MP3 Audio
+    "audio/mpeg", // MPEG Audio
+    "audio/wav", // WAV Audio
+    "audio/x-wav", // WAV Audio (alternativo)
+    "audio/flac", // FLAC Audio
+    "audio/aac", // AAC Audio
+    "image/jpeg", // JPEG Image
+    "image/png", // PNG Image
+    "image/gif", // GIF Image
+    "image/webp", // WebP Image
+    "video/mp4", // MP4 Video
+    "video/webm", // WebM Video
+  ];
 
-  // Criando o objeto de mídia com o MIME type adequado
-  try {
-    const messageMedia = new MessageMedia(mimeType, base64, fileName);
+  // Testando o envio para todos os tipos MIME
+  for (let mimeType of mimeTypesToTest) {
+    try {
+      console.log(`Enviando mensagem com MIME type: ${mimeType}`);
 
-    // Enviando mensagem
-    await session.client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
-      caption: caption,
-    });
+      // Criando o objeto de mídia com o MIME type atual
+      const messageMedia = new MessageMedia(mimeType, base64, fileName);
 
-    console.log(`Mensagem de áudio Base64 enviada com sucesso ao número ${phoneNumber} pela instância ${sessionName} no horário ${new Date()}!`);
-  } catch (error) {
-    console.error(`Erro ao enviar mensagem para o número ${phoneNumber}:`, error);
-    throw new Error(`Falha ao enviar mensagem para o número ${phoneNumber}. Detalhes: ${error.message}`);
+      // Enviando a mensagem
+      await session.client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
+        caption: caption,
+      });
+
+      console.log(`Mensagem de ${mimeType} enviada com sucesso ao número ${phoneNumber} pela instância ${sessionName} no horário ${new Date()}!`);
+    } catch (error) {
+      console.error(`Erro ao enviar mensagem com MIME type ${mimeType} para o número ${phoneNumber}:`, error);
+    }
   }
 };
 
