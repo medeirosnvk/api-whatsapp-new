@@ -24,7 +24,6 @@ module.exports = {
         ? {
             pushname: client.info.pushname,
             wid: client.info.wid,
-            phone: client.info.phone,
           }
         : null;
 

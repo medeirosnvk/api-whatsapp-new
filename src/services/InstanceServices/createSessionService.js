@@ -59,6 +59,7 @@ const createSession = async (sessionName) => {
     });
 
     client.sessionName = sessionName;
+    client.connectionState = "connecting";
     sessionsManager.addSession(sessionName, client, { connectionState: "connecting" });
 
     const qrTimeout = setTimeout(() => {
@@ -145,7 +146,6 @@ const createSession = async (sessionName) => {
         const clientData = saveClientDataService.addOrUpdateDataSession(client);
         sessionsManager.updateSession(sessionName, {
           connectionState: "open",
-          clientData,
         });
 
         // Configuração da máquina de estado
