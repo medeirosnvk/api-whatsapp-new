@@ -15,8 +15,6 @@ module.exports = {
    * @param {object} additionalData - Dados adicionais para a sessão.
    */
   addSession: (sessionName, client, additionalData = {}) => {
-    console.log("Adicionando sessão:", sessionName, { client, additionalData });
-
     sessions.set(sessionName, {
       client,
       connectionState: "connecting", // Estado inicial
