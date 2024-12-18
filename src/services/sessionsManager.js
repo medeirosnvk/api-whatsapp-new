@@ -15,6 +15,8 @@ module.exports = {
    * @param {object} additionalData - Dados adicionais para a sessão.
    */
   addSession: (sessionName, client, additionalData = {}) => {
+    console.log("Adicionando sessão:", sessionName, { client, additionalData });
+
     sessions.set(sessionName, {
       client,
       connectionState: "connecting", // Estado inicial
@@ -68,6 +70,8 @@ module.exports = {
    * @throws {Error} - Se a sessão não for encontrada.
    */
   updateSession: (sessionName, updates) => {
+    console.log("Atualizando sessão:", sessionName, updates);
+
     const session = sessions.get(sessionName);
 
     if (!session) {
@@ -75,13 +79,18 @@ module.exports = {
     }
 
     if (updates.client) {
-      console.warn("Atualização do objeto `client` ignorada para evitar sobrescrita indesejada.");
-      delete updates.client; // Evita sobrescrever o cliente
+      if (session.client !== updates.client) {
+        console.log(`Atualizando o objeto \`client\` para a sessão "${sessionName}".`);
+        session.client = updates.client;
+      } else {
+        console.warn(`O objeto \`client\` para a sessão "${sessionName}" já está atualizado.`);
+      }
+      delete updates.client; // Remove o `client` de updates após lidar com ele
     }
 
     sessions.set(sessionName, {
       ...session,
-      ...updates, // Atualiza os dados com as novas informações
+      ...updates,
       connectionDateTime: getServerDateTime(),
     });
   },

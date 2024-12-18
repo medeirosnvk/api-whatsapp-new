@@ -75,7 +75,6 @@ const createSession = async (sessionName) => {
           console.log("Timeout de QR Code limpo com sucesso.");
         }
 
-        console.log(`Sessão ${sessionName} está pronta!`);
         client.connectionState = "open";
 
         // Salvar os dados do cliente no sessionManager
@@ -86,6 +85,7 @@ const createSession = async (sessionName) => {
         });
 
         console.log(`Sessão ${sessionName} foi salva como 'open' no sessionsManager.`);
+        console.log(`Sessão ${sessionName} está pronta!`);
 
         // Configuração da máquina de estado
         new StateMachine(client, sessionName);
@@ -132,6 +132,11 @@ const createSession = async (sessionName) => {
         console.error(`A sessão ${sessionName} foi banida.`);
         sessionsManager.updateSession(sessionName, { connectionState: "banned" });
       }
+    });
+
+    client.on("connection-state-changed", (state) => {
+      console.log(`Estado da conexão mudou para ${sessionName}:`, state);
+      sessionsManager.updateSession(sessionName, { connectionState: state });
     });
 
     await client.initialize();
