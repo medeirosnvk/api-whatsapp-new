@@ -31,18 +31,27 @@ module.exports = {
         sessionName,
         connectionState: client.connectionState, // Retorna sessionName e connectionState
         info: clientInfo, // Inclui os dados de info, se existirem
+        connectionDateTime: client.connectionDateTime,
       };
     });
   },
 
   updateSession: (sessionName, updates) => {
     const session = sessions.get(sessionName);
+
     if (!session) {
       throw new Error("Sessão não encontrada.");
     }
+
+    const serverTimezone = "America/Sao_Paulo"; // Substitua pelo fuso horário do seu servidor
+    const serverDateTime = new Date().toLocaleString("en-US", {
+      timeZone: serverTimezone,
+    });
+
     sessions.set(sessionName, {
       ...session,
       ...updates, // Atualiza os dados com as novas informações
+      connectionDateTime: serverDateTime,
     });
   },
 
