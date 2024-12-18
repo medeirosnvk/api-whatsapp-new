@@ -24,24 +24,6 @@ const createSession = async (sessionName) => {
     console.log(`Criando nova sessão: ${sessionName}...`);
 
     const localAuth = new LocalAuth({ clientId: sessionName });
-
-    delete localAuth.logout;
-    localAuth.logout = async () => {
-      try {
-        console.log("Executando logout...");
-
-        if (this.userDataDir) {
-          await fs.promises.rm(this.userDataDir, {
-            recursive: true,
-            force: true,
-          });
-          console.log(`Diretório de dados do usuário ${this.userDataDir} removido com sucesso.`);
-        }
-      } catch (error) {
-        console.error("Erro ao remover o diretório de dados do usuário:", error);
-      }
-    };
-
     const client = new Client({
       authStrategy: localAuth,
       puppeteer: {
@@ -60,6 +42,8 @@ const createSession = async (sessionName) => {
 
     client.sessionName = sessionName;
     client.connectionState = "connecting";
+
+    // Atualiza a sessão no SessionManager
     sessionsManager.addSession(sessionName, client, { connectionState: "connecting" });
 
     const qrTimeout = setTimeout(() => {
@@ -67,9 +51,9 @@ const createSession = async (sessionName) => {
         client.connectionState = "disconnected";
         console.log(`Tempo esgotado para a sessão ${sessionName}. Desconectando...`);
         client.destroy();
-        sessionsManager.removeSession(sessionName); // Remove a sessão do sessionManager
+        sessionsManager.removeSession(sessionName);
       }
-    }, 3 * 60 * 1000); // 3 minutos
+    }, 3 * 60 * 1000);
 
     client.on("qr", async (qr) => {
       try {
@@ -84,17 +68,33 @@ const createSession = async (sessionName) => {
       }
     });
 
+    client.on("ready", async () => {
+      try {
+        clearTimeout(qrTimeout);
+        console.log(`Sessão ${sessionName} está pronta!`);
+
+        client.connectionState = "open";
+        sessionsManager.updateSession(sessionName, {
+          connectionState: "open",
+        });
+        saveClientDataService.addOrUpdateDataSession(client);
+
+        // Configuração da máquina de estado
+        new StateMachine(client, sessionName);
+      } catch (error) {
+        console.error(`Erro ao configurar a sessão "${sessionName}":`, error);
+        sessionsManager.removeSession(sessionName);
+      }
+    });
+
     client.on("disconnected", async (data) => {
       try {
         clearTimeout(qrTimeout);
         console.error(`Sessão ${sessionName} foi desconectada.`);
 
         client.connectionState = "disconnected";
-        const clientData = saveClientDataService.addOrUpdateDataSession(client);
-        sessionsManager.updateSession(sessionName, {
-          connectionState: "disconnected",
-          clientData,
-        });
+        sessionsManager.updateSession(sessionName, { connectionState: "disconnected" });
+        saveClientDataService.addOrUpdateDataSession(client);
 
         await client.logout();
       } catch (error) {
@@ -108,9 +108,6 @@ const createSession = async (sessionName) => {
           console.error("Erro ao acessar propriedades indefinidas ou diretório não vazio durante a desconexão:", error.message);
           sessionsManager.updateSession(sessionName, { connectionState: "banned" });
           saveClientDataService.addOrUpdateDataSession(client);
-        } else {
-          sessionsManager.updateSession(sessionName, { connectionState: "disconnected" });
-          saveClientDataService.addOrUpdateDataSession(client);
         }
       }
     });
@@ -120,51 +117,12 @@ const createSession = async (sessionName) => {
       console.error(`Sessão ${sessionName} falhou na autenticação.`);
 
       client.connectionState = "auth_failure";
-      const clientData = saveClientDataService.addOrUpdateDataSession(client);
-      sessionsManager.updateSession(sessionName, {
-        connectionState: "auth_failure",
-        clientData,
-      });
-
-      console.error(`Falha de autenticação na sessão ${sessionName}. Verifique suas credenciais.`);
+      sessionsManager.updateSession(sessionName, { connectionState: "auth_failure" });
+      saveClientDataService.addOrUpdateDataSession(client);
 
       if (data.includes("ban")) {
-        client.connectionState = "banned";
-        console.error(`A sessão ${client.sessionName} foi banida.`);
+        console.error(`A sessão ${sessionName} foi banida.`);
         sessionsManager.updateSession(sessionName, { connectionState: "banned" });
-      } else {
-        sessionsManager.updateSession(sessionName, { connectionState: "disconnected" });
-      }
-    });
-
-    client.on("ready", async () => {
-      try {
-        clearTimeout(qrTimeout);
-        console.log(`Sessão ${sessionName} está pronta!`);
-
-        client.connectionState = "open";
-        const clientData = saveClientDataService.addOrUpdateDataSession(client);
-        sessionsManager.updateSession(sessionName, {
-          connectionState: "open",
-        });
-
-        // Configuração da máquina de estado
-        new StateMachine(client, sessionName);
-      } catch (error) {
-        console.error(`Erro ao configurar a sessão "${sessionName}":`, error);
-        sessionsManager.removeSession(sessionName);
-      }
-    });
-
-    client.on("message", async (message) => {
-      try {
-        console.log(`Mensagem ${message.body} recebida de ${message.from} as ${new Date()}`);
-
-        if (message.body === "ping") {
-          message.reply("pong");
-        }
-      } catch (error) {
-        console.error("Erro ao processar com a mensagem:", error);
       }
     });
 

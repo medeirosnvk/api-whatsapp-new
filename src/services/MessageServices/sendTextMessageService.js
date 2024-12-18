@@ -1,4 +1,5 @@
 const sessionManager = require("../../services/sessionsManager");
+const { getDataSession } = require("../InstanceServices/saveClientDataService");
 
 const sendTextMessage = async (sessionName, phoneNumber, message) => {
   const session = sessionManager.getSession(sessionName);
@@ -26,8 +27,17 @@ const sendTextMessage = async (sessionName, phoneNumber, message) => {
   console.log(`Número processado: ${processedNumber}`);
   console.log(`Texto: ${message.text}`);
 
-  await session.client.sendMessage(`${processedNumber}@c.us`, message.text);
+  try {
+    await session.client.sendMessage(`${processedNumber}@c.us`, message.text);
+    console.log(`Mensagem enviada para ${phoneNumber} na sessão ${sessionName}: ${message.text}`);
+  } catch (error) {
+    console.error(`- Erro: ${error.message}`);
+    console.error(`- Stack: ${error.stack}`);
+    console.error(`- Detalhes adicionais:`, error);
+    throw new Error(`Erro ao tentar enviar sendTextMessage: ${error.message}`);
+  }
 
+  await session.client.sendMessage(`${processedNumber}@c.us`, message.text);
   console.log(`Mensagem enviada para ${phoneNumber} na sessão ${sessionName}: ${message.text}`);
 };
 
