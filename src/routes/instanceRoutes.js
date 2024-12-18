@@ -225,17 +225,34 @@ instanceRoutes.get("/instance/getAllSessions", async (req, res) => {
 instanceRoutes.get("/instance/connectionState/:instanceName", async (req, res) => {
   const { instanceName } = req.params;
 
-  const session = sessionsManager.getSession(instanceName);
+  try {
+    const session = sessionsManager.getSession(instanceName);
 
-  if (session.client) {
-    res.json({
+    if (!session) {
+      console.error(`Sessão "${instanceName}" não encontrada.`);
+      return res.status(404).json({
+        error: "Instance not found",
+        instanceName,
+      });
+    }
+
+    if (!session.client) {
+      console.error(`Cliente não inicializado para a sessão "${instanceName}".`);
+      return res.status(500).json({
+        error: "Client not initialized",
+        instanceName,
+      });
+    }
+
+    return res.json({
       instanceName,
       state: session.client.connectionState,
     });
-  } else {
-    res.status(404).json({
-      error: "Instance not found",
-      instanceName,
+  } catch (error) {
+    console.error(`Erro ao buscar estado da conexão para a instância "${instanceName}":`, error);
+    return res.status(500).json({
+      error: "Internal Server Error",
+      details: error.message,
     });
   }
 });

@@ -30,7 +30,7 @@ module.exports = {
    */
   getSession: (sessionName) => {
     if (!sessions.has(sessionName)) {
-      console.warn(`Sessão "${sessionName}" não encontrada.`);
+      console.error(`Sessão "${sessionName}" não encontrada.`);
       return null;
     }
     return sessions.get(sessionName);
