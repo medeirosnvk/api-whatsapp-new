@@ -12,7 +12,7 @@ const createSession = async (sessionName) => {
   if (existingSession) {
     if (existingSession.connectionState === "open") {
       console.log(`A sessão ${sessionName} já está conectada.`);
-      return;
+      return existingSession;
     } else {
       console.log(`A sessão ${sessionName} existe, mas não está conectada.`);
     }
