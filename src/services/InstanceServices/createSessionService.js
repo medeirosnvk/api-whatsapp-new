@@ -70,14 +70,22 @@ const createSession = async (sessionName) => {
 
     client.on("ready", async () => {
       try {
-        clearTimeout(qrTimeout);
-        console.log(`Sessão ${sessionName} está pronta!`);
+        if (qrTimeout) {
+          clearTimeout(qrTimeout);
+          console.log("Timeout de QR Code limpo com sucesso.");
+        }
 
+        console.log(`Sessão ${sessionName} está pronta!`);
         client.connectionState = "open";
+
+        // Salvar os dados do cliente no sessionManager
+        saveClientDataService.addOrUpdateDataSession(client);
         sessionsManager.updateSession(sessionName, {
+          client,
           connectionState: "open",
         });
-        saveClientDataService.addOrUpdateDataSession(client);
+
+        console.log(`Sessão ${sessionName} foi salva como 'open' no sessionsManager.`);
 
         // Configuração da máquina de estado
         new StateMachine(client, sessionName);

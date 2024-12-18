@@ -1,5 +1,4 @@
 const sessionManager = require("../../services/sessionsManager");
-const { getDataSession } = require("../InstanceServices/saveClientDataService");
 
 const sendTextMessage = async (sessionName, phoneNumber, message) => {
   const session = sessionManager.getSession(sessionName);
