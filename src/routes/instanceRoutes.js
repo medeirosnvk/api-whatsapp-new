@@ -230,7 +230,7 @@ instanceRoutes.get("/instance/connectionState/:instanceName", async (req, res) =
   if (session.client) {
     res.json({
       instanceName,
-      state: session.client.connectionState || "unknown", // Valor padrão caso não exista connectionState
+      state: session.client.connectionState,
     });
   } else {
     res.status(404).json({
