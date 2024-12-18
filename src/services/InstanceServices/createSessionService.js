@@ -9,29 +9,31 @@ const sessionsManager = require("../../services/sessionsManager");
 const sessionsInProgress = new Set();
 
 const createSession = async (sessionName) => {
-  if (sessionsInProgress.has(sessionName)) {
-    console.log(`A sessão ${sessionName} já está sendo criada. Aguardando...`);
-    return null;
-  }
-
-  sessionsInProgress.add(sessionName);
-
   const existingSession = sessionsManager.getSession(sessionName);
 
+  // Verifica se a sessão já está sendo criada e não está conectada
+  if (sessionsInProgress.has(sessionName)) {
+    if (existingSession && existingSession.connectionState !== "open") {
+      console.log(`A sessão ${sessionName} já está sendo criada. Aguardando...`);
+      return null; // A sessão está sendo criada, aguardar
+    }
+  }
+
+  // Marca a sessão como em criação
+  sessionsInProgress.add(sessionName);
+
+  // Se a sessão já existir, mas não estiver conectada, loga que está em processo
   if (existingSession) {
     if (existingSession.connectionState === "open") {
       console.log(`A sessão ${sessionName} já está conectada.`);
-      return existingSession;
-    } else {
-      console.log(`A sessão ${sessionName} existe, mas não está conectada.`);
+      return existingSession; // Retorna a sessão se já estiver conectada
     }
+    console.log(`A sessão ${sessionName} existe, mas não está conectada.`);
   }
 
   let isQRFunctionExposed = false;
 
   try {
-    console.log(`Criando nova sessão: ${sessionName}...`);
-
     const localAuth = new LocalAuth({ clientId: sessionName });
     const client = new Client({
       authStrategy: localAuth,
