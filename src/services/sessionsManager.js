@@ -30,7 +30,7 @@ module.exports = {
 
       return {
         sessionName,
-        connectionState: safeData.connectionState, // Retorna sessionName e connectionState
+        connectionState: client.connectionState, // Retorna sessionName e connectionState
         info: clientInfo, // Inclui os dados de info, se existirem
       };
     });

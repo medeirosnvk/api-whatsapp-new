@@ -48,7 +48,6 @@ const sendAudioBase64Message = async (sessionName, phoneNumber, message) => {
   let processedNumber = phoneNumber;
   const brazilCountryCode = "55";
 
-  // Ajuste do número brasileiro
   if (processedNumber.startsWith(brazilCountryCode)) {
     const localNumber = processedNumber.slice(4);
 
@@ -59,12 +58,10 @@ const sendAudioBase64Message = async (sessionName, phoneNumber, message) => {
 
   let { base64, fileName, caption } = message;
 
-  // Verificar e ajustar Base64
   if (base64.includes(",")) {
     base64 = base64.split(",")[1]; // Remove prefixo 'data:<mime>;base64,'
   }
 
-  // Definir todos os MIME types possíveis para os testes
   const mimeTypesToTest = [
     "audio/webm", // WebM Audio
     "audio/ogg", // Ogg Audio
@@ -82,15 +79,12 @@ const sendAudioBase64Message = async (sessionName, phoneNumber, message) => {
     "video/webm", // WebM Video
   ];
 
-  // Testando o envio para todos os tipos MIME
   for (let mimeType of mimeTypesToTest) {
     try {
       console.log(`Enviando mensagem com MIME type: ${mimeType}`);
 
-      // Criando o objeto de mídia com o MIME type atual
       const messageMedia = new MessageMedia(mimeType, base64, fileName);
 
-      // Enviando a mensagem
       await session.client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
         caption: caption,
       });

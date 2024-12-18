@@ -199,24 +199,6 @@ instanceRoutes.get("/instance/fetchAllInstances", async (req, res) => {
   }
 });
 
-instanceRoutes.get("/instance/connectionState/:instanceName", async (req, res) => {
-  const { instanceName } = req.params;
-
-  const session = sessionsManager.getSession(instanceName);
-
-  if (session.client) {
-    res.json({
-      instanceName,
-      state: session.client.connectionState || "unknown", // Valor padrão caso não exista connectionState
-    });
-  } else {
-    res.status(404).json({
-      error: "Instance not found",
-      instanceName,
-    });
-  }
-});
-
 instanceRoutes.get("/instance/getAllSessions", async (req, res) => {
   try {
     const sessions = sessionsManager.getAllSessions();
@@ -236,6 +218,24 @@ instanceRoutes.get("/instance/getAllSessions", async (req, res) => {
     console.error("Error fetching sessions:", error);
     res.status(500).json({
       error: "An unexpected error occurred while fetching sessions.",
+    });
+  }
+});
+
+instanceRoutes.get("/instance/connectionState/:instanceName", async (req, res) => {
+  const { instanceName } = req.params;
+
+  const session = sessionsManager.getSession(instanceName);
+
+  if (session.client) {
+    res.json({
+      instanceName,
+      state: session.client.connectionState || "unknown", // Valor padrão caso não exista connectionState
+    });
+  } else {
+    res.status(404).json({
+      error: "Instance not found",
+      instanceName,
     });
   }
 });
