@@ -68,7 +68,7 @@ module.exports = {
    * @throws {Error} - Se a sessão não for encontrada.
    */
   updateSession: (sessionName, updates) => {
-    console.log("Atualizando sessão:", sessionName, updates);
+    console.log("Atualizando sessão:", sessionName);
 
     const session = sessions.get(sessionName);
 
@@ -78,7 +78,6 @@ module.exports = {
 
     if (updates.client) {
       if (session.client !== updates.client) {
-        console.log(`Atualizando o objeto \`client\` para a sessão "${sessionName}".`);
         session.client = updates.client;
       } else {
         console.warn(`O objeto \`client\` para a sessão "${sessionName}" já está atualizado.`);
