@@ -6,7 +6,16 @@ const saveClientDataService = require("../../services/InstanceServices/saveClien
 const StateMachine = require("../../services/InstanceServices/stateMachineService");
 const sessionsManager = require("../../services/sessionsManager");
 
+const sessionsInProgress = new Set();
+
 const createSession = async (sessionName) => {
+  if (sessionsInProgress.has(sessionName)) {
+    console.log(`A sessão ${sessionName} já está sendo criada. Aguardando...`);
+    return null;
+  }
+
+  sessionsInProgress.add(sessionName);
+
   const existingSession = sessionsManager.getSession(sessionName);
 
   if (existingSession) {
