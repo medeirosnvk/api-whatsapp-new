@@ -1,3 +1,5 @@
+const { executeQuery } = require("../../db/dbconfig");
+
 const customDbConfig = {
   host: process.env.DB2_MY_SQL_HOST,
   user: process.env.MY_SQL_USER,
