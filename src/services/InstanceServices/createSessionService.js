@@ -135,7 +135,7 @@ const createSession = async (sessionName) => {
       }
     });
 
-    client.on("auth_failure", (data) => {
+    client.on("auth_failure", async (data) => {
       clearTimeout(qrTimeout);
       console.error(`Sessão ${sessionName} falhou na autenticação.`);
 
@@ -149,7 +149,7 @@ const createSession = async (sessionName) => {
       }
     });
 
-    client.on("connection-state-changed", (state) => {
+    client.on("connection-state-changed", async (state) => {
       console.log(`Estado da conexão mudou para ${sessionName}:`, state);
       sessionsManager.updateSession(sessionName, { connectionState: state });
     });
@@ -283,12 +283,12 @@ const createSession = async (sessionName) => {
 
           const demim = 0;
 
-          stateMachine._setTicketId(ticketId);
-          stateMachine._setFromNumber(from);
-          stateMachine._setToNumber(to);
+          StateMachine.setTicketId(ticketId);
+          StateMachine.setFromNumber(from);
+          StateMachine.setToNumber(to);
 
-          await stateMachine._getRegisterMessagesDB(from, to, message.body, ticketId, demim);
-          await stateMachine.handleMessage(fromPhoneNumber, response);
+          await StateMachine.getRegisterMessagesDB(from, to, message.body, ticketId, demim);
+          await StateMachine.handleMessage(fromPhoneNumber, response);
         } catch (error) {
           console.error("Erro ao processar a mensagem:", error);
         }
