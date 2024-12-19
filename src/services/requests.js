@@ -320,7 +320,7 @@ async function getTicketStatusByPhoneNumber(phoneNumber) {
     return { error: "Erro ao buscar dados no servidor." };
   }
 }
-k;
+
 async function getAbrirAtendimentoBot(ticketId) {
   try {
     const response = await axiosApiInstance.get(`/atendimento-bot?id=${ticketId}`);
