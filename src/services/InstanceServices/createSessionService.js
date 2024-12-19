@@ -288,12 +288,12 @@ const createSession = async (sessionName) => {
 
           const demim = 0;
 
-          StateMachine.setTicketId(ticketId);
-          StateMachine.setFromNumber(from);
-          StateMachine.setToNumber(to);
+          stateMachine.setTicketId(ticketId);
+          stateMachine.setFromNumber(from);
+          stateMachine.setToNumber(to);
 
-          await StateMachine.getRegisterMessagesDB(from, to, message.body, ticketId, demim);
-          await StateMachine.handleMessage(fromPhoneNumber, response);
+          await stateMachine.getRegisterMessagesDB(from, to, message.body, ticketId, demim);
+          await stateMachine.handleMessage(fromPhoneNumber, response);
         } catch (error) {
           console.error("Erro ao processar a mensagem:", error);
         }

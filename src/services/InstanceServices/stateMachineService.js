@@ -71,15 +71,15 @@ class StateMachine {
     }
   }
 
-  async setTicketId(ticketId) {
+  static async setTicketId(ticketId) {
     this.ticketId = ticketId;
   }
 
-  async setFromNumber(from) {
+  static async setFromNumber(from) {
     this.fromNumber = from;
   }
 
-  async setToNumber(to) {
+  static async setToNumber(to) {
     this.toNumber = to;
   }
 
