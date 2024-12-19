@@ -193,7 +193,7 @@ const createSession = async (sessionName) => {
           try {
             // Fazer o download da mídia
             const media = await message.downloadMedia();
-            const mediaPath = path.join(__dirname, "media", fromPhoneNumber);
+            const mediaPath = path.join(__dirname, "../../media", fromPhoneNumber);
 
             // Garantir que o diretório existe
             if (!fs.existsSync(mediaPath)) {
