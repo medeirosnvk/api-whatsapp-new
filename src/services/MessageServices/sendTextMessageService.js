@@ -34,9 +34,6 @@ const sendTextMessage = async (sessionName, phoneNumber, message) => {
     console.error(`- Detalhes adicionais:`, error);
     throw new Error(`Erro ao tentar enviar sendTextMessage: ${error.message}`);
   }
-
-  await session.client.sendMessage(`${processedNumber}@c.us`, message.text);
-  console.log(`Mensagem enviada para ${phoneNumber} na sessão ${sessionName}: ${message.text}`);
 };
 
 module.exports = { sendTextMessage };

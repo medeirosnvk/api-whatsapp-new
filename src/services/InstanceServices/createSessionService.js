@@ -1,15 +1,15 @@
 require("dotenv").config();
-const qrcode = require("qrcode-terminal");
-const fs = require("fs");
-const path = require("path");
 const { Client, LocalAuth } = require("whatsapp-web.js");
 const { saveQRCodeImage } = require("./saveQRCodeImageService");
-const saveClientDataService = require("../../services/InstanceServices/saveClientDataService");
+const fs = require("fs");
 const StateMachine = require("../../services/InstanceServices/stateMachineService");
+const axios = require("axios");
+const path = require("path");
+const saveClientDataService = require("../../services/InstanceServices/saveClientDataService");
 const sessionsManager = require("../../services/sessionsManager");
+const qrcode = require("qrcode-terminal");
 const requests = require("../requests");
 const utils = require("../utils");
-const axios = require("axios");
 
 const sessionsInProgress = new Set();
 
