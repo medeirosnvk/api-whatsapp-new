@@ -852,7 +852,7 @@ class StateMachine {
     }
   }
 
-  static async handleMessage(phoneNumber, response) {
+  async handleMessage(phoneNumber, response) {
     try {
       let { currentState } = this._getState(phoneNumber);
       const origin = response.from;
