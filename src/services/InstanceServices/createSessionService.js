@@ -6,8 +6,8 @@ const { saveQRCodeImage } = require("./saveQRCodeImageService");
 const saveClientDataService = require("../../services/InstanceServices/saveClientDataService");
 const StateMachine = require("../../services/InstanceServices/stateMachineService");
 const sessionsManager = require("../../services/sessionsManager");
-const requests = require("../utils");
-const utils = require("../requests");
+const requests = require("../requests");
+const utils = require("../utils");
 
 const sessionsInProgress = new Set();
 
