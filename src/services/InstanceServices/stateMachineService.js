@@ -228,7 +228,7 @@ class StateMachine {
     const demim = 1;
 
     if (typeof body === "string") {
-      await this._getRegisterMessagesDB(this.toNumber, this.fromNumber, body, this.ticketId, demim);
+      await this.getRegisterMessagesDB(this.toNumber, this.fromNumber, body, this.ticketId, demim);
 
       await this.client.sendMessage(origin, body);
     } else {
