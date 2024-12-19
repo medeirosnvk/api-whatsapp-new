@@ -1,6 +1,6 @@
-const { axios } = require("axios");
+const axios = require("axios");
 const utils = require("./utils");
-const axiosApiInstance = require("./api").axiosApiInstance;
+const axiosApiInstance = require("../services/api").axiosApiInstance;
 
 async function getAcordosFirmados(document) {
   const response = await axiosApiInstance.get(`/lista-acordos-firmados?documento=${document}`);
