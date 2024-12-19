@@ -1,3 +1,4 @@
+const { MessageMedia } = require("whatsapp-web.js");
 const { executeQuery } = require("../../db/dbconfig");
 const requests = require("../requests");
 const utils = require("../utils");
