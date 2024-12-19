@@ -8,7 +8,7 @@ const { getAllFiles } = require("../services/FileServices/getAllFilesService");
 const urlWebhookMedia = process.env.URL_WEBHOOK_MEDIA;
 
 const fileRoutes = express.Router();
-const mediaDataPath = path.join(__dirname, "../../media");
+const mediaDataPath = path.join(__dirname, "../media");
 
 fileRoutes.use(express.urlencoded({ limit: "50mb", extended: true }));
 fileRoutes.use(express.static("qrcodes"));
