@@ -169,7 +169,7 @@ const createSession = async (sessionName) => {
         let ticketId;
         let bot_idstatus;
 
-        const stateMachine = stateMachines[sessionName];
+        const stateMachine = StateMachine[sessionName];
         const { body, from, to } = message;
 
         if (!stateMachine) {
@@ -238,7 +238,7 @@ const createSession = async (sessionName) => {
         }
 
         try {
-          const credorExistsFromDB = await stateMachine._getCredorFromDB(fromPhoneNumber);
+          const credorExistsFromDB = await stateMachine.getCredorFromDB(fromPhoneNumber);
           if (!credorExistsFromDB) {
             console.log("Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -", fromPhoneNumber);
             return;
