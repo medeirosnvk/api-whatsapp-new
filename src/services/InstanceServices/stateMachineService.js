@@ -304,7 +304,7 @@ class StateMachine {
     return dbResponse;
   }
 
-  static async getRegisterMessagesDB(from, to, message, ticketId, demim) {
+  async getRegisterMessagesDB(from, to, message, ticketId, demim) {
     if (!this.userStates[from]) {
       this.userStates[from] = {}; // inicialize o objeto se não existir
     }
