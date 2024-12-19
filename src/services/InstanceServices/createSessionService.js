@@ -8,6 +8,7 @@ const StateMachine = require("../../services/InstanceServices/stateMachineServic
 const sessionsManager = require("../../services/sessionsManager");
 const requests = require("../requests");
 const utils = require("../utils");
+const axios = require("axios");
 
 const sessionsInProgress = new Set();
 
