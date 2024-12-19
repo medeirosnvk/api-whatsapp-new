@@ -275,6 +275,7 @@ const createSession = async (sessionName) => {
             await requests.getInserirNumeroCliente(fromPhoneNumber);
 
             const insertNovoTicket = await requests.getInserirNovoTicket(fromPhoneNumber);
+
             if (insertNovoTicket && insertNovoTicket.insertId) {
               ticketId = insertNovoTicket.insertId;
               await requests.getAbrirAtendimentoBot(ticketId);
