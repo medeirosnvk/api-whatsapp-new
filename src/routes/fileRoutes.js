@@ -1,8 +1,11 @@
+require("dotenv").config();
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
 
 const { getAllFiles } = require("../services/FileServices/getAllFilesService");
+
+const urlWebhookMedia = process.env.URL_WEBHOOK_MEDIA;
 
 const fileRoutes = express.Router();
 const mediaDataPath = path.join(__dirname, "media");
@@ -32,7 +35,7 @@ fileRoutes.get("/listAllFiles", async (req, res) => {
 
     const fileUrls = fileStats.map(({ file }) => ({
       fileName: path.basename(file),
-      url: `https://whatsapp.cobrance.online:3060/media${file.replace(mediaDataPath, "").replace(/\\/g, "/")}`,
+      url: `${urlWebhookMedia}/media${file.replace(mediaDataPath, "").replace(/\\/g, "/")}`,
     }));
 
     res.json(fileUrls);
