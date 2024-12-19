@@ -237,7 +237,7 @@ instanceRoutes.get("/instance/connectionState/:instanceName", async (req, res) =
     }
 
     if (!session.client) {
-      console.error(`Cliente não inicializado para a sessão "${instanceName}".`);
+      console.warn(`Cliente não inicializado para a sessão "${instanceName}".`);
       return res.status(500).json({
         error: "Client not initialized",
         instanceName,
