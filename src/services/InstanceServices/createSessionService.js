@@ -169,7 +169,7 @@ const createSession = async (sessionName) => {
         let ticketId;
         let bot_idstatus;
 
-        const stateMachine = StateMachine[sessionName];
+        const stateMachine = StateMachine.getStateMachine(sessionName);
         const { body, from, to } = message;
 
         if (!stateMachine) {
