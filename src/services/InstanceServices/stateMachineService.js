@@ -81,6 +81,63 @@ class StateMachine {
     this.toNumber = to;
   }
 
+  async getCredorFromDB(phoneNumber) {
+    try {
+      if (!this.userStates[phoneNumber]) {
+        this.userStates[phoneNumber] = {}; // Inicialize o objeto se não existir
+      }
+
+      const query = `
+        select
+          d.iddevedor,
+          d.cpfcnpj,
+          d.nome,
+          t.telefone,
+          t.idtelefones,
+          d.idusuario
+        from
+          statustelefone s,
+          telefones2 t,
+          devedor d ,
+          credor c
+        where
+          right(t.telefone,8) = '${phoneNumber}'
+          and d.cpfcnpj = t.cpfcnpj
+          and d.idusuario not in (11, 14)
+          and s.idstatustelefone = t.idstatustelefone
+          and s.fila = 's'
+          and c.idcredor = d.idcredor
+          and c.libera_api_acordo = 's'
+      `;
+
+      const dbResponse = await executeQuery(query, customDbConfig);
+
+      if (dbResponse && dbResponse.length) {
+        for (const credor of dbResponse) {
+          const liberaApiQuery = `select libera_api(${credor.iddevedor}) as liberaApi;`;
+          const liberaApiResponse = await executeQuery(liberaApiQuery, customDbConfig);
+
+          // Se o liberaApiResponse retornar 'S' retorne o primeiro credor
+          if (liberaApiResponse && liberaApiResponse.length && liberaApiResponse[0].liberaApi === "S") {
+            console.log(`Libera API encontrada para o número ${phoneNumber}.`);
+            this._setCredor(phoneNumber, dbResponse[0]);
+            return dbResponse[0];
+          }
+        }
+
+        // Se nenhum valor de liberaApi for encontrado, retorna null
+        console.log(`Nenhuma liberação de API encontrada para o número ${phoneNumber}.`);
+        return null;
+      } else {
+        console.log(`Nenhum credor encontrado para o número ${phoneNumber}.`);
+        return null;
+      }
+    } catch (error) {
+      console.error(`Erro ao buscar credor para o número ${phoneNumber}:`, error);
+      throw error;
+    }
+  }
+
   _setDataMenu(phoneNumber, data) {
     this.userStates[phoneNumber].data.MENU = data;
   }
@@ -174,63 +231,6 @@ class StateMachine {
       await this.client.sendMessage(origin, body);
     } else {
       await this.client.sendMessage(origin, body);
-    }
-  }
-
-  static async getCredorFromDB(phoneNumber) {
-    try {
-      if (!this.userStates[phoneNumber]) {
-        this.userStates[phoneNumber] = {}; // Inicialize o objeto se não existir
-      }
-
-      const query = `
-        select
-          d.iddevedor,
-          d.cpfcnpj,
-          d.nome,
-          t.telefone,
-          t.idtelefones,
-          d.idusuario
-        from
-          statustelefone s,
-          telefones2 t,
-          devedor d ,
-          credor c
-        where
-          right(t.telefone,8) = '${phoneNumber}'
-          and d.cpfcnpj = t.cpfcnpj
-          and d.idusuario not in (11, 14)
-          and s.idstatustelefone = t.idstatustelefone
-          and s.fila = 's'
-          and c.idcredor = d.idcredor
-          and c.libera_api_acordo = 's'
-      `;
-
-      const dbResponse = await executeQuery(query, customDbConfig);
-
-      if (dbResponse && dbResponse.length) {
-        for (const credor of dbResponse) {
-          const liberaApiQuery = `select libera_api(${credor.iddevedor}) as liberaApi;`;
-          const liberaApiResponse = await executeQuery(liberaApiQuery, customDbConfig);
-
-          // Se o liberaApiResponse retornar 'S' retorne o primeiro credor
-          if (liberaApiResponse && liberaApiResponse.length && liberaApiResponse[0].liberaApi === "S") {
-            console.log(`Libera API encontrada para o número ${phoneNumber}.`);
-            this._setCredor(phoneNumber, dbResponse[0]);
-            return dbResponse[0];
-          }
-        }
-
-        // Se nenhum valor de liberaApi for encontrado, retorna null
-        console.log(`Nenhuma liberação de API encontrada para o número ${phoneNumber}.`);
-        return null;
-      } else {
-        console.log(`Nenhum credor encontrado para o número ${phoneNumber}.`);
-        return null;
-      }
-    } catch (error) {
-      console.error(`Erro ao buscar credor para o número ${phoneNumber}:`, error);
-      throw error;
     }
   }
 
