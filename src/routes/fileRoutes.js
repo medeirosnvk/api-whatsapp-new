@@ -13,6 +13,20 @@ const mediaDataPath = path.join(__dirname, "../media");
 fileRoutes.use(express.urlencoded({ limit: "50mb", extended: true }));
 fileRoutes.use(express.static("qrcodes"));
 
+/**
+ * @swagger
+ * /listAllFiles:
+ *   get:
+ *     summary: Lista todos os arquivos de mídia recebidos
+ *     tags: [Files]
+ *     responses:
+ *       200:
+ *         description: Sucesso ao listar arquivos
+ *       400:
+ *         description: Diretório não encontrado
+ *       500:
+ *         description: Erro interno ao tentar listar arquivos
+ */
 fileRoutes.get("/listAllFiles", async (req, res) => {
   try {
     // Verificar se o diretório existe
@@ -38,10 +52,10 @@ fileRoutes.get("/listAllFiles", async (req, res) => {
       url: `${urlWebhookMedia}/media${file.replace(mediaDataPath, "").replace(/\\/g, "/")}`,
     }));
 
-    res.json(fileUrls);
+    res.status(200).json(fileUrls);
   } catch (error) {
     console.error("Erro ao ler o diretório", error);
-    res.status(500).json({ error: "Erro ao ler o diretório" });
+    res.status(500).json({ error: "Erro ao tentar ler o diretório" });
   }
 });
 

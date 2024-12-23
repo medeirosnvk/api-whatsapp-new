@@ -1,1 +1,11 @@
-{"undefined":{"lastLoggedOut":null,"connectionState":"open","wid":{"user":"555185071891"},"connectionDateTime":"12/5/2024, 12:57:30 PM"}}
+{
+  "KEVIN": {
+    "sessionName": "KEVIN",
+    "connectionState": "open",
+    "wid": {
+      "user": "555185071891"
+    },
+    "connectionDateTime": "12/23/2024, 3:32:32 PM",
+    "lastLoggedOut": null
+  }
+}

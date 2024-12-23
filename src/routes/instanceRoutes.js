@@ -16,6 +16,29 @@ const instanceRoutes = express.Router();
 const authDir = path.join(__dirname, "../../.wwebjs_auth");
 const clientDataDir = path.join(__dirname, "../../clientData.json");
 
+/**
+ * @swagger
+ * /instance/create:
+ *   post:
+ *     summary: Cria uma nova sessão.
+ *     tags: [Instance]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               instanceName:
+ *                 type: string
+ *                 description: Nome da sessão a ser criada.
+ *                 example: myInstance
+ *     responses:
+ *       200:
+ *         description: Sessão criada com sucesso.
+ *       500:
+ *         description: Erro ao criar a sessão.
+ */
 instanceRoutes.post("/instance/create", async (req, res) => {
   const { instanceName } = req.body;
 
@@ -28,6 +51,27 @@ instanceRoutes.post("/instance/create", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /instance/restore/{sessionName}:
+ *   post:
+ *     summary: Restaura uma sessão específica.
+ *     tags: [Instance]
+ *     parameters:
+ *       - in: path
+ *         name: sessionName
+ *         required: true
+ *         description: Nome da sessão a ser restaurada.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Sessão restaurada com sucesso.
+ *       400:
+ *         description: Nome da sessão é obrigatório.
+ *       403:
+ *         description: Erro ao restaurar a sessão.
+ */
 instanceRoutes.post("/instance/restore/:sessionName", async (req, res) => {
   const { sessionName } = req.params;
 
@@ -48,6 +92,18 @@ instanceRoutes.post("/instance/restore/:sessionName", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /instance/restoreAll:
+ *   post:
+ *     summary: Restaura todas as sessões.
+ *     tags: [Instance]
+ *     responses:
+ *       200:
+ *         description: Todas as sessões foram restauradas com sucesso.
+ *       403:
+ *         description: Erro ao restaurar todas as sessões.
+ */
 instanceRoutes.post("/instance/restoreAll", async (req, res) => {
   try {
     restoreAllSessions();
@@ -63,6 +119,27 @@ instanceRoutes.post("/instance/restoreAll", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /instance/logout/{sessionName}:
+ *   delete:
+ *     summary: Desconecta uma sessão específica.
+ *     tags: [Instance]
+ *     parameters:
+ *       - in: path
+ *         name: sessionName
+ *         required: true
+ *         description: Nome da sessão a ser desconectada.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Sessão desconectada com sucesso.
+ *       400:
+ *         description: Nome da sessão é obrigatório.
+ *       500:
+ *         description: Erro ao desconectar a sessão.
+ */
 instanceRoutes.delete("/instance/logout/:sessionName", async (req, res) => {
   const { sessionName } = req.params;
 
@@ -84,6 +161,18 @@ instanceRoutes.delete("/instance/logout/:sessionName", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /instance/logoutAll:
+ *   delete:
+ *     summary: Desconecta todas as sessões.
+ *     tags: [Instance]
+ *     responses:
+ *       200:
+ *         description: Todas as sessões desconectadas com sucesso.
+ *       500:
+ *         description: Erro ao desconectar todas as sessões.
+ */
 instanceRoutes.delete("/instance/logoutAll", async (req, res) => {
   try {
     await disconnectAllSessions();
@@ -98,6 +187,27 @@ instanceRoutes.delete("/instance/logoutAll", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /instance/deleteSession/{sessionName}:
+ *   delete:
+ *     summary: Exclui uma sessão específica.
+ *     tags: [Instance]
+ *     parameters:
+ *       - in: path
+ *         name: sessionName
+ *         required: true
+ *         description: Nome da sessão a ser excluída.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Sessão excluída com sucesso.
+ *       404:
+ *         description: Sessão não encontrada.
+ *       500:
+ *         description: Erro ao excluir a sessão.
+ */
 instanceRoutes.delete("/instance/deleteSession/:sessionName", async (req, res) => {
   const sessionName = req.params.sessionName;
 
@@ -114,6 +224,18 @@ instanceRoutes.delete("/instance/deleteSession/:sessionName", async (req, res) =
   }
 });
 
+/**
+ * @swagger
+ * /instance/clearUnusedSessions:
+ *   delete:
+ *     summary: Remove sessões não utilizadas.
+ *     tags: [Instance]
+ *     responses:
+ *       200:
+ *         description: Sessões não utilizadas removidas com sucesso.
+ *       500:
+ *         description: Erro ao remover sessões não utilizadas.
+ */
 instanceRoutes.delete("/instance/clearUnusedSessions", async (req, res) => {
   try {
     deleteUnusedSessions();
@@ -124,6 +246,16 @@ instanceRoutes.delete("/instance/clearUnusedSessions", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /instance/listFolders:
+ *   get:
+ *     summary: Lista todas as pastas de sessões.
+ *     tags: [Instance]
+ *     responses:
+ *       200:
+ *         description: Lista de pastas retornada com sucesso.
+ */
 instanceRoutes.get("/instance/listFolders", async (req, res) => {
   console.log("Diretório de autenticação:", authDir); // Adicionado para depuração
 
@@ -137,6 +269,20 @@ instanceRoutes.get("/instance/listFolders", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /instance/fetchInstances:
+ *   get:
+ *     summary: Retorna informações de instâncias ativas.
+ *     tags: [Instance]
+ *     responses:
+ *       200:
+ *         description: Informações das instâncias retornadas com sucesso.
+ *       404:
+ *         description: Arquivo de instâncias não encontrado.
+ *       500:
+ *         description: Erro interno do servidor.
+ */
 instanceRoutes.get("/instance/fetchInstances", async (req, res) => {
   // Verificar se o arquivo clientData.json existe
   if (fs.existsSync(clientDataDir)) {
@@ -167,6 +313,20 @@ instanceRoutes.get("/instance/fetchInstances", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /instance/fetchAllInstances:
+ *   get:
+ *     summary: Retorna informações de todas as instâncias.
+ *     tags: [Instance]
+ *     responses:
+ *       200:
+ *         description: Informações das instâncias retornadas com sucesso.
+ *       404:
+ *         description: Arquivo de instâncias não encontrado.
+ *       500:
+ *         description: Erro interno do servidor.
+ */
 instanceRoutes.get("/instance/fetchAllInstances", async (req, res) => {
   // Verificar se o arquivo clientData.json existe
   if (fs.existsSync(clientDataDir)) {
@@ -199,6 +359,18 @@ instanceRoutes.get("/instance/fetchAllInstances", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /instance/getAllSessions:
+ *   get:
+ *     summary: Retorna todas as sessões.
+ *     tags: [Instance]
+ *     responses:
+ *       200:
+ *         description: Lista de sessões retornada com sucesso.
+ *       500:
+ *         description: Erro ao buscar as sessões.
+ */
 instanceRoutes.get("/instance/getAllSessions", async (req, res) => {
   try {
     const sessions = sessionsManager.getAllSessions();
@@ -222,6 +394,27 @@ instanceRoutes.get("/instance/getAllSessions", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /instance/connectionState/{instanceName}:
+ *   get:
+ *     summary: Retorna o estado de conexão de uma sessão específica.
+ *     tags: [Instance]
+ *     parameters:
+ *       - in: path
+ *         name: instanceName
+ *         required: true
+ *         description: Nome da instância.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Estado de conexão retornado com sucesso.
+ *       404:
+ *         description: Instância não encontrada.
+ *       500:
+ *         description: Erro ao buscar estado da conexão.
+ */
 instanceRoutes.get("/instance/connectionState/:instanceName", async (req, res) => {
   const { instanceName } = req.params;
 
