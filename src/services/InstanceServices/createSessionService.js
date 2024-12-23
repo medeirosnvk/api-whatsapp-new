@@ -13,6 +13,9 @@ const utils = require("../utils");
 
 const sessionsInProgress = new Set();
 
+console.log("URL_WEBHOOK_MEDIA no .env:", process.env.URL_WEBHOOK_MEDIA);
+console.log("Todas variáveis de ambiente:", process.env);
+
 const urlWebhookResponse = process.env.URL_WEBHOOK_RESPONSE;
 const urlWebhookMedia = process.env.URL_WEBHOOK_MEDIA;
 
