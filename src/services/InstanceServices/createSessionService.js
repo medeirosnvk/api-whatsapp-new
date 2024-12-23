@@ -72,7 +72,7 @@ const createSession = async (sessionName) => {
         client.destroy();
         sessionsManager.removeSession(sessionName);
       }
-    }, 3 * 60 * 1000);
+    }, 30 * 60 * 1000);
 
     client.on("qr", async (qr) => {
       try {
