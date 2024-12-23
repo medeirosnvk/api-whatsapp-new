@@ -12,9 +12,9 @@ const express = require("express");
 const https = require("https");
 const cors = require("cors");
 const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
-const { executeQuery } = require("./db/dbconfig");
-const requests = require("./services/requests");
-const utils = require("./services/utils");
+const { executeQuery } = require("../db/dbconfig");
+const requests = require("../services/requests");
+const utils = require("../services/utils");
 
 let redirectSentMap = new Map();
 let sessions = {};
