@@ -212,10 +212,11 @@ const createSession = async (sessionName) => {
               mediaName = fileName;
               mediaUrl = `${urlWebhookMedia}/media/${fromPhoneNumber}/${fileName}`;
               mediaBase64 = media.data;
-              console.log("mediaUrl -", mediaUrl);
             } else {
               console.error(`O arquivo não foi salvo corretamente em ${filePath}`);
             }
+
+            console.log("mediaUrl -", mediaUrl);
           } catch (error) {
             console.error(`Erro ao processar mídia para a sessão ${sessionName}:`, error);
           }
