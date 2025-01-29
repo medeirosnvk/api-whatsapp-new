@@ -158,149 +158,150 @@ const createSession = async (sessionName) => {
       sessionsManager.updateSession(sessionName, { connectionState: state });
     });
 
-    // client.on("message", async (message) => {
-    //   try {
-    //     if (client.connectionState !== "open") {
-    //       console.log(`Sessão ${sessionName} está desconectada. Ignorando mensagem.`);
-    //       return;
-    //     }
+    client.on("message", async (message) => {
+      try {
+        if (client.connectionState !== "open") {
+          console.log(`Sessão ${sessionName} está desconectada. Ignorando mensagem.`);
+          return;
+        }
 
-    //     console.log(`Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${message.from} no horário ${new Date()}`);
+        console.log(`Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${message.from} no horário ${new Date()}`);
 
-    //     let mediaName = "";
-    //     let mediaUrl = "";
-    //     let mediaBase64 = "";
-    //     let ticketId;
-    //     let bot_idstatus;
+        let mediaName = "";
+        let mediaUrl = "";
+        let mediaBase64 = "";
+        let ticketId;
+        let bot_idstatus;
 
-    //     const stateMachine = StateMachine.getStateMachine(sessionName);
-    //     const { body, from, to } = message;
+        const stateMachine = StateMachine.getStateMachine(sessionName);
+        const { body, from, to } = message;
 
-    //     if (!stateMachine) {
-    //       console.error(`StateMachine não encontrada para a sessão ${sessionName}`);
-    //       return;
-    //     }
+        if (!stateMachine) {
+          console.error(`StateMachine não encontrada para a sessão ${sessionName}`);
+          return;
+        }
 
-    //     const response = {
-    //       from: message.from,
-    //       body: message.body,
-    //     };
+        const response = {
+          from: message.from,
+          body: message.body,
+        };
 
-    //     const fromPhoneNumber = utils.formatPhoneNumber(message.from);
-    //     console.log(`Numero atual - ${message.from} e Numero formatado - ${fromPhoneNumber}`);
+        const fromPhoneNumber = utils.formatPhoneNumber(message.from);
+        console.log(`Numero atual - ${message.from} e Numero formatado - ${fromPhoneNumber}`);
 
-    //     if (message.hasMedia) {
-    //       try {
-    //         // Fazer o download da mídia
-    //         const media = await message.downloadMedia();
-    //         const mediaPath = path.join(__dirname, "../../media", fromPhoneNumber);
+        if (message.hasMedia) {
+          try {
+            // Fazer o download da mídia
+            const media = await message.downloadMedia();
+            const mediaPath = path.join(__dirname, "../../media", fromPhoneNumber);
 
-    //         // Garantir que o diretório existe
-    //         if (!fs.existsSync(mediaPath)) {
-    //           fs.mkdirSync(mediaPath, { recursive: true });
-    //         }
+            // Garantir que o diretório existe
+            if (!fs.existsSync(mediaPath)) {
+              fs.mkdirSync(mediaPath, { recursive: true });
+            }
 
-    //         // Definir o nome e o caminho do arquivo
-    //         const fileName = `${new Date().getTime()}.${media.mimetype.split("/")[1]}`;
-    //         const filePath = path.join(mediaPath, fileName);
+            // Definir o nome e o caminho do arquivo
+            const fileName = `${new Date().getTime()}.${media.mimetype.split("/")[1]}`;
+            const filePath = path.join(mediaPath, fileName);
 
-    //         // Salvar o arquivo e verificar se foi salvo corretamente
-    //         fs.writeFileSync(filePath, media.data, "base64");
+            // Salvar o arquivo e verificar se foi salvo corretamente
+            fs.writeFileSync(filePath, media.data, "base64");
 
-    //         if (fs.existsSync(filePath)) {
-    //           console.log(`Arquivo recebido e salvo em: ${filePath}`);
-    //           mediaName = fileName;
-    //           mediaUrl = `${urlWebhookMedia}/media/${fromPhoneNumber}/${fileName}`;
-    //           mediaBase64 = media.data;
-    //         } else {
-    //           console.error(`O arquivo não foi salvo corretamente em ${filePath}`);
-    //         }
-    //       } catch (error) {
-    //         console.error(`Erro ao processar mídia para a sessão ${sessionName}:`, error);
-    //       }
-    //     }
+            if (fs.existsSync(filePath)) {
+              console.log(`Arquivo recebido e salvo em: ${filePath}`);
+              mediaName = fileName;
+              mediaUrl = `${urlWebhookMedia}/media/${fromPhoneNumber}/${fileName}`;
+              mediaBase64 = media.data;
+            } else {
+              console.error(`O arquivo não foi salvo corretamente em ${filePath}`);
+            }
+          } catch (error) {
+            console.error(`Erro ao processar mídia para a sessão ${sessionName}:`, error);
+          }
+        }
 
-    //     try {
-    //       // Enviar os dados para o webhook
-    //       await axios.post(urlWebhookResponse, {
-    //         sessionName,
-    //         message: {
-    //           ...message,
-    //           body: mediaName || message.body,
-    //           mediaName,
-    //           mediaUrl,
-    //           mediaBase64,
-    //         },
-    //       });
-    //     } catch (error) {
-    //       console.error(`Erro ao enviar dados para o webhook para a sessão ${sessionName}:`, error);
-    //     }
+        try {
+          // Enviar os dados para o webhook
+          await axios.post(urlWebhookResponse, {
+            sessionName,
+            message: {
+              ...message,
+              body: mediaName || message.body,
+              mediaName,
+              mediaUrl,
+              mediaBase64,
+            },
+          });
+        } catch (error) {
+          console.error(`Erro ao enviar dados para o webhook para a sessão ${sessionName}:`, error);
+        }
 
-    //     if (!fromPhoneNumber || !response) {
-    //       console.log("Mensagem inválida recebida", message.body);
-    //       return;
-    //     }
+        if (!fromPhoneNumber || !response) {
+          console.log("Mensagem inválida recebida", message.body);
+          return;
+        }
 
-    //     try {
-    //       const credorExistsFromDB = await stateMachine.getCredorFromDB(fromPhoneNumber);
-    //       if (!credorExistsFromDB) {
-    //         console.log("Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -", fromPhoneNumber);
-    //         return;
-    //       }
+        try {
+          const credorExistsFromDB = await stateMachine.getCredorFromDB(fromPhoneNumber);
+          if (!credorExistsFromDB) {
+            console.log("Credor sem cadastro no banco de dados. Atendimento chatbot não iniciado para -", fromPhoneNumber);
+            return;
+          }
 
-    //       const statusAtendimento = await requests.getStatusAtendimento(fromPhoneNumber);
-    //       const bot_idstatus = statusAtendimento[0]?.bot_idstatus;
+          const statusAtendimento = await requests.getStatusAtendimento(fromPhoneNumber);
+          // const bot_idstatus = statusAtendimento[0]?.bot_idstatus;
+          const bot_idstatus = 2;
 
-    //       if (!bot_idstatus) {
-    //         console.log("Status de atendimento não encontrado para o usuário -", fromPhoneNumber);
-    //       } else if (bot_idstatus === 2) {
-    //         console.log("Usuário em atendimento humano -", bot_idstatus);
+          if (!bot_idstatus) {
+            console.log("Status de atendimento não encontrado para o usuário -", fromPhoneNumber);
+          } else if (bot_idstatus === 2) {
+            console.log("Usuário em atendimento humano -", bot_idstatus);
 
-    //         if (!redirectSentMap.get(fromPhoneNumber)) {
-    //           await client.sendMessage(from, "Estamos redirecionando seu atendimento para um atendente humano, por favor aguarde...");
-    //           redirectSentMap.set(fromPhoneNumber, true);
-    //         }
-    //         return;
-    //       } else if ([1, 3].includes(bot_idstatus) || bot_idstatus === "") {
-    //         console.log("Usuário em atendimento automático -", bot_idstatus);
-    //       }
+            if (!redirectSentMap.get(fromPhoneNumber)) {
+              await client.sendMessage(from, "Estamos redirecionando seu atendimento para um atendente humano, por favor aguarde...");
+              redirectSentMap.set(fromPhoneNumber, true);
+            }
+            return;
+          } else if ([1, 3].includes(bot_idstatus) || bot_idstatus === "") {
+            console.log("Usuário em atendimento automático -", bot_idstatus);
+          }
 
-    //       const ticketStatus = await requests.getTicketStatusByPhoneNumber(fromPhoneNumber);
+          const ticketStatus = await requests.getTicketStatusByPhoneNumber(fromPhoneNumber);
 
-    //       if (ticketStatus && ticketStatus.length > 0) {
-    //         ticketId = ticketStatus[0].id;
-    //         await requests.getAbrirAtendimentoBot(ticketId);
-    //         console.log(`Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId}`);
-    //       } else {
-    //         await requests.getInserirNumeroCliente(fromPhoneNumber);
+          if (ticketStatus && ticketStatus.length > 0) {
+            ticketId = ticketStatus[0].id;
+            await requests.getAbrirAtendimentoBot(ticketId);
+            console.log(`Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId}`);
+          } else {
+            await requests.getInserirNumeroCliente(fromPhoneNumber);
 
-    //         const insertNovoTicket = await requests.getInserirNovoTicket(fromPhoneNumber);
+            const insertNovoTicket = await requests.getInserirNovoTicket(fromPhoneNumber);
 
-    //         if (insertNovoTicket && insertNovoTicket.insertId) {
-    //           ticketId = insertNovoTicket.insertId;
-    //           await requests.getAbrirAtendimentoBot(ticketId);
-    //           console.log(`Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId} (NOVO)`);
-    //         } else {
-    //           console.log("Erro ao criar novo número de Ticket no banco.");
-    //           return;
-    //         }
-    //       }
+            if (insertNovoTicket && insertNovoTicket.insertId) {
+              ticketId = insertNovoTicket.insertId;
+              await requests.getAbrirAtendimentoBot(ticketId);
+              console.log(`Iniciando atendimento Bot para ${fromPhoneNumber} no Ticket - ${ticketId} (NOVO)`);
+            } else {
+              console.log("Erro ao criar novo número de Ticket no banco.");
+              return;
+            }
+          }
 
-    //       const demim = 0;
+          const demim = 0;
 
-    //       stateMachine.setTicketId(ticketId);
-    //       stateMachine.setFromNumber(from);
-    //       stateMachine.setToNumber(to);
+          stateMachine.setTicketId(ticketId);
+          stateMachine.setFromNumber(from);
+          stateMachine.setToNumber(to);
 
-    //       await stateMachine.getRegisterMessagesDB(from, to, message.body, ticketId, demim);
-    //       await stateMachine.handleMessage(fromPhoneNumber, response);
-    //     } catch (error) {
-    //       console.error("Erro ao processar a mensagem:", error);
-    //     }
-    //   } catch (error) {
-    //     console.error("Erro ao lidar com a mensagem:", error);
-    //   }
-    // });
+          await stateMachine.getRegisterMessagesDB(from, to, message.body, ticketId, demim);
+          await stateMachine.handleMessage(fromPhoneNumber, response);
+        } catch (error) {
+          console.error("Erro ao processar a mensagem:", error);
+        }
+      } catch (error) {
+        console.error("Erro ao lidar com a mensagem:", error);
+      }
+    });
 
     await client.initialize();
 
