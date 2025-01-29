@@ -26,6 +26,7 @@ const initializeDirectories = async () => {
   }
 
   if (!fs.existsSync(mediaDir)) {
+    k;
     console.log("Diretório 'media' não existe, criando...");
     fs.mkdirSync(mediaDir);
   }
