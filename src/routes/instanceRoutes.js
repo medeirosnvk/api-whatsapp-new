@@ -146,7 +146,7 @@ instanceRoutes.get("/instance/fetchInstances", async (req, res) => {
 
       // Extrair informações para cada instância com connectionState: 'open'
       const instances = Object.keys(clientData)
-        .filter((key) => clientData[key].connectionState === "open" && clientData[key].sessionName && clientData[key].wid?.user)
+        .filter((key) => clientData[key].connectionState === "open" && clientData[key].sessionName)
         .map((key) => ({
           instance: {
             instanceName: clientData[key].sessionName,
