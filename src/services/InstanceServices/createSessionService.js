@@ -19,6 +19,10 @@ const port = process.env.PORT;
 const urlHostIP = process.env.HOST_IP;
 const urlWebhookMedia = `${urlHostIP}/${port}`;
 
+console.log("port -", port);
+console.log("urlHostIP -", urlHostIP);
+console.log("urlWebhookMedia -", urlWebhookMedia);
+
 const createSession = async (sessionName) => {
   const session = sessionsManager.getSession(sessionName);
 
@@ -183,6 +187,8 @@ const createSession = async (sessionName) => {
 
         const { webhook, ativa_bot } = responseStatusUrlWebhook[0];
         const urlWebhookResponse = webhook;
+
+        console.log("urlWebhookResponse -", urlWebhookResponse);
 
         const stateMachine = StateMachine.getStateMachine(sessionName);
         const { body, from, to } = message;

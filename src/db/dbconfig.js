@@ -3,11 +3,11 @@ const mysql = require("mysql2/promise");
 require("dotenv").config();
 
 const defaultDbConfig = {
-  host: process.env.DB1_MY_SQL_HOST || "localhost",
+  host: process.env.DB_MY_SQL_HOST || "localhost",
   user: process.env.MY_SQL_USER || "root",
-  password: process.env.DB1_MY_SQL_PASSWORD || "",
+  password: process.env.DB_MY_SQL_PASSWORD || "",
   port: parseInt(process.env.MY_SQL_PORT, 10) || 3306,
-  database: process.env.DB1_MY_SQL_DATABASE || "test",
+  database: process.env.DB_MY_SQL_DATABASE || "test",
   connectionLimit: parseInt(process.env.MY_SQL_CONNECTION_LIMIT, 10) || 10,
   charset: process.env.MY_SQL_CHARSET || "utf8mb4",
 };
