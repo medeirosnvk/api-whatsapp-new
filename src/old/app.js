@@ -29,11 +29,11 @@ const clientDataPath = path.join(__dirname, "clientData.json");
 const mediaDataPath = path.join(__dirname, "media");
 const sessionDataPath = path.join(__dirname, "../.wwebjs_auth");
 const customDbConfig = {
-  host: process.env.DB2_MY_SQL_HOST,
+  host: process.env.DB_MY_SQL_HOST,
   user: process.env.MY_SQL_USER,
-  password: process.env.DB2_MY_SQL_PASSWORD,
+  password: process.env.DB_MY_SQL_PASSWORD,
   port: process.env.MY_SQL_PORT,
-  database: process.env.DB2_MY_SQL_DATABASE,
+  database: process.env.DB_MY_SQL_DATABASE,
   connectionLimit: parseInt(process.env.MY_SQL_CONNECTION_LIMIT),
   charset: process.env.MY_SQL_CHARSET,
   connectTimeout: 60000,
@@ -513,7 +513,10 @@ class StateMachine {
           const idDevedor = selectedCreditor.iddevedor;
           const dataBase = utils.getCurrentDate();
 
-          const [credorDividas, credorOfertas] = await Promise.all([requests.getCredorDividas(idDevedor, dataBase), requests.getCredorOfertas(idDevedor)]);
+          const [credorDividas, credorOfertas] = await Promise.all([
+            requests.getCredorDividas(idDevedor, dataBase),
+            requests.getCredorOfertas(idDevedor),
+          ]);
 
           this._setDataCredorDividas(phoneNumber, credorDividas);
 
@@ -2144,7 +2147,9 @@ app.post("/message/sendBase64/:instanceName", async (req, res) => {
       caption: caption,
     });
 
-    console.log(`Mensagem de mídia Base64 enviada com sucesso ao número ${number} pela instância ${instanceName} no horário ${new Date()}!`);
+    console.log(
+      `Mensagem de mídia Base64 enviada com sucesso ao número ${number} pela instância ${instanceName} no horário ${new Date()}!`
+    );
     res.status(200).json({ status: "PENDING" });
   } catch (error) {
     if (error.message.includes("disconnected")) {

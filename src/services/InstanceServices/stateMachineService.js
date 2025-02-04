@@ -5,11 +5,11 @@ const utils = require("../utils");
 const axios = require("axios");
 
 const customDbConfig = {
-  host: process.env.DB2_MY_SQL_HOST,
+  host: process.env.DB_MY_SQL_HOST,
   user: process.env.MY_SQL_USER,
-  password: process.env.DB2_MY_SQL_PASSWORD,
+  password: process.env.DB_MY_SQL_PASSWORD,
   port: process.env.MY_SQL_PORT,
-  database: process.env.DB2_MY_SQL_DATABASE,
+  database: process.env.DB_MY_SQL_DATABASE,
   connectionLimit: parseInt(process.env.MY_SQL_CONNECTION_LIMIT),
   charset: process.env.MY_SQL_CHARSET,
   connectTimeout: 60000,
@@ -472,7 +472,10 @@ class StateMachine {
           const idDevedor = selectedCreditor.iddevedor;
           const dataBase = utils.getCurrentDate();
 
-          const [credorDividas, credorOfertas] = await Promise.all([requests.getCredorDividas(idDevedor, dataBase), requests.getCredorOfertas(idDevedor)]);
+          const [credorDividas, credorOfertas] = await Promise.all([
+            requests.getCredorDividas(idDevedor, dataBase),
+            requests.getCredorOfertas(idDevedor),
+          ]);
 
           this._setDataCredorDividas(phoneNumber, credorDividas);
 
