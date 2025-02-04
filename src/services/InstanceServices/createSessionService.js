@@ -178,7 +178,7 @@ const createSession = async (sessionName) => {
 
         // Busca no banco a urlWebhook e se o bot esta ativo ou nao
         const responseStatusUrlWebhook = await executeQuery(
-          `SELECT webhook, ativa_bot FROM codechat_hosts ch WHERE nome='http://10.0.0.102:3030'`
+          `SELECT webhook, ativa_bot FROM codechat_hosts ch WHERE nome='${urlWebhookMedia}'`
         );
 
         const { webhook, ativa_bot } = responseStatusUrlWebhook[0];
