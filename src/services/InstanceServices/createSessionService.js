@@ -183,7 +183,7 @@ const createSession = async (sessionName) => {
 
         console.log("responseStatusUrlWebhook -", responseStatusUrlWebhook);
 
-        const { webhook, ativa_bot } = responseStatusUrlWebhook[0];
+        const { webhook, ativa_bot } = responseStatusUrlWebhook[0] || {};
         const urlWebhookResponse = webhook;
 
         console.log("webhook -", webhook);
