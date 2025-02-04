@@ -17,7 +17,7 @@ const sessionsInProgress = new Set();
 
 const port = process.env.PORT;
 const urlHostIP = process.env.HOST_IP;
-const urlWebhookMedia = `${urlHostIP}/${port}`;
+const urlWebhookMedia = `${urlHostIP}:${port}`;
 
 const createSession = async (sessionName) => {
   const session = sessionsManager.getSession(sessionName);
