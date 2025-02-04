@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable quotes */
 const puppeteer = require("puppeteer");
 const mysql = require("mysql2/promise");
 require("dotenv").config();
@@ -19,8 +17,7 @@ const createBrowserInstance = async () => {
     const browser = await puppeteer.launch({
       headless: false, // Defina como true se não precisar da interface gráfica
       args: ["--no-sandbox"],
-      executablePath:
-        process.env.CHROME_EXECUTABLE_PATH || "/usr/bin/chromium-browser", // Utilize variável de ambiente
+      executablePath: process.env.CHROME_EXECUTABLE_PATH || "/usr/bin/chromium-browser", // Utilize variável de ambiente
       ignoreDefaultArgs: ["--disable-extensions"],
     });
     return browser;
@@ -58,10 +55,7 @@ const executeQuery = async (sql, customDbConfig = defaultDbConfig) => {
       try {
         await connection.end();
       } catch (error) {
-        console.error(
-          "Erro ao encerrar a conexão com o banco de dados:",
-          error
-        );
+        console.error("Erro ao encerrar a conexão com o banco de dados:", error);
       }
     }
   }

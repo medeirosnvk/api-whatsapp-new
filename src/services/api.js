@@ -1,3 +1,4 @@
+/* eslint-disable quotes */
 const axios = require("axios");
 
 const baseURL = "https://api.cobrance.online:3030";

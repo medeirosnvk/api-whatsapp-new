@@ -5,7 +5,7 @@
   "main": "./index.js",
   "typings": "./index.d.ts",
   "scripts": {
-    "start": "node src/app.js",
+    "start": "node src/server.js",
     "test": "mocha tests --recursive --timeout 5000",
     "test-single": "mocha",
     "shell": "node --experimental-repl-await ./shell.js",
@@ -31,12 +31,16 @@
   "homepage": "https://wwebjs.dev/",
   "dependencies": {
     "@pedroslopez/moduleraid": "^5.0.2",
+    "axios": "^1.7.8",
+    "cors": "^2.8.5",
+    "express": "^4.21.1",
     "fluent-ffmpeg": "2.1.2",
     "mime": "^3.0.0",
     "node-fetch": "^2.6.9",
     "node-webpmux": "3.1.7",
     "nodemon": "^3.1.4",
     "puppeteer": "^18.2.1",
+    "qr-image": "^3.2.0",
     "qrcode-terminal": "^0.12.0",
     "whatsapp-web.js": "^1.25.0"
   },
