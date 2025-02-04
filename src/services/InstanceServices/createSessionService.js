@@ -10,11 +10,14 @@ const sessionsManager = require("../../services/sessionsManager");
 const qrcode = require("qrcode-terminal");
 const requests = require("../requests");
 const utils = require("../utils");
+const { exec } = require("child_process");
+const { executeQuery } = require("../../db/dbconfig");
 
 const sessionsInProgress = new Set();
 
-const urlWebhookResponse = process.env.URL_WEBHOOK_RESPONSE;
-const urlWebhookMedia = process.env.URL_WEBHOOK_MEDIA;
+const port = process.env.PORT;
+const urlHostIP = process.env.HOST_IP;
+const urlWebhookMedia = `${urlHostIP}/${port}`;
 
 const createSession = async (sessionName) => {
   const session = sessionsManager.getSession(sessionName);
@@ -160,6 +163,12 @@ const createSession = async (sessionName) => {
 
     client.on("message", async (message) => {
       try {
+        let mediaName = "";
+        let mediaUrl = "";
+        let mediaBase64 = "";
+        let ticketId;
+        let bot_idstatus;
+
         if (client.connectionState !== "open") {
           console.log(`Sessão ${sessionName} está desconectada. Ignorando mensagem.`);
           return;
@@ -167,11 +176,13 @@ const createSession = async (sessionName) => {
 
         console.log(`Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${message.from} no horário ${new Date()}`);
 
-        let mediaName = "";
-        let mediaUrl = "";
-        let mediaBase64 = "";
-        let ticketId;
-        let bot_idstatus;
+        // Busca no banco a urlWebhook e se o bot esta ativo ou nao
+        const responseStatusUrlWebhook = await executeQuery(
+          `SELECT webhook, ativa_bot FROM codechat_hosts ch WHERE nome='http://10.0.0.102:3030'`
+        );
+
+        const { webhook, ativa_bot } = responseStatusUrlWebhook[0];
+        const urlWebhookResponse = webhook;
 
         const stateMachine = StateMachine.getStateMachine(sessionName);
         const { body, from, to } = message;
@@ -220,8 +231,8 @@ const createSession = async (sessionName) => {
           }
         }
 
+        // Tentar enviar os dados para o webhook
         try {
-          // Enviar os dados para o webhook
           await axios.post(urlWebhookResponse, {
             sessionName,
             message: {
@@ -249,8 +260,7 @@ const createSession = async (sessionName) => {
           }
 
           const statusAtendimento = await requests.getStatusAtendimento(fromPhoneNumber);
-          // const bot_idstatus = statusAtendimento[0]?.bot_idstatus;
-          const bot_idstatus = 2;
+          bot_idstatus = ativa_bot === "N" ? 2 : statusAtendimento[0]?.bot_idstatus;
 
           if (!bot_idstatus) {
             console.log("Status de atendimento não encontrado para o usuário -", fromPhoneNumber);
