@@ -168,6 +168,7 @@ const createSession = async (sessionName) => {
         let mediaBase64 = "";
         let ticketId;
         let bot_idstatus;
+        const redirectSentMap = new Map();
 
         if (client.connectionState !== "open") {
           console.log(`Sessão ${sessionName} está desconectada. Ignorando mensagem.`);
@@ -181,17 +182,8 @@ const createSession = async (sessionName) => {
           `SELECT webhook, ativa_bot FROM codechat_hosts ch WHERE nome='${urlWebhookMedia}'`
         );
 
-        console.log("responseStatusUrlWebhook -", responseStatusUrlWebhook);
-
         const { webhook, ativa_bot } = responseStatusUrlWebhook[0] || {};
         const urlWebhookResponse = webhook;
-
-        console.log("webhook -", webhook);
-        console.log("ativa_bot -", ativa_bot);
-        console.log("port -", port);
-        console.log("urlHostIP -", urlHostIP);
-        console.log("urlWebhookMedia -", urlWebhookMedia);
-        console.log("urlWebhookResponse -", urlWebhookResponse);
 
         const stateMachine = StateMachine.getStateMachine(sessionName);
         const { body, from, to } = message;
