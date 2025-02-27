@@ -3,21 +3,21 @@ const mysql = require("mysql2/promise");
 require("dotenv").config();
 
 const defaultDbConfig = {
-  host: process.env.DB_MY_SQL_HOST || "localhost",
-  user: process.env.MY_SQL_USER || "root",
-  password: process.env.DB_MY_SQL_PASSWORD || "",
-  port: parseInt(process.env.MY_SQL_PORT, 10) || 3306,
-  database: process.env.DB_MY_SQL_DATABASE || "test",
-  connectionLimit: parseInt(process.env.MY_SQL_CONNECTION_LIMIT, 10) || 10,
-  charset: process.env.MY_SQL_CHARSET || "utf8mb4",
+  host: process.env.DB_MY_SQL_HOST,
+  user: process.env.MY_SQL_USER,
+  password: process.env.DB_MY_SQL_PASSWORD,
+  port: parseInt(process.env.MY_SQL_PORT, 10),
+  database: process.env.DB_MY_SQL_DATABASE,
+  connectionLimit: parseInt(process.env.MY_SQL_CONNECTION_LIMIT, 10),
+  charset: process.env.MY_SQL_CHARSET,
 };
 
 const createBrowserInstance = async () => {
   try {
     const browser = await puppeteer.launch({
-      headless: false, // Defina como true se não precisar da interface gráfica
+      headless: false,
       args: ["--no-sandbox"],
-      executablePath: process.env.CHROME_EXECUTABLE_PATH || "/usr/bin/chromium-browser", // Utilize variável de ambiente
+      executablePath: process.env.CHROME_EXECUTABLE_PATH || "/usr/bin/chromium-browser",
       ignoreDefaultArgs: ["--disable-extensions"],
     });
     return browser;
@@ -35,7 +35,13 @@ const createConnection = async (dbConfig) => {
     });
     return connection;
   } catch (error) {
-    console.error("Erro ao conectar ao banco de dados:", error);
+    if (error.code === "ECONNREFUSED") {
+      console.error("Erro: Banco de dados inacessível. Verifique se ele está online.");
+    } else if (error.code === "ENOTFOUND") {
+      console.error("Erro: Falha na conexão. Verifique sua internet ou as configurações do banco.");
+    } else {
+      console.error("Erro ao conectar ao banco de dados:", error);
+    }
     throw error;
   }
 };
@@ -48,7 +54,13 @@ const executeQuery = async (sql, customDbConfig = defaultDbConfig) => {
     const [rows, fields] = await connection.execute(sql);
     return rows;
   } catch (error) {
-    console.error("Erro ao executar a consulta:", error);
+    if (error.code === "ECONNREFUSED") {
+      console.error("Erro: O banco de dados está fora do ar.");
+    } else if (error.code === "ENOTFOUND") {
+      console.error("Erro: Sem conexão com a internet ou banco de dados não encontrado.");
+    } else {
+      console.error("Erro ao executar a consulta:", error);
+    }
     throw error;
   } finally {
     if (connection) {
