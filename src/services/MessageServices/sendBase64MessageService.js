@@ -1,6 +1,23 @@
 const sessionManager = require("../sessionsManager");
 const { MessageMedia } = require("whatsapp-web.js");
 
+const validateAndFormatNumber = async (client, rawNumber) => {
+  const number = rawNumber.replace(/\D/g, ""); // remove tudo que não for número
+
+  if (!number.startsWith("55") || number.length < 12 || number.length > 13) {
+    throw new Error(`Número ${rawNumber} inválido. Deve estar no formato internacional começando com 55.`);
+  }
+
+  const jid = `${number}@c.us`;
+
+  const isRegistered = await client.isRegisteredUser(jid);
+  if (!isRegistered) {
+    throw new Error(`O número ${number} não está registrado no WhatsApp.`);
+  }
+
+  return jid;
+};
+
 const sendBase64Message = async (sessionName, phoneNumber, message) => {
   const session = sessionManager.getSession(sessionName);
 
@@ -12,26 +29,20 @@ const sendBase64Message = async (sessionName, phoneNumber, message) => {
     throw new Error(`Sessão ${sessionName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  let processedNumber = phoneNumber;
-  const brazilCountryCode = "55";
-
-  if (processedNumber.startsWith(brazilCountryCode)) {
-    const localNumber = processedNumber.slice(4);
-
-    if (localNumber.length === 9 && localNumber.startsWith("9")) {
-      processedNumber = brazilCountryCode + processedNumber.slice(2, 4) + localNumber.slice(1);
-    }
-  }
+  const jid = await validateAndFormatNumber(session.client, phoneNumber);
 
   const { base64, fileName, caption, mimeType } = message;
-
   const messageMedia = new MessageMedia(mimeType, base64, fileName);
 
-  await session.client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
-    caption: caption,
-  });
-
-  console.log(`Mensagem de mídia Base64 enviada com sucesso ao número ${phoneNumber} pela instância ${sessionName} no horário ${new Date()}!`);
+  try {
+    await session.client.sendMessage(jid, messageMedia, { caption });
+    console.log(
+      `Mensagem de mídia Base64 enviada com sucesso ao número ${phoneNumber} pela instância ${sessionName} no horário ${new Date()}!`
+    );
+  } catch (error) {
+    console.error(`Erro ao enviar mensagem Base64: ${error.message}`);
+    throw new Error(`Erro ao enviar mensagem Base64: ${error.message}`);
+  }
 };
 
 const sendAudioBase64Message = async (sessionName, phoneNumber, message) => {
@@ -45,16 +56,7 @@ const sendAudioBase64Message = async (sessionName, phoneNumber, message) => {
     throw new Error(`Sessão ${sessionName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  let processedNumber = phoneNumber;
-  const brazilCountryCode = "55";
-
-  if (processedNumber.startsWith(brazilCountryCode)) {
-    const localNumber = processedNumber.slice(4);
-
-    if (localNumber.length === 9 && localNumber.startsWith("9")) {
-      processedNumber = brazilCountryCode + processedNumber.slice(2, 4) + localNumber.slice(1);
-    }
-  }
+  const jid = await validateAndFormatNumber(session.client, phoneNumber);
 
   let { base64, fileName, caption } = message;
 
@@ -63,20 +65,20 @@ const sendAudioBase64Message = async (sessionName, phoneNumber, message) => {
   }
 
   const mimeTypesToTest = [
-    "audio/webm", // WebM Audio
-    "audio/ogg", // Ogg Audio
-    "audio/mp3", // MP3 Audio
-    "audio/mpeg", // MPEG Audio
-    "audio/wav", // WAV Audio
-    "audio/x-wav", // WAV Audio (alternativo)
-    "audio/flac", // FLAC Audio
-    "audio/aac", // AAC Audio
-    "image/jpeg", // JPEG Image
-    "image/png", // PNG Image
-    "image/gif", // GIF Image
-    "image/webp", // WebP Image
-    "video/mp4", // MP4 Video
-    "video/webm", // WebM Video
+    "audio/webm",
+    "audio/ogg",
+    "audio/mp3",
+    "audio/mpeg",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/flac",
+    "audio/aac",
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "video/mp4",
+    "video/webm",
   ];
 
   for (let mimeType of mimeTypesToTest) {
@@ -85,13 +87,14 @@ const sendAudioBase64Message = async (sessionName, phoneNumber, message) => {
 
       const messageMedia = new MessageMedia(mimeType, base64, fileName);
 
-      await session.client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
-        caption: caption,
-      });
+      await session.client.sendMessage(jid, messageMedia, { caption });
 
-      console.log(`Mensagem de ${mimeType} enviada com sucesso ao número ${phoneNumber} pela instância ${sessionName} no horário ${new Date()}!`);
+      console.log(
+        `Mensagem de ${mimeType} enviada com sucesso ao número ${phoneNumber} pela instância ${sessionName} no horário ${new Date()}!`
+      );
+      break; // Sucesso, para o loop
     } catch (error) {
-      console.error(`Erro ao enviar mensagem com MIME type ${mimeType} para o número ${phoneNumber}:`, error);
+      console.error(`Erro ao enviar mensagem com MIME type ${mimeType} para o número ${phoneNumber}:`, error.message);
     }
   }
 };
