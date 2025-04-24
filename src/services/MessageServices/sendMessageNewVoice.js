@@ -58,7 +58,7 @@ const sendMessageNewVoice = async (iddevedor, plano, telefone, token) => {
     throw new Error(dataAcordoMaster.error);
   }
 
-  // Preparar texto
+  // Preparar textoPrincipal
   const { primeiraEtapaResponse, terceiraEtapaResponse } = dataAcordoMaster;
 
   const dataFormatada = formatarDataBR(primeiraEtapaResponse.ultimaDataVencimento);
@@ -67,14 +67,24 @@ const sendMessageNewVoice = async (iddevedor, plano, telefone, token) => {
   const valorComAcrescimo = valorParcelaOriginal + acrescimo;
   const valorFormatado = formatarValorBR(valorComAcrescimo);
 
-  const texto =
-    `Olá! Seu acordo foi registrado com sucesso.\n\n` +
-    `Valor da parcela (com taxa): ${valorFormatado}\n` +
-    `Vencimento: ${dataFormatada}\n` +
-    `Boleto: ${terceiraEtapaResponse.urlBoleto}`;
+  const textoAcordo = `
+    *ACORDO REALIZADO COM SUCESSO!*\n\n
+    Pague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n
+    ${terceiraEtapaResponse.urlBoleto}\n\n
+    Ou utilize o PIX copia e cola abaixo:\n
+    ${terceiraEtapaResponse.pixCopiaECola}
+  `;
 
-  // Enviar texto
-  await client.sendMessage(telefoneFormatado, texto);
+  const textoRecibo = `
+    *ATENÇÃO! CONFIRA SEUS DADOS E VALOR NA HORA DO PAGAMENTO!*\n\n
+    Por favor, nos envie o *comprovante* assim que possivel para registro!\n
+    Atendimento finalizado, obrigado e bons negócios.
+  `;
+
+  const textoPrincipal = textoAcordo + textoRecibo;
+
+  // Enviar textoPrincipal
+  await client.sendMessage(telefoneFormatado, textoPrincipal);
 
   // Preparar e enviar QR Code
   const qrBase64 = terceiraEtapaResponse.urlQrCodeBase64;
