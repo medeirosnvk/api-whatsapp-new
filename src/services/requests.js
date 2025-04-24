@@ -435,4 +435,5 @@ module.exports = {
   getInserirNovoTicket,
   getStatusAtendimento,
   getCredorByPhoneNumber,
+  inserirAcordoMaster,
 };
