@@ -695,13 +695,9 @@ class StateMachine {
           });
 
           const responseBoletoContent = await requests.getImagemBoleto(parsedData4);
-
           const parsedData5 = utils.parseDadosImagemQrCode({ idboleto });
-
           const responseQrcodeContent = await requests.getImagemQrCode(parsedData5);
-
           await utils.saveQRCodeImageToLocal(responseQrcodeContent.url, idboleto);
-
           const media = MessageMedia.fromFilePath(`src/qrcodes/${idboleto}.png`);
 
           // Verifique se a imagem foi salva corretamente
