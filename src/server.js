@@ -84,6 +84,8 @@ const startHttpsServer = async () => {
   const credentials = { key: privateKey, cert: certificate, ca };
   const httpsServer = https.createServer(credentials, app);
 
+  httpsServer.setTimeout(50000); // 50 segundos
+
   httpsServer.listen(port, async () => {
     console.log(`Servidor HTTPS iniciado na porta ${port}`);
 
