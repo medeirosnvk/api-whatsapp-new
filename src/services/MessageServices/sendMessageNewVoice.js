@@ -67,20 +67,8 @@ const sendMessageNewVoice = async (iddevedor, plano, telefone, token) => {
   const valorComAcrescimo = valorParcelaOriginal + acrescimo;
   const valorFormatado = formatarValorBR(valorComAcrescimo);
 
-  const textoAcordo = `
-    *ACORDO REALIZADO COM SUCESSO!*\n\n
-    Pague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n
-    ${terceiraEtapaResponse.urlBoleto}\n\n
-    Ou utilize o PIX copia e cola abaixo:\n
-    ${terceiraEtapaResponse.pixCopiaECola}
-  `;
-
-  const textoRecibo = `
-    *ATENÇÃO! CONFIRA SEUS DADOS E VALOR NA HORA DO PAGAMENTO!*\n\n
-    Por favor, nos envie o *comprovante* assim que possivel para registro!\n
-    Atendimento finalizado, obrigado e bons negócios.
-  `;
-
+  const textoAcordo = `*ACORDO REALIZADO COM SUCESSO!*\n\nPague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n${terceiraEtapaResponse.urlBoleto}\n\nOu utilize o PIX copia e cola abaixo:\n${terceiraEtapaResponse.pixCopiaECola}`;
+  const textoRecibo = `*ATENÇÃO! CONFIRA SEUS DADOS E VALOR NA HORA DO PAGAMENTO!*\n\nPor favor, nos envie o *comprovante* assim que possivel para registro!\nAtendimento finalizado, obrigado e bons negócios.`;
   const textoPrincipal = textoAcordo + textoRecibo;
 
   // Enviar textoPrincipal
