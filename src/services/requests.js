@@ -80,6 +80,22 @@ async function postDadosRecibo(props) {
   }
 }
 
+async function inserirAcordoMaster(iddevedor, plano, token) {
+  try {
+    const { data } = await axiosApiInstance.post(
+      "/registro-master-acordo",
+      { iddevedor, plano },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return data;
+  } catch (error) {
+    const errorMessage = "Erro ao inserir dados do acordo master.";
+    console.error(errorMessage, error);
+
+    return { error: errorMessage };
+  }
+}
+
 async function getAtualizarPromessas(idacordo) {
   try {
     const { data } = await axiosApiInstance.get(`/atualizar-valores-promessas?idacordo=${idacordo}`);
