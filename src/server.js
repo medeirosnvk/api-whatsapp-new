@@ -9,6 +9,7 @@ const fileRoutes = require("../src/routes/fileRoutes");
 const instanceRoutes = require("../src/routes/instanceRoutes");
 const messageRoutes = require("../src/routes/messageRoutes");
 const qrCodeRoutes = require("../src/routes/qrCodeRoutes");
+const groupRoutes = require("../src/routes/groupRoutes");
 const { restoreAllSessions } = require("../src/services/InstanceServices/restoreAllSessionsService");
 
 const qrCodeDir = path.join(__dirname, "qrcodes");
@@ -99,6 +100,7 @@ const startServer = async () => {
   app.use(qrCodeRoutes);
   app.use(messageRoutes);
   app.use(fileRoutes);
+  app.use(groupRoutes);
 
   setupSwagger(app);
 
