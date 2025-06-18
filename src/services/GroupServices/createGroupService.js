@@ -113,7 +113,7 @@ const sendMessageToGroup = async (instanceName, groupId, text) => {
     throw new Error(`Sessão ${sessionName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  const group = await session.client.getgroupById(groupId);
+  const group = await session.client.getChatById(groupId);
   await group.sendMessage(text);
 };
 
