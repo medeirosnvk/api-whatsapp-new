@@ -24,6 +24,18 @@ groupRoutes.post("/message/createGroup/:instanceName", async (req, res) => {
   }
 });
 
+groupRoutes.get("/message/listGroups/:instanceName", async (req, res) => {
+  const { instanceName } = req.params;
+
+  try {
+    const groups = await listAllGroups(instanceName);
+    res.status(200).json({ status: "Grupos listados com sucesso", groups });
+  } catch (error) {
+    console.error("Erro ao listar grupos:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 groupRoutes.post("/message/addParticipants/:instanceName", async (req, res) => {
   const { groupId, participants } = req.body;
   const { instanceName } = req.params;

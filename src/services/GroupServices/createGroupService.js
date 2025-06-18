@@ -17,7 +17,31 @@ const createGroup = async (instanceName, groupName, participants) => {
     participants.map((n) => `${n}@c.us`)
   );
 
-  return { group };
+  return group;
+};
+
+const listAllGroups = async (instanceName) => {
+  const session = sessionManager.getSession(instanceName);
+
+  if (!session.client) {
+    throw new Error(`Sessão ${sessionName} não encontrada.`);
+  }
+
+  if (session.connectionState !== "open") {
+    throw new Error(`Sessão ${sessionName} não está conectada. Estado atual: ${session.connectionState}`);
+  }
+
+  const chats = await session.client.getChats();
+
+  const groups = chats
+    .filter((chat) => chat.isGroup)
+    .map((group) => ({
+      id: group.id._serialized,
+      name: group.name,
+      participantsCount: group.participants?.length || 0,
+    }));
+
+  return groups;
 };
 
 // Adiciona membros a um grupo
