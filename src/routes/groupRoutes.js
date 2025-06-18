@@ -16,7 +16,6 @@ groupRoutes.post("/message/createGroup/:instanceName", async (req, res) => {
 
     res.status(200).json({
       status: "Sucesso ao criar o grupo.",
-      groupId: group.groupId,
       group,
     });
   } catch (error) {

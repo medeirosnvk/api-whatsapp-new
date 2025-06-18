@@ -17,10 +17,7 @@ const createGroup = async (instanceName, groupName, participants) => {
     participants.map((n) => `${n}@c.us`)
   );
 
-  const groupId = group.gid._serialized;
-  console.log("ID do grupo criado:", groupId);
-
-  return { groupId: group.gid._serialized, group };
+  return { group };
 };
 
 // Adiciona membros a um grupo
@@ -36,11 +33,14 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
   }
 
   let chat;
+
   try {
     chat = await session.client.getChatById(groupId);
   } catch (error) {
     // fallback: tenta localizar o grupo em todos os chats
     const chats = await session.client.getChats();
+    console.log("Grupos existentes- ", chats);
+
     chat = chats.find((c) => c.isGroup && c.id._serialized === groupId);
   }
 
