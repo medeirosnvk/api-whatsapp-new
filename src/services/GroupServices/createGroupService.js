@@ -60,17 +60,6 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
 
   const group = await session.client.getChatById(groupId);
 
-  if (!group || !group.isGroup) {
-    throw new Error("O ID fornecido não pertence a um grupo ou o grupo não foi encontrado.");
-  }
-
-  // Verifica se o usuário logado é admin do grupo
-  const isAdmin = group.participants.some((p) => p.id.user === session.client.info.wid.user && (p.isAdmin || p.isSuperAdmin));
-
-  if (!isAdmin) {
-    throw new Error("A sessão atual não é administradora do grupo.");
-  }
-
   // Filtra números válidos e formata
   const validParticipants = participants
     .filter((n) => /^\d{10,15}$/.test(n)) // número com DDI e DDD
