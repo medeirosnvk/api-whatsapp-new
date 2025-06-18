@@ -1,5 +1,5 @@
 const express = require("express");
-const { createGroup, addParticipantsToGroup, sendMessageToGroup } = require("../services/GroupServices/createGroupService");
+const { createGroup, addParticipantsToGroup, sendMessageToGroup, listAllGroups } = require("../services/GroupServices/createGroupService");
 
 const groupRoutes = express.Router();
 

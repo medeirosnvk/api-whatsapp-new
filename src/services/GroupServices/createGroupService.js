@@ -96,6 +96,7 @@ const sendMessageToGroup = async (instanceName, groupId, text) => {
 
 module.exports = {
   createGroup,
+  listAllGroups,
   addParticipantsToGroup,
   sendMessageToGroup,
 };
