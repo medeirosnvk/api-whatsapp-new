@@ -13,7 +13,12 @@ groupRoutes.post("/message/createGroup/:instanceName", async (req, res) => {
 
   try {
     const group = await createGroup(instanceName, groupName, participants);
-    res.status(200).json({ status: "Sucesso ao criar o grupo.", group });
+
+    res.status(200).json({
+      status: "Sucesso ao criar o grupo.",
+      groupId: group.groupId,
+      group,
+    });
   } catch (error) {
     console.error("Erro ao criar grupo:", error.message);
     res.status(500).json({ error: error.message });
