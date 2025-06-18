@@ -58,20 +58,7 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
     throw new Error(`Sessão ${instanceName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  let group;
-
-  try {
-    group = await session.client.getChatById(groupId);
-  } catch (error) {
-    console.warn(`Falha ao obter grupo diretamente: ${error.message}`);
-    const cachedGroups = await buscarGruposEmCacheId(groupId);
-    console.log(
-      "Grupos em cache localizados -",
-      cachedGroups.map((g) => g.id._serialized)
-    );
-
-    group = cachedGroups.find((c) => c.isGroup && c.id._serialized === groupId);
-  }
+  const group = await session.client.getChatById(groupId);
 
   if (!group || !group.isGroup) {
     throw new Error("O ID fornecido não pertence a um grupo ou o grupo não foi encontrado.");
