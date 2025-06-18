@@ -61,18 +61,24 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
   let group;
 
   try {
+    console.log("Tentando buscar grupo com getChatById:", groupId);
     group = await session.client.getChatById(groupId);
   } catch (error) {
-    console.warn(`Falha ao obter grupo diretamente: ${error.message}`);
-    const cachedGroups = await buscarGruposEmCacheId(groupId);
-    group = cachedGroups.find((c) => c.isGroup && c.id._serialized === groupId);
+    console.warn("getChatById falhou:", error.message);
+  }
+
+  if (!group || !group.isGroup) {
+    console.log("Tentando buscar grupo via lista de chats...");
+
+    const allChats = await session.client.getChats();
+    group = allChats.find((chat) => chat.isGroup && chat.id._serialized === groupId);
   }
 
   if (!group || !group.isGroup) {
     throw new Error("Grupo não encontrado ou ID inválido.");
   }
 
-  const isAdmin = group.participants.some((p) => p.id.user === session.client.info.wid.user && (p.isAdmin || p.isSuperAdmin));
+  const isAdmin = group.participants?.some((p) => p.id.user === session.client.info.wid.user && (p.isAdmin || p.isSuperAdmin));
 
   if (!isAdmin) {
     throw new Error("A sessão atual não é administradora do grupo.");
