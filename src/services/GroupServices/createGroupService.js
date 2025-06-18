@@ -1,5 +1,5 @@
 const sessionManager = require("../../services/sessionsManager");
-const { salvarGrupoEmCache, buscarGruposEmCache } = require("./groupCacheFs");
+const { salvarGrupoEmCache, buscarGruposEmCache, buscarGruposEmCacheId } = require("./groupCacheFs");
 
 const createGroup = async (instanceName, groupName, participants) => {
   const session = sessionManager.getSession(instanceName);
@@ -33,9 +33,9 @@ const listAllGroups = async (instanceName) => {
     throw new Error(`Sessão ${sessionName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  // const chats = await session.client.getChats();
-  // const groups = chats
-  //   .filter((chat) => chat.isGroup)
+  // const groups = await session.client.getgroups();
+  // const groups = groups
+  //   .filter((group) => group.isGroup)
   //   .map((group) => ({
   //     id: group.id._serialized,
   //     name: group.name,
@@ -50,7 +50,7 @@ const listAllGroups = async (instanceName) => {
 const addParticipantsToGroup = async (instanceName, groupId, participants) => {
   const session = sessionManager.getSession(instanceName);
 
-  if (!session.client) {
+  if (!session?.client) {
     throw new Error(`Sessão ${instanceName} não encontrada.`);
   }
 
@@ -58,26 +58,48 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
     throw new Error(`Sessão ${instanceName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  let chat;
+  let group;
 
   try {
-    chat = await session.client.getChatById(groupId);
+    group = await session.client.getChatById(groupId);
   } catch (error) {
-    // fallback: tenta localizar o grupo em todos os chats
-    const chats = await session.client.getChats();
-    console.log("Grupos existentes- ", chats);
+    console.warn(`Falha ao obter grupo diretamente: ${error.message}`);
+    const cachedGroups = await buscarGruposEmCacheId(groupId);
+    console.log(
+      "Grupos em cache localizados -",
+      cachedGroups.map((g) => g.id._serialized)
+    );
 
-    chat = chats.find((c) => c.isGroup && c.id._serialized === groupId);
+    group = cachedGroups.find((c) => c.isGroup && c.id._serialized === groupId);
   }
 
-  if (!chat || !chat.isGroup) {
-    throw new Error("O ID fornecido não pertence a um grupo ou não foi encontrado.");
+  if (!group || !group.isGroup) {
+    throw new Error("O ID fornecido não pertence a um grupo ou o grupo não foi encontrado.");
   }
 
-  await chat.addParticipants(
-    participants.map((n) => `${n}@c.us`),
-    { autoSendInviteV4: true }
-  );
+  // Verifica se o usuário logado é admin do grupo
+  const isAdmin = group.participants.some((p) => p.id.user === session.client.info.wid.user && (p.isAdmin || p.isSuperAdmin));
+
+  if (!isAdmin) {
+    throw new Error("A sessão atual não é administradora do grupo.");
+  }
+
+  // Filtra números válidos e formata
+  const validParticipants = participants
+    .filter((n) => /^\d{10,15}$/.test(n)) // número com DDI e DDD
+    .map((n) => `${n}@c.us`);
+
+  if (validParticipants.length === 0) {
+    throw new Error("Nenhum número válido para adicionar.");
+  }
+
+  try {
+    await group.addParticipants(validParticipants, { autoSendInviteV4: true });
+    console.log(`Participantes adicionados ao grupo ${groupId}:`, validParticipants);
+  } catch (err) {
+    console.error("Erro ao adicionar participantes:", err);
+    throw new Error("Falha ao adicionar participantes: " + err.message);
+  }
 };
 
 const sendMessageToGroup = async (instanceName, groupId, text) => {
@@ -91,8 +113,8 @@ const sendMessageToGroup = async (instanceName, groupId, text) => {
     throw new Error(`Sessão ${sessionName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  const chat = await session.client.getChatById(groupId);
-  await chat.sendMessage(text);
+  const group = await session.client.getgroupById(groupId);
+  await group.sendMessage(text);
 };
 
 module.exports = {

@@ -26,4 +26,10 @@ const buscarGruposEmCache = async (instanceName) => {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 };
 
-module.exports = { salvarGrupoEmCache, buscarGruposEmCache };
+const buscarGruposEmCacheId = async (groupId) => {
+  const filePath = getFilePath(groupId);
+  if (!fs.existsSync(filePath)) return [];
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+};
+
+module.exports = { salvarGrupoEmCache, buscarGruposEmCache, buscarGruposEmCacheId };
