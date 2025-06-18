@@ -69,44 +69,40 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
   }
 
   if (!group || !group.isGroup) {
-    throw new Error("O ID fornecido não pertence a um grupo ou o grupo não foi encontrado.");
+    throw new Error("Grupo não encontrado ou ID inválido.");
   }
 
-  // Verifica se a sessão atual é administradora do grupo
   const isAdmin = group.participants.some((p) => p.id.user === session.client.info.wid.user && (p.isAdmin || p.isSuperAdmin));
 
   if (!isAdmin) {
     throw new Error("A sessão atual não é administradora do grupo.");
   }
 
-  // Filtra números válidos e formata
-  const validParticipants = participants.filter((n) => /^\d{10,15}$/.test(n)).map((n) => `${n}@c.us`);
+  const formattedParticipants = participants.filter((n) => /^\d{10,15}$/.test(n)).map((n) => `${n}@c.us`);
 
-  if (validParticipants.length === 0) {
-    throw new Error("Nenhum número válido para adicionar.");
+  if (formattedParticipants.length === 0) {
+    throw new Error("Nenhum número válido foi fornecido.");
   }
 
-  // Envia com comentário padrão, permite convite automático (inviteV4) e delay randômico
   try {
-    const result = await group.addParticipants(validParticipants, {
-      comment: "Bem-vindo(a) ao grupo!",
+    const result = await group.addParticipants(formattedParticipants, {
+      comment: "Você foi convidado para o grupo!",
       autoSendInviteV4: true,
       sleep: [200, 400],
     });
 
-    const feedback = Object.entries(result).map(([participantId, info]) => ({
-      participante: participantId,
+    const resultadoDetalhado = Object.entries(result).map(([id, info]) => ({
+      participante: id,
       codigo: info.code,
       mensagem: info.message,
-      conviteEnviado: info.isInviteV4Sent,
+      conviteEnviado: info.isInviteV4Sent || false,
     }));
 
-    console.table(feedback);
-
-    return feedback;
+    console.table(resultadoDetalhado);
+    return resultadoDetalhado;
   } catch (err) {
-    console.error("Erro ao adicionar participantes:", err);
-    throw new Error("Falha ao adicionar participantes: " + err.message);
+    console.error("Erro ao tentar adicionar participantes:", err);
+    throw new Error("Erro ao adicionar participantes: " + err.message);
   }
 };
 
