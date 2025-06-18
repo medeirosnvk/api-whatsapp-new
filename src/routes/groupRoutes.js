@@ -41,19 +41,18 @@ groupRoutes.post("/message/addParticipants/:instanceName", async (req, res) => {
   const { instanceName } = req.params;
 
   if (!instanceName || !groupId || !Array.isArray(participants) || participants.length === 0) {
-    return res.status(400).send("instanceName, groupId e participants (array de números) são obrigatórios.");
+    return res.status(400).json({ error: "instanceName, groupId e participants são obrigatórios." });
   }
 
   try {
-    const feedback = await addParticipantsToGroup(instanceName, groupId, participants);
+    const resultado = await addParticipantsToGroup(instanceName, groupId, participants);
     res.status(200).json({
-      status: "Participantes processados.",
-      grupo: groupId,
-      participantes: feedback,
+      status: "Processamento finalizado",
+      groupId,
+      resultado,
     });
   } catch (error) {
-    console.error("Erro na rota /addParticipants:", error);
-    res.status(500).json({ error: error.message || "Erro interno no servidor" });
+    res.status(500).json({ error: error.message });
   }
 });
 
