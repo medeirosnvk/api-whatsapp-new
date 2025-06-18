@@ -1,6 +1,6 @@
 const sessionManager = require("../../services/sessionsManager");
+const { salvarGrupoEmCache, buscarGruposEmCache } = require("./groupCacheFs");
 
-// Cria grupo
 const createGroup = async (instanceName, groupName, participants) => {
   const session = sessionManager.getSession(instanceName);
 
@@ -17,6 +17,8 @@ const createGroup = async (instanceName, groupName, participants) => {
     participants.map((n) => `${n}@c.us`)
   );
 
+  await salvarGrupoEmCache({ instanceName, groupId: group.gid._serialized, nome: groupName });
+
   return group;
 };
 
@@ -31,20 +33,20 @@ const listAllGroups = async (instanceName) => {
     throw new Error(`Sessão ${sessionName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  const chats = await session.client.getChats();
+  // const chats = await session.client.getChats();
+  // const groups = chats
+  //   .filter((chat) => chat.isGroup)
+  //   .map((group) => ({
+  //     id: group.id._serialized,
+  //     name: group.name,
+  //     participantsCount: group.participants?.length || 0,
+  //   }));
 
-  const groups = chats
-    .filter((chat) => chat.isGroup)
-    .map((group) => ({
-      id: group.id._serialized,
-      name: group.name,
-      participantsCount: group.participants?.length || 0,
-    }));
+  const localGrupos = await buscarGruposEmCache(instanceName);
 
-  return groups;
+  return localGrupos;
 };
 
-// Adiciona membros a um grupo
 const addParticipantsToGroup = async (instanceName, groupId, participants) => {
   const session = sessionManager.getSession(instanceName);
 
@@ -78,7 +80,6 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
   );
 };
 
-// Envia mensagem no grupo
 const sendMessageToGroup = async (instanceName, groupId, text) => {
   const session = sessionManager.getSession(instanceName);
 
