@@ -45,8 +45,12 @@ groupRoutes.post("/message/addParticipants/:instanceName", async (req, res) => {
   }
 
   try {
-    await addParticipantsToGroup(instanceName, groupId, participants);
-    res.status(200).json({ status: "Sucesso ao adicionar participantes.", groupId, participants });
+    const feedback = await addParticipantsToGroup(instanceName, groupId, participants);
+    res.status(200).json({
+      status: "Participantes processados.",
+      grupo: groupId,
+      participantes: feedback,
+    });
   } catch (error) {
     console.error("Erro na rota /addParticipants:", error);
     res.status(500).json({ error: error.message || "Erro interno no servidor" });

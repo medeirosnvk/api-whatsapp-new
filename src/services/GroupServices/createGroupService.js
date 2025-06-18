@@ -58,20 +58,52 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
     throw new Error(`Sessão ${instanceName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  const group = await session.client.getChatById(groupId);
+  let group;
+
+  try {
+    group = await session.client.getChatById(groupId);
+  } catch (error) {
+    console.warn(`Falha ao obter grupo diretamente: ${error.message}`);
+    const cachedGroups = await buscarGruposEmCacheId(groupId);
+    group = cachedGroups.find((c) => c.isGroup && c.id._serialized === groupId);
+  }
+
+  if (!group || !group.isGroup) {
+    throw new Error("O ID fornecido não pertence a um grupo ou o grupo não foi encontrado.");
+  }
+
+  // Verifica se a sessão atual é administradora do grupo
+  const isAdmin = group.participants.some((p) => p.id.user === session.client.info.wid.user && (p.isAdmin || p.isSuperAdmin));
+
+  if (!isAdmin) {
+    throw new Error("A sessão atual não é administradora do grupo.");
+  }
 
   // Filtra números válidos e formata
-  const validParticipants = participants
-    .filter((n) => /^\d{10,15}$/.test(n)) // número com DDI e DDD
-    .map((n) => `${n}@c.us`);
+  const validParticipants = participants.filter((n) => /^\d{10,15}$/.test(n)).map((n) => `${n}@c.us`);
 
   if (validParticipants.length === 0) {
     throw new Error("Nenhum número válido para adicionar.");
   }
 
+  // Envia com comentário padrão, permite convite automático (inviteV4) e delay randômico
   try {
-    await group.addParticipants(validParticipants, { autoSendInviteV4: true });
-    console.log(`Participantes adicionados ao grupo ${groupId}:`, validParticipants);
+    const result = await group.addParticipants(validParticipants, {
+      comment: "Bem-vindo(a) ao grupo!",
+      autoSendInviteV4: true,
+      sleep: [200, 400],
+    });
+
+    const feedback = Object.entries(result).map(([participantId, info]) => ({
+      participante: participantId,
+      codigo: info.code,
+      mensagem: info.message,
+      conviteEnviado: info.isInviteV4Sent,
+    }));
+
+    console.table(feedback);
+
+    return feedback;
   } catch (err) {
     console.error("Erro ao adicionar participantes:", err);
     throw new Error("Falha ao adicionar participantes: " + err.message);
