@@ -114,6 +114,8 @@ const sendMessageToGroup = async (instanceName, groupId, text) => {
   }
 
   const group = await session.client.getChatById(groupId);
+  console.log("sendMessageToGroup group getChatById -", group);
+
   await group.sendMessage(text);
 };
 
