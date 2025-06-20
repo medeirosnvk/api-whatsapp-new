@@ -62,6 +62,7 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
 
   try {
     console.log("Tentando buscar grupo com getChatById:", groupId);
+
     group = await session.client.getChatById(groupId);
   } catch (error) {
     console.warn("getChatById falhou:", error.message);
@@ -77,6 +78,11 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
   if (!group || !group.isGroup) {
     throw new Error("Grupo não encontrado ou ID inválido.");
   }
+
+  const groupName = group.name;
+  const groupParticipants = group.participants;
+  console.log("Nome do Grupo:", groupName);
+  console.log("Participantes do Grupo:", groupParticipants);
 
   const isAdmin = group.participants?.some((p) => p.id.user === session.client.info.wid.user && (p.isAdmin || p.isSuperAdmin));
 
