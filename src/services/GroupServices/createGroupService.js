@@ -1,31 +1,44 @@
 const sessionManager = require("../../services/sessionsManager");
-const { salvarGrupoEmCache, buscarGruposEmCache, buscarGruposEmCacheId } = require("./groupCacheFs");
 
-const formatNumberToWid = (number) => {
-  const cleaned = number.replace(/\D/g, ""); // remove tudo que não é número
-  if (!cleaned.startsWith("55")) {
-    throw new Error("Número precisa estar no formato DDI + DDD + número. Ex: 5598999999999");
+function formatToWid(number) {
+  try {
+    if (typeof number !== "string" && typeof number !== "number") return null;
+
+    const cleaned = number.toString().replace(/\D/g, "");
+    if (!cleaned || cleaned.length < 12 || !cleaned.startsWith("55")) return null;
+
+    const ddd = cleaned.slice(2, 4);
+    let celular = cleaned.slice(4);
+
+    if (celular.length === 9 && celular.startsWith("9")) {
+      celular = celular.slice(1);
+    }
+
+    const numeroFinal = `55${ddd}${celular}`;
+    return `${numeroFinal}@c.us`;
+  } catch {
+    return null;
   }
-  return `${cleaned}@c.us`;
-};
+}
 
 const createGroup = async (instanceName, groupName, participants) => {
   const session = sessionManager.getSession(instanceName);
 
   if (!session.client) {
-    throw new Error(`Sessão ${sessionName} não encontrada.`);
+    throw new Error(`Sessão ${instanceName} não encontrada.`);
   }
 
   if (session.connectionState !== "open") {
-    throw new Error(`Sessão ${sessionName} não está conectada. Estado atual: ${session.connectionState}`);
+    throw new Error(`Sessão ${instanceName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  const group = await session.client.createGroup(
-    groupName,
-    participants.map((n) => `${n}@c.us`)
-  );
+  const formattedParticipants = participants.map(formatToWid).filter(Boolean); // Remove inválidos
 
-  await salvarGrupoEmCache({ instanceName, groupId: group.gid._serialized, nome: groupName });
+  if (formattedParticipants.length === 0) {
+    throw new Error("Nenhum número válido para criar o grupo.");
+  }
+
+  const group = await session.client.createGroup(groupName, formattedParticipants);
 
   return group;
 };
@@ -34,25 +47,25 @@ const listAllGroups = async (instanceName) => {
   const session = sessionManager.getSession(instanceName);
 
   if (!session.client) {
-    throw new Error(`Sessão ${sessionName} não encontrada.`);
+    throw new Error(`Sessão ${instanceName} não encontrada.`);
   }
 
   if (session.connectionState !== "open") {
-    throw new Error(`Sessão ${sessionName} não está conectada. Estado atual: ${session.connectionState}`);
+    throw new Error(`Sessão ${instanceName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  // const groups = await session.client.getgroups();
-  // const groups = groups
-  //   .filter((group) => group.isGroup)
-  //   .map((group) => ({
-  //     id: group.id._serialized,
-  //     name: group.name,
-  //     participantsCount: group.participants?.length || 0,
-  //   }));
+  const chats = await session.client.getChats();
 
-  const localGrupos = await buscarGruposEmCache(instanceName);
+  // Filtra somente os grupos
+  const grupos = chats
+    .filter((chat) => chat.isGroup === true)
+    .map((group) => ({
+      id: group.id._serialized,
+      nome: group.name,
+      participantes: group.participants?.map((p) => p.id._serialized) || [],
+    }));
 
-  return localGrupos;
+  return grupos;
 };
 
 const addParticipantsToGroup = async (instanceName, groupId, participants) => {
@@ -78,17 +91,6 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
   const groupParticipants2 = groupById.participants;
   console.log("Nome do Grupo:", groupName);
   console.log("Participantes do Grupo:", groupParticipants2);
-
-  const formatToWid = (number) => {
-    try {
-      if (typeof number !== "string" && typeof number !== "number") return null;
-      const cleaned = number.toString().replace(/\D/g, "");
-      if (!cleaned || cleaned.length < 10 || !cleaned.startsWith("55")) return null;
-      return `${cleaned}@c.us`;
-    } catch {
-      return null;
-    }
-  };
 
   const formattedParticipants = [];
 
