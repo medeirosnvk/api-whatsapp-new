@@ -3,7 +3,7 @@ const { createGroup, addParticipantsToGroup, sendMessageToGroup, listAllGroups }
 
 const groupRoutes = express.Router();
 
-groupRoutes.post("/message/createGroup/:instanceName", async (req, res) => {
+groupRoutes.post("/group/createGroup/:instanceName", async (req, res) => {
   const { groupName, participants } = req.body;
   const { instanceName } = req.params;
 
@@ -24,7 +24,7 @@ groupRoutes.post("/message/createGroup/:instanceName", async (req, res) => {
   }
 });
 
-groupRoutes.get("/message/listGroups/:instanceName", async (req, res) => {
+groupRoutes.get("/group/listGroups/:instanceName", async (req, res) => {
   const { instanceName } = req.params;
 
   try {
@@ -36,7 +36,7 @@ groupRoutes.get("/message/listGroups/:instanceName", async (req, res) => {
   }
 });
 
-groupRoutes.post("/message/addParticipants/:instanceName", async (req, res) => {
+groupRoutes.post("/group/addParticipants/:instanceName", async (req, res) => {
   const { groupId, participants } = req.body;
   const { instanceName } = req.params;
 
@@ -56,7 +56,7 @@ groupRoutes.post("/message/addParticipants/:instanceName", async (req, res) => {
   }
 });
 
-groupRoutes.post("/message/sendGroupMessage/:instanceName", async (req, res) => {
+groupRoutes.post("/group/sendGroupMessage/:instanceName", async (req, res) => {
   const { groupId, text } = req.body;
   const { instanceName } = req.params;
 
