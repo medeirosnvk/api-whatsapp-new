@@ -69,15 +69,12 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
   }
 
   const groupById = await session.client.getChatById(groupId);
-  const chats = await session.client.getChats();
-  const group = chats.find((chat) => chat.id._serialized === groupId && chat.isGroup === true);
 
   console.log("groupById -", groupById);
-  console.log("group -", group);
-  console.log("Grupo encontrado:", group?.name || "não encontrado");
-  console.log("Tipo de chat:", group?.constructor?.name);
+  console.log("Grupo encontrado:", groupById?.name || "não encontrado");
+  console.log("Tipo de chat:", groupById?.constructor?.name);
 
-  if (!group || typeof group.addParticipants !== "function") {
+  if (!groupById || typeof groupById.addParticipants !== "function") {
     throw new Error("Grupo não encontrado ou método addParticipants não disponível.");
   }
 
@@ -99,7 +96,7 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
   }
 
   try {
-    const result = await group.addParticipants(formattedParticipants, {
+    const result = await groupById.addParticipants(formattedParticipants, {
       comment: "Você foi convidado para o grupo!",
       autoSendInviteV4: true,
     });
