@@ -56,6 +56,8 @@ const listAllGroups = async (instanceName) => {
 };
 
 const addParticipantsToGroup = async (instanceName, groupId, participants) => {
+  console.log("props addParticipantsToGroup -", instanceName, groupId, participants);
+
   const session = sessionManager.getSession(instanceName);
 
   if (!session?.client) {
@@ -66,9 +68,13 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
     throw new Error(`Sessão ${instanceName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
+  const groupById = await session.client.getChatById(groupId);
   const chats = await session.client.getChats();
   const group = chats.find((chat) => chat.id._serialized === groupId && chat.isGroup === true);
 
+  console.log("groupById -", groupById);
+  console.log("chats -", chats);
+  console.log("group -", group);
   console.log("Grupo encontrado:", group?.name || "não encontrado");
   console.log("Tipo de chat:", group?.constructor?.name);
 
