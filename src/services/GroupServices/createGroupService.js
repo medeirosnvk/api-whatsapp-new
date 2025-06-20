@@ -17,6 +17,8 @@ const createGroup = async (instanceName, groupName, participants) => {
     participants.map((n) => `${n}@c.us`)
   );
 
+  console.log("groupInfo -", groupInfo);
+
   const groupId = groupInfo.gid._serialized;
   await salvarGrupoEmCache({ instanceName, groupId, nome: groupName });
 
