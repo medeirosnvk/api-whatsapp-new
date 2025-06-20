@@ -49,58 +49,23 @@ const listAllGroups = async (instanceName) => {
 
 const addParticipantsToGroup = async (instanceName, groupId, participants) => {
   const session = sessionManager.getSession(instanceName);
+  const participantsToAdd = ["5551991766192@c.us"];
 
-  if (!session?.client) {
-    throw new Error(`Sessão ${instanceName} não encontrada.`);
+  if (!session.client) {
+    throw new Error(`Sessão ${sessionName} não encontrada.`);
   }
 
   if (session.connectionState !== "open") {
-    throw new Error(`Sessão ${instanceName} não está conectada. Estado atual: ${session.connectionState}`);
+    throw new Error(`Sessão ${sessionName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  let group;
+  const group = await session.client.getChatById(groupId);
+  console.log("sendMessageToGroup group getChatById -", group);
 
   try {
-    console.log("Tentando buscar grupo com getChatById:", groupId);
-
-    group = await session.client.getChatById(groupId);
-  } catch (error) {
-    console.warn("getChatById falhou:", error.message);
-  }
-
-  if (!group || !group.isGroup) {
-    console.log("Tentando buscar grupo via lista de chats...");
-
-    const allChats = await session.client.getChats();
-    group = allChats.find((chat) => chat.isGroup && chat.id._serialized === groupId);
-  }
-
-  if (!group || !group.isGroup) {
-    throw new Error("Grupo não encontrado ou ID inválido.");
-  }
-
-  const groupName = group.name;
-  const groupParticipants = group.participants;
-  console.log("Nome do Grupo:", groupName);
-  console.log("Participantes do Grupo:", groupParticipants);
-
-  const isAdmin = group.participants?.some((p) => p.id.user === session.client.info.wid.user && (p.isAdmin || p.isSuperAdmin));
-
-  if (!isAdmin) {
-    throw new Error("A sessão atual não é administradora do grupo.");
-  }
-
-  const formattedParticipants = participants.filter((n) => /^\d{10,15}$/.test(n)).map((n) => `${n}@c.us`);
-
-  if (formattedParticipants.length === 0) {
-    throw new Error("Nenhum número válido foi fornecido.");
-  }
-
-  try {
-    const result = await group.addParticipants(formattedParticipants, {
+    const result = await group.addParticipants(participantsToAdd, {
       comment: "Você foi convidado para o grupo!",
       autoSendInviteV4: true,
-      sleep: [200, 400],
     });
 
     const resultadoDetalhado = Object.entries(result).map(([id, info]) => ({
