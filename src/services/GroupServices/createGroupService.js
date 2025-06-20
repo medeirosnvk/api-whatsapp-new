@@ -58,7 +58,7 @@ const listAllGroups = async (instanceName) => {
 const addParticipantsToGroup = async (instanceName, groupId, participants) => {
   const session = sessionManager.getSession(instanceName);
 
-  if (!session.client) {
+  if (!session?.client) {
     throw new Error(`Sessão ${instanceName} não encontrada.`);
   }
 
@@ -66,7 +66,6 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
     throw new Error(`Sessão ${instanceName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  const formattedParticipants = participants.map(formatNumberToWid);
   const chats = await session.client.getChats();
   const group = chats.find((chat) => chat.id._serialized === groupId && chat.isGroup === true);
 
@@ -75,6 +74,23 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
 
   if (!group || typeof group.addParticipants !== "function") {
     throw new Error("Grupo não encontrado ou método addParticipants não disponível.");
+  }
+
+  // ✅ Limpeza e validação dos números
+  const formatToWid = (number) => {
+    try {
+      const cleaned = number?.toString().replace(/\D/g, "");
+      if (!cleaned || cleaned.length < 10 || !cleaned.startsWith("55")) return null;
+      return `${cleaned}@c.us`;
+    } catch {
+      return null;
+    }
+  };
+
+  const formattedParticipants = participants.map(formatToWid).filter(Boolean); // Remove inválidos ou nulos
+
+  if (formattedParticipants.length === 0) {
+    throw new Error("Nenhum número válido para adicionar ao grupo.");
   }
 
   try {
