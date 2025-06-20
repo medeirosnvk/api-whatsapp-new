@@ -12,7 +12,6 @@ const createGroup = async (instanceName, groupName, participants) => {
     throw new Error(`Sessão ${instanceName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  // Cria o grupo com os participantes iniciais
   const groupInfo = await session.client.createGroup(
     groupName,
     participants.map((n) => `${n}@c.us`)
@@ -21,10 +20,16 @@ const createGroup = async (instanceName, groupName, participants) => {
   const groupId = groupInfo.gid._serialized;
   await salvarGrupoEmCache({ instanceName, groupId, nome: groupName });
 
-  // Aguarda o grupo estar disponível como GroupChat real
+  // Força uma mensagem no grupo para que ele apareça no getChats()
+  try {
+    await session.client.sendMessage(groupId, "Grupo criado com sucesso!");
+  } catch (e) {
+    console.warn("Falha ao enviar mensagem de forçar sincronização:", e.message);
+  }
+
+  // Aguarda a sincronização do grupo como GroupChat
   let groupChat = null;
   const maxTentativas = 10;
-
   for (let tentativa = 0; tentativa < maxTentativas; tentativa++) {
     const chats = await session.client.getChats();
     groupChat = chats.find((chat) => chat.id._serialized === groupId && chat.isGroup === true);
