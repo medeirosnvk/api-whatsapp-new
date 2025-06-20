@@ -1,6 +1,14 @@
 const sessionManager = require("../../services/sessionsManager");
 const { salvarGrupoEmCache, buscarGruposEmCache, buscarGruposEmCacheId } = require("./groupCacheFs");
 
+const formatNumberToWid = (number) => {
+  const cleaned = number.replace(/\D/g, ""); // remove tudo que não é número
+  if (!cleaned.startsWith("55")) {
+    throw new Error("Número precisa estar no formato DDI + DDD + número. Ex: 5598999999999");
+  }
+  return `${cleaned}@c.us`;
+};
+
 const createGroup = async (instanceName, groupName, participants) => {
   const session = sessionManager.getSession(instanceName);
 
@@ -47,7 +55,7 @@ const listAllGroups = async (instanceName) => {
   return localGrupos;
 };
 
-const addParticipantsToGroup = async (instanceName, groupId, participantsToAdd) => {
+const addParticipantsToGroup = async (instanceName, groupId, participants) => {
   const session = sessionManager.getSession(instanceName);
 
   if (!session.client) {
@@ -58,6 +66,7 @@ const addParticipantsToGroup = async (instanceName, groupId, participantsToAdd) 
     throw new Error(`Sessão ${instanceName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
+  const formattedParticipants = participants.map(formatNumberToWid);
   const chats = await session.client.getChats();
   const group = chats.find((chat) => chat.id._serialized === groupId && chat.isGroup === true);
 
@@ -69,7 +78,7 @@ const addParticipantsToGroup = async (instanceName, groupId, participantsToAdd) 
   }
 
   try {
-    const result = await group.addParticipants(participantsToAdd, {
+    const result = await group.addParticipants(formattedParticipants, {
       comment: "Você foi convidado para o grupo!",
       autoSendInviteV4: true,
     });
