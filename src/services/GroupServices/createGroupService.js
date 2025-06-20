@@ -39,6 +39,13 @@ const createGroup = async (instanceName, groupName, participants) => {
   }
 
   const group = await session.client.createGroup(groupName, formattedParticipants);
+  const chat = await session.client.getChatById(group.gid._serialized);
+
+  // Define a descrição
+  await chat.setDescription("Este grupo foi criado pela Cobrance com assuntos relacionados a Coca-Cola.");
+
+  // Envia mensagem de boas-vindas
+  await chat.sendMessage("👋 Bem-vindo ao grupo! Assunto de seu interesse referente a Coca-Cola.");
 
   return group;
 };
@@ -84,9 +91,6 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
   if (!groupById || typeof groupById.addParticipants !== "function") {
     throw new Error("Grupo não encontrado ou método addParticipants não disponível.");
   }
-
-  const groupName = groupById.name;
-  const groupParticipants2 = groupById.participants;
 
   const formattedParticipants = [];
 
