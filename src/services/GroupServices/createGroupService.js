@@ -47,10 +47,10 @@ const listAllGroups = async (instanceName) => {
   return localGrupos;
 };
 
-const addParticipantsToGroup = async (instanceName, groupId, participants) => {
+const addParticipantsToGroup = async (instanceName, groupId, participantsToAdd) => {
   const session = sessionManager.getSession(instanceName);
 
-  if (!session?.client) {
+  if (!session.client) {
     throw new Error(`Sessão ${instanceName} não encontrada.`);
   }
 
@@ -58,49 +58,20 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
     throw new Error(`Sessão ${instanceName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  let group;
+  const chats = await session.client.getChats();
+  const group = chats.find((chat) => chat.id._serialized === groupId && chat.isGroup === true);
 
-  try {
-    console.log("Tentando buscar grupo com getChatById:", groupId);
+  console.log("Grupo encontrado:", group?.name || "não encontrado");
+  console.log("Tipo de chat:", group?.constructor?.name);
 
-    group = await session.client.getChatById(groupId);
-  } catch (error) {
-    console.warn("getChatById falhou:", error.message);
-  }
-
-  if (!group || !group.isGroup) {
-    console.log("Tentando buscar grupo via lista de chats...");
-
-    const allChats = await session.client.getChats();
-    group = allChats.find((chat) => chat.isGroup && chat.id._serialized === groupId);
-  }
-
-  if (!group || !group.isGroup) {
-    throw new Error("Grupo não encontrado ou ID inválido.");
-  }
-
-  const groupName = group.name;
-  const groupParticipants = group.participants;
-  console.log("Nome do Grupo:", groupName);
-  console.log("Participantes do Grupo:", groupParticipants);
-
-  const isAdmin = group.participants?.some((p) => p.id.user === session.client.info.wid.user && (p.isAdmin || p.isSuperAdmin));
-
-  if (!isAdmin) {
-    throw new Error("A sessão atual não é administradora do grupo.");
-  }
-
-  const formattedParticipants = participants.filter((n) => /^\d{10,15}$/.test(n)).map((n) => `${n}@c.us`);
-
-  if (formattedParticipants.length === 0) {
-    throw new Error("Nenhum número válido foi fornecido.");
+  if (!group || typeof group.addParticipants !== "function") {
+    throw new Error("Grupo não encontrado ou método addParticipants não disponível.");
   }
 
   try {
-    const result = await group.addParticipants(formattedParticipants, {
+    const result = await group.addParticipants(participantsToAdd, {
       comment: "Você foi convidado para o grupo!",
       autoSendInviteV4: true,
-      sleep: [200, 400],
     });
 
     const resultadoDetalhado = Object.entries(result).map(([id, info]) => ({
