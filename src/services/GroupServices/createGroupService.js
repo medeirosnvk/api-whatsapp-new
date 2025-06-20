@@ -74,6 +74,11 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
     throw new Error("Grupo não encontrado ou método addParticipants não disponível.");
   }
 
+  const groupName = groupById.name;
+  const groupParticipants2 = groupById.participants;
+  console.log("Nome do Grupo:", groupName);
+  console.log("Participantes do Grupo:", groupParticipants2);
+
   const formatToWid = (number) => {
     try {
       if (typeof number !== "string" && typeof number !== "number") return null;
@@ -89,12 +94,14 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
 
   for (const num of participants) {
     const wid = formatToWid(num);
+
     if (!wid) {
       console.warn("Número inválido:", num);
       continue;
     }
 
     const isRegistered = await session.client.isRegisteredUser(wid);
+
     if (!isRegistered) {
       console.warn("Usuário não está no WhatsApp:", wid);
       continue;
