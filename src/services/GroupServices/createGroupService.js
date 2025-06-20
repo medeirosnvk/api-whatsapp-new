@@ -69,8 +69,6 @@ const listAllGroups = async (instanceName) => {
 };
 
 const addParticipantsToGroup = async (instanceName, groupId, participants) => {
-  console.log("props addParticipantsToGroup -", instanceName, groupId, participants);
-
   const session = sessionManager.getSession(instanceName);
 
   if (!session?.client) {
@@ -89,8 +87,6 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
 
   const groupName = groupById.name;
   const groupParticipants2 = groupById.participants;
-  console.log("Nome do Grupo:", groupName);
-  console.log("Participantes do Grupo:", groupParticipants2);
 
   const formattedParticipants = [];
 
@@ -111,8 +107,6 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
 
     formattedParticipants.push(wid);
   }
-
-  console.log("Participantes prontos para adicionar:", formattedParticipants);
 
   if (formattedParticipants.length === 0) {
     throw new Error("Nenhum participante válido e registrado para adicionar ao grupo.");
@@ -151,7 +145,6 @@ const sendMessageToGroup = async (instanceName, groupId, text) => {
   }
 
   const group = await session.client.getChatById(groupId);
-  console.log("sendMessageToGroup group getChatById -", group);
 
   await group.sendMessage(text);
 };
