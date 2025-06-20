@@ -73,7 +73,6 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
   const group = chats.find((chat) => chat.id._serialized === groupId && chat.isGroup === true);
 
   console.log("groupById -", groupById);
-  console.log("chats -", chats);
   console.log("group -", group);
   console.log("Grupo encontrado:", group?.name || "não encontrado");
   console.log("Tipo de chat:", group?.constructor?.name);
