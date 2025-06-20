@@ -70,18 +70,14 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
 
   const groupById = await session.client.getChatById(groupId);
 
-  console.log("groupById -", groupById);
-  console.log("Grupo encontrado:", groupById?.name || "não encontrado");
-  console.log("Tipo de chat:", groupById?.constructor?.name);
-
   if (!groupById || typeof groupById.addParticipants !== "function") {
     throw new Error("Grupo não encontrado ou método addParticipants não disponível.");
   }
 
-  // ✅ Limpeza e validação dos números
   const formatToWid = (number) => {
     try {
-      const cleaned = number?.toString().replace(/\D/g, "");
+      if (typeof number !== "string" && typeof number !== "number") return null;
+      const cleaned = number.toString().replace(/\D/g, "");
       if (!cleaned || cleaned.length < 10 || !cleaned.startsWith("55")) return null;
       return `${cleaned}@c.us`;
     } catch {
@@ -89,10 +85,28 @@ const addParticipantsToGroup = async (instanceName, groupId, participants) => {
     }
   };
 
-  const formattedParticipants = participants.map(formatToWid).filter(Boolean); // Remove inválidos ou nulos
+  const formattedParticipants = [];
+
+  for (const num of participants) {
+    const wid = formatToWid(num);
+    if (!wid) {
+      console.warn("Número inválido:", num);
+      continue;
+    }
+
+    const isRegistered = await session.client.isRegisteredUser(wid);
+    if (!isRegistered) {
+      console.warn("Usuário não está no WhatsApp:", wid);
+      continue;
+    }
+
+    formattedParticipants.push(wid);
+  }
+
+  console.log("Participantes prontos para adicionar:", formattedParticipants);
 
   if (formattedParticipants.length === 0) {
-    throw new Error("Nenhum número válido para adicionar ao grupo.");
+    throw new Error("Nenhum participante válido e registrado para adicionar ao grupo.");
   }
 
   try {
