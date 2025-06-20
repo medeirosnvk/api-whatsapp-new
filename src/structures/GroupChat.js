@@ -99,7 +99,7 @@ class GroupChat extends Chat {
           419: "The participant can't be added because the group is full",
         };
 
-        await window.Store.GroupQueryAndUpdate({ id: groupId }); // this solves the problem
+        await window.Store.GroupQueryAndUpdate({ id: groupWid._serialized });
         const groupMetadata = group.groupMetadata;
         const groupParticipants = groupMetadata?.participants;
 
