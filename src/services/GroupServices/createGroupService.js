@@ -42,10 +42,10 @@ const createGroup = async (instanceName, groupName, participants) => {
   const chat = await session.client.getChatById(group.gid._serialized);
 
   // Define a descrição
-  await chat.setDescription("Este grupo foi criado pela Cobrance com assuntos relacionados a Coca-Cola.");
+  await chat.setDescription("Este grupo foi criado pela Cobrance para tratar-mos assuntos de seu interesse relacionados a Coca-Cola.");
 
   // Envia mensagem de boas-vindas
-  await chat.sendMessage("👋 Bem-vindo ao grupo! Assunto de seu interesse referente a Coca-Cola.");
+  await chat.sendMessage("👋 Bem-vindo ao grupo!");
 
   return group;
 };
