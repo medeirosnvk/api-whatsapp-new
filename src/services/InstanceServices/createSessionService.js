@@ -158,6 +158,24 @@ const createSession = async (sessionName) => {
       sessionsManager.updateSession(sessionName, { connectionState: state });
     });
 
+    client.on("group_join", async (notification) => {
+      const { chatId, recipientIds } = notification;
+
+      const groupChat = await client.getChatById(chatId);
+      for (const wid of recipientIds) {
+        const contato = await client.getContactById(wid);
+        await groupChat.sendMessage(`👋 Seja bem-vindo(a), @${contato.number}!`, {
+          mentions: [contato],
+        });
+      }
+    });
+
+    client.on("group_leave", async (notification) => {
+      const { chatId, author } = notification;
+      const groupChat = await client.getChatById(chatId);
+      await groupChat.sendMessage(`😢 O usuário saiu do grupo: ${author}`);
+    });
+
     client.on("message", async (message) => {
       try {
         if (client.connectionState !== "open") {
