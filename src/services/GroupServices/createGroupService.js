@@ -40,21 +40,7 @@ const createGroup = async (instanceName, groupName, participants) => {
 
   const group = await session.client.createGroup(groupName, formattedParticipants);
   const chat = await session.client.getChatById(group.gid._serialized);
-
-  // Define a descrição
   await chat.setDescription("Este grupo foi criado pela Cobrance para tratar-mos assuntos de seu interesse relacionados a Coca-Cola.");
-
-  // Envia mensagem apos tempo determinado
-  setTimeout(async () => {
-    try {
-      const grupoChat = await session.client.getChatById(group.gid._serialized);
-      const mensagemSaudacao = `👋 Olá a todos! Este grupo *${groupName}* foi criado com sucesso.`;
-      await grupoChat.sendMessage(mensagemSaudacao);
-      console.log("Mensagem de saudação enviada ao grupo.");
-    } catch (erro) {
-      console.error("Erro ao enviar mensagem de saudação:", erro.message);
-    }
-  }, 3000); // 3 segundos
 
   return group;
 };
