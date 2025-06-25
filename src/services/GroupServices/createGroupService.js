@@ -1,5 +1,6 @@
 const sessionManager = require("../../services/sessionsManager");
 const fs = require("fs");
+const path = require("path");
 
 function formatToWid(number) {
   try {
@@ -25,7 +26,7 @@ function formatToWid(number) {
 const createGroup = async (instanceName, groupName, participants) => {
   const session = sessionManager.getSession(instanceName);
 
-  if (!session.client) {
+  if (!session?.client) {
     throw new Error(`Sessão ${instanceName} não encontrada.`);
   }
 
@@ -33,29 +34,40 @@ const createGroup = async (instanceName, groupName, participants) => {
     throw new Error(`Sessão ${instanceName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  const formattedParticipants = participants.map(formatToWid).filter(Boolean); // Remove inválidos
+  const formattedParticipants = participants.map(formatToWid).filter(Boolean);
 
   if (formattedParticipants.length === 0) {
     throw new Error("Nenhum número válido para criar o grupo.");
   }
 
-  const imgBuffer = fs.readFileSync("public/group-image.png");
+  const imagePath = path.resolve("public", "group-image.png");
 
-  if (!imgBuffer) {
-    throw new Error("Imagem não encontrada.");
+  let imgBuffer;
+
+  if (fs.existsSync(imagePath)) {
+    imgBuffer = fs.readFileSync(imagePath);
+  } else {
+    console.warn("Imagem de grupo não encontrada em:", imagePath);
+    imgBuffer = null;
   }
 
   try {
     const group = await session.client.createGroup(groupName, formattedParticipants);
     const chat = await session.client.getChatById(group.gid._serialized);
-    await chat.setDescription("Este grupo foi criado pela Cobrance para tratar-mos assuntos de seu interesse relacionados a Coca-Cola.");
-    await chat.setPicture(imgBuffer);
+
+    await chat.setDescription("Este grupo foi criado pela Cobrance para tratarmos de assuntos do seu interesse relacionados à Coca-Cola.");
+
+    if (imgBuffer) {
+      await chat.setPicture(imgBuffer);
+    } else {
+      console.log("Grupo criado, mas sem imagem por ausência de arquivo.");
+    }
+
+    return group;
   } catch (error) {
-    console.error("Erro ao tentar criar grupo.", error);
+    console.error("Erro ao tentar criar grupo:", error);
     throw new Error(`Erro ao criar o grupo: ${error.message}`);
   }
-
-  return group;
 };
 
 const listAllGroups = async (instanceName) => {
