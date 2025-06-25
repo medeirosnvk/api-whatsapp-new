@@ -23,7 +23,7 @@ function formatToWid(number) {
   }
 }
 
-const createGroup = async (instanceName, groupName, participants) => {
+const createGroup = async (instanceName, groupName, participants, description) => {
   const session = sessionManager.getSession(instanceName);
 
   if (!session?.client) {
@@ -40,16 +40,12 @@ const createGroup = async (instanceName, groupName, participants) => {
     throw new Error("Nenhum número válido para criar o grupo.");
   }
 
-  const imagePath = path.resolve("public", "group-image.png");
   let imgBase64 = null;
+  const imagePath = path.join("public", "group-image.png");
 
   if (fs.existsSync(imagePath)) {
-    const ext = path.extname(imagePath).toLowerCase().replace(".", "");
-    const mimeType = ext === "jpg" ? "jpeg" : ext;
-
-    const imageBuffer = fs.readFileSync(imagePath);
-    const base64Data = imageBuffer.toString("base64");
-
+    const mimeType = path.extname(imagePath).slice(1) === "jpg" ? "jpeg" : path.extname(imagePath).slice(1);
+    const base64Data = fs.readFileSync(imagePath).toString("base64");
     imgBase64 = `data:image/${mimeType};base64,${base64Data}`;
   }
 
@@ -57,7 +53,7 @@ const createGroup = async (instanceName, groupName, participants) => {
     const group = await session.client.createGroup(groupName, formattedParticipants);
     const chat = await session.client.getChatById(group.gid._serialized);
 
-    await chat.setDescription("Este grupo foi criado pela Cobrance para tratarmos de assuntos do seu interesse relacionados à Coca-Cola.");
+    await chat.setDescription(description);
 
     if (imgBase64) {
       await chat.setPicture(imgBase64);
