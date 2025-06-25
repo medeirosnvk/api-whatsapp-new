@@ -25,6 +25,8 @@ function formatToWid(number) {
 }
 
 const createGroup = async (instanceName, groupName, participants, description) => {
+  console.log("Descrição recebida na rota:", description); // <=== TESTE AQUI
+
   const session = sessionManager.getSession(instanceName);
 
   if (!session?.client) {
@@ -47,7 +49,7 @@ const createGroup = async (instanceName, groupName, participants, description) =
     const group = await session.client.createGroup(groupName, formattedParticipants);
     const chat = await session.client.getChatById(group.gid._serialized);
 
-    await chat.setDescription(`${description}`);
+    await chat.setDescription(JSON.stringify(description));
 
     if (fs.existsSync(imagePath)) {
       const imageBuffer = fs.readFileSync(imagePath);
