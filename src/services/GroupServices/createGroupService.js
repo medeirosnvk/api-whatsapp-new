@@ -41,14 +41,16 @@ const createGroup = async (instanceName, groupName, participants) => {
   }
 
   const imagePath = path.resolve("public", "group-image.png");
-
-  let imgBuffer;
+  let imgBase64 = null;
 
   if (fs.existsSync(imagePath)) {
-    imgBuffer = fs.readFileSync(imagePath);
-  } else {
-    console.warn("Imagem de grupo não encontrada em:", imagePath);
-    imgBuffer = null;
+    const ext = path.extname(imagePath).toLowerCase().replace(".", "");
+    const mimeType = ext === "jpg" ? "jpeg" : ext;
+
+    const imageBuffer = fs.readFileSync(imagePath);
+    const base64Data = imageBuffer.toString("base64");
+
+    imgBase64 = `data:image/${mimeType};base64,${base64Data}`;
   }
 
   try {
@@ -57,10 +59,8 @@ const createGroup = async (instanceName, groupName, participants) => {
 
     await chat.setDescription("Este grupo foi criado pela Cobrance para tratarmos de assuntos do seu interesse relacionados à Coca-Cola.");
 
-    if (imgBuffer) {
-      await chat.setPicture(imgBuffer);
-    } else {
-      console.log("Grupo criado, mas sem imagem por ausência de arquivo.");
+    if (imgBase64) {
+      await chat.setPicture(imgBase64);
     }
 
     return group;
