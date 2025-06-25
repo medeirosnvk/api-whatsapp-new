@@ -1,4 +1,5 @@
 const sessionManager = require("../../services/sessionsManager");
+const { MessageMedia } = require("whatsapp-web.js");
 const fs = require("fs");
 const path = require("path");
 
@@ -40,14 +41,7 @@ const createGroup = async (instanceName, groupName, participants, description) =
     throw new Error("Nenhum número válido para criar o grupo.");
   }
 
-  let imgBase64 = null;
   const imagePath = path.join("public", "group-image.png");
-
-  if (fs.existsSync(imagePath)) {
-    const mimeType = path.extname(imagePath).slice(1) === "jpg" ? "jpeg" : path.extname(imagePath).slice(1);
-    const base64Data = fs.readFileSync(imagePath).toString("base64");
-    imgBase64 = `data:image/${mimeType};base64,${base64Data}`;
-  }
 
   try {
     const group = await session.client.createGroup(groupName, formattedParticipants);
@@ -55,8 +49,15 @@ const createGroup = async (instanceName, groupName, participants, description) =
 
     await chat.setDescription(description);
 
-    if (imgBase64) {
-      await chat.setPicture(imgBase64);
+    if (fs.existsSync(imagePath)) {
+      const imageBuffer = fs.readFileSync(imagePath);
+      const base64Data = imageBuffer.toString("base64");
+      const ext = path.extname(imagePath).toLowerCase().replace(".", "");
+      const mimeType = ext === "jpg" ? "image/jpeg" : `image/${ext}`;
+      const media = new MessageMedia(mimeType, base64Data, `group-image.${ext}`);
+
+      const success = await chat.setPicture(media);
+      console.log("Foto do grupo atualizada?", success);
     }
 
     return group;
