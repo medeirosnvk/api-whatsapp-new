@@ -1,4 +1,5 @@
 const sessionManager = require("../../services/sessionsManager");
+const fs = require("fs");
 
 function formatToWid(number) {
   try {
@@ -38,9 +39,21 @@ const createGroup = async (instanceName, groupName, participants) => {
     throw new Error("Nenhum número válido para criar o grupo.");
   }
 
-  const group = await session.client.createGroup(groupName, formattedParticipants);
-  const chat = await session.client.getChatById(group.gid._serialized);
-  await chat.setDescription("Este grupo foi criado pela Cobrance para tratar-mos assuntos de seu interesse relacionados a Coca-Cola.");
+  const imgBuffer = fs.readFileSync("public/group-image.png");
+
+  if (!imgBuffer) {
+    throw new Error("Imagem não encontrada.");
+  }
+
+  try {
+    const group = await session.client.createGroup(groupName, formattedParticipants);
+    const chat = await session.client.getChatById(group.gid._serialized);
+    await chat.setDescription("Este grupo foi criado pela Cobrance para tratar-mos assuntos de seu interesse relacionados a Coca-Cola.");
+    await chat.setPicture(imgBuffer);
+  } catch (error) {
+    console.error("Erro ao tentar criar grupo.", error);
+    throw new Error(`Erro ao criar o grupo: ${error.message}`);
+  }
 
   return group;
 };
