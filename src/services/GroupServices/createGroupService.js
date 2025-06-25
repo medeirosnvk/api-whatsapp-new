@@ -25,8 +25,6 @@ function formatToWid(number) {
 }
 
 const createGroup = async (instanceName, groupName, participants, description) => {
-  console.log("Descrição recebida na rota:", description); // <=== TESTE AQUI
-
   const session = sessionManager.getSession(instanceName);
 
   if (!session?.client) {
@@ -43,13 +41,13 @@ const createGroup = async (instanceName, groupName, participants, description) =
     throw new Error("Nenhum número válido para criar o grupo.");
   }
 
-  const imagePath = path.join("public", "group-image.png");
+  const imagePath = path.join("public", "femsa-image.jpeg");
 
   try {
     const group = await session.client.createGroup(groupName, formattedParticipants);
     const chat = await session.client.getChatById(group.gid._serialized);
 
-    await chat.setDescription(JSON.stringify(description));
+    await chat.setDescription(description);
 
     if (fs.existsSync(imagePath)) {
       const imageBuffer = fs.readFileSync(imagePath);
