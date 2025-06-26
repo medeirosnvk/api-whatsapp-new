@@ -24,7 +24,7 @@ function formatToWid(number) {
   }
 }
 
-const createGroup = async (instanceName, groupName, participants, description) => {
+const createGroup = async (instanceName, groupName, participants, description, image) => {
   const session = sessionManager.getSession(instanceName);
 
   if (!session?.client) {
@@ -41,7 +41,7 @@ const createGroup = async (instanceName, groupName, participants, description) =
     throw new Error("Nenhum número válido para criar o grupo.");
   }
 
-  const imagePath = path.join("public", "femsa-image.jpeg");
+  const imagePath = path.join("public", image);
 
   try {
     const group = await session.client.createGroup(groupName, formattedParticipants);

@@ -4,7 +4,7 @@ const { createGroup, addParticipantsToGroup, sendMessageToGroup, listAllGroups }
 const groupRoutes = express.Router();
 
 groupRoutes.post("/group/createGroup/:instanceName", async (req, res) => {
-  const { groupName, participants, description } = req.body;
+  const { groupName, participants, description, image } = req.body;
   const { instanceName } = req.params;
 
   if (!instanceName || !groupName || !Array.isArray(participants) || participants.length === 0) {
@@ -12,7 +12,7 @@ groupRoutes.post("/group/createGroup/:instanceName", async (req, res) => {
   }
 
   try {
-    const group = await createGroup(instanceName, groupName, participants, description);
+    const group = await createGroup(instanceName, groupName, participants, description, image);
 
     res.status(200).json({
       status: "Sucesso ao criar o grupo.",
