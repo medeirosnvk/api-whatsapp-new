@@ -12,10 +12,9 @@ groupRoutes.post("/group/createGroup/:instanceName", async (req, res) => {
     return res.status(400).send("instanceName, groupName e participants (array de números) são obrigatórios");
   }
 
-  welcomeMessages.set(group.gid._serialized, welcomeMessage || "👋 Bem-vindo(a)!");
-
   try {
     const group = await createGroup(instanceName, groupName, participants, description, image);
+    welcomeMessages.set(group.gid._serialized, welcomeMessage || "👋 Bem-vindo(a)!");
 
     res.status(200).json({
       status: "Sucesso ao criar o grupo.",
