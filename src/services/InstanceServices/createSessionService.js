@@ -7,6 +7,7 @@ const axios = require("axios");
 const path = require("path");
 const saveClientDataService = require("../../services/InstanceServices/saveClientDataService");
 const sessionsManager = require("../../services/sessionsManager");
+const welcomeMessages = require("../MessageServices/welcomeMessagesService");
 const qrcode = require("qrcode-terminal");
 const requests = require("../requests");
 const utils = require("../utils");
@@ -162,9 +163,11 @@ const createSession = async (sessionName) => {
       const { chatId, recipientIds } = notification;
 
       const groupChat = await client.getChatById(chatId);
+      const customMessage = welcomeMessages.get(chatId) || "👋 Bem-vindo(a)!";
+
       for (const wid of recipientIds) {
         const contato = await client.getContactById(wid);
-        await groupChat.sendMessage(`👋 Seja bem-vindo(a), @${contato.number}!`, {
+        await groupChat.sendMessage(`${customMessage} @${contato.number}`, {
           mentions: [contato],
         });
       }

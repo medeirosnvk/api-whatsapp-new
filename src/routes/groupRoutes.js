@@ -1,15 +1,18 @@
 const express = require("express");
 const { createGroup, addParticipantsToGroup, sendMessageToGroup, listAllGroups } = require("../services/GroupServices/createGroupService");
+const welcomeMessages = require("../services/MessageServices/welcomeMessagesService");
 
 const groupRoutes = express.Router();
 
 groupRoutes.post("/group/createGroup/:instanceName", async (req, res) => {
-  const { groupName, participants, description, image } = req.body;
+  const { groupName, participants, description, image, welcomeMessage } = req.body;
   const { instanceName } = req.params;
 
   if (!instanceName || !groupName || !Array.isArray(participants) || participants.length === 0) {
     return res.status(400).send("instanceName, groupName e participants (array de números) são obrigatórios");
   }
+
+  welcomeMessages.set(group.gid._serialized, welcomeMessage || "👋 Bem-vindo(a)!");
 
   try {
     const group = await createGroup(instanceName, groupName, participants, description, image);
