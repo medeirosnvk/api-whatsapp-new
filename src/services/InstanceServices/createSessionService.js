@@ -167,7 +167,7 @@ const createSession = async (sessionName) => {
 
       for (const wid of recipientIds) {
         const contato = await client.getContactById(wid);
-        await groupChat.sendMessage(`${customMessage} @${contato.number}`, {
+        await groupChat.sendMessage(`${customMessage}`, {
           mentions: [contato],
         });
       }
