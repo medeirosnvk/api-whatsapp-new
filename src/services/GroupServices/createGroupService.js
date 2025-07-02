@@ -44,10 +44,12 @@ const createGroup = async (instanceName, groupName, participants, description, i
   const imagePath = path.join("public", image);
 
   try {
-    const group = await session.client.createGroup(groupName, formattedParticipants);
-    const chat = await session.client.getChatById(group.gid._serialized);
+    const groupId = await session.client.createGroup(groupName, formattedParticipants);
+    const chat = await session.client.getChatById(groupId);
 
-    await chat.setDescription(description);
+    if (description) {
+      await chat.setDescription(description);
+    }
 
     if (fs.existsSync(imagePath)) {
       const imageBuffer = fs.readFileSync(imagePath);
@@ -60,7 +62,9 @@ const createGroup = async (instanceName, groupName, participants, description, i
       console.log("Foto do grupo atualizada?", success);
     }
 
-    return group;
+    return {
+      groupId,
+    };
   } catch (error) {
     console.error("Erro ao tentar criar grupo:", error);
     throw new Error(`Erro ao criar o grupo: ${error.message}`);
