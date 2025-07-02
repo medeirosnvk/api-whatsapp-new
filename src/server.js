@@ -4,7 +4,6 @@ const https = require("https");
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const { setupSwagger } = require("../swagger");
 const fileRoutes = require("../src/routes/fileRoutes");
 const instanceRoutes = require("../src/routes/instanceRoutes");
 const messageRoutes = require("../src/routes/messageRoutes");
@@ -102,7 +101,7 @@ const startServer = async () => {
   app.use(fileRoutes);
   app.use(groupRoutes);
 
-  setupSwagger(app);
+  // setupSwagger(app);
 
   if (environment === "production") {
     startHttpsServer();
