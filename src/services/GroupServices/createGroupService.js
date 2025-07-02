@@ -45,22 +45,22 @@ const createGroup = async (instanceName, groupName, participants, description, i
 
   try {
     const group = await session.client.createGroup(groupName, formattedParticipants);
-    const chat = await session.client.getChatById(group.gid._serialized);
+    // const chat = await session.client.getChatById(group.gid._serialized);
 
-    if (description) {
-      await chat.setDescription(description);
-    }
+    // if (description) {
+    //   await chat.setDescription(description);
+    // }
 
-    if (fs.existsSync(imagePath)) {
-      const imageBuffer = fs.readFileSync(imagePath);
-      const base64Data = imageBuffer.toString("base64");
-      const ext = path.extname(imagePath).toLowerCase().replace(".", "");
-      const mimeType = ext === "jpg" ? "image/jpeg" : `image/${ext}`;
-      const media = new MessageMedia(mimeType, base64Data, `group-image.${ext}`);
+    // if (fs.existsSync(imagePath)) {
+    //   const imageBuffer = fs.readFileSync(imagePath);
+    //   const base64Data = imageBuffer.toString("base64");
+    //   const ext = path.extname(imagePath).toLowerCase().replace(".", "");
+    //   const mimeType = ext === "jpg" ? "image/jpeg" : `image/${ext}`;
+    //   const media = new MessageMedia(mimeType, base64Data, `group-image.${ext}`);
 
-      const success = await chat.setPicture(media);
-      console.log("Foto do grupo atualizada?", success);
-    }
+    //   const success = await chat.setPicture(media);
+    //   console.log("Foto do grupo atualizada?", success);
+    // }
 
     return group;
   } catch (error) {
