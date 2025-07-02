@@ -14,8 +14,9 @@ const utils = require("../utils");
 
 const sessionsInProgress = new Set();
 
-const urlWebhookResponse = process.env.URL_WEBHOOK_RESPONSE;
-const urlWebhookMedia = process.env.URL_WEBHOOK_MEDIA;
+const port = process.env.PORT;
+const urlHostIP = process.env.HOST_IP;
+const urlWebhookMedia = `${urlHostIP}:${port}`;
 
 const createSession = async (sessionName) => {
   const session = sessionsManager.getSession(sessionName);
