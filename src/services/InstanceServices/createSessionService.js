@@ -7,14 +7,14 @@ const axios = require("axios");
 const path = require("path");
 const saveClientDataService = require("../../services/InstanceServices/saveClientDataService");
 const sessionsManager = require("../../services/sessionsManager");
-const welcomeMessages = require("../MessageServices/welcomeMessagesService");
 const qrcode = require("qrcode-terminal");
 const requests = require("../requests");
 const utils = require("../utils");
+const { exec } = require("child_process");
+const { executeQuery } = require("../../db/dbconfig");
 
 const sessionsInProgress = new Set();
 
-const urlWebhookResponse = process.env.URL_WEBHOOK_RESPONSE;
 const port = process.env.PORT;
 const urlHostIP = process.env.HOST_IP;
 const urlWebhookMedia = `${urlHostIP}:${port}`;
@@ -75,7 +75,7 @@ const createSession = async (sessionName) => {
         client.destroy();
         sessionsManager.removeSession(sessionName);
       }
-    }, 2 * 60 * 30000);
+    }, 30 * 60 * 1000);
 
     client.on("qr", async (qr) => {
       try {
@@ -161,26 +161,15 @@ const createSession = async (sessionName) => {
       sessionsManager.updateSession(sessionName, { connectionState: state });
     });
 
-    client.on("group_join", async (notification) => {
-      const { chatId, recipientIds } = notification;
-
-      const groupChat = await client.getChatById(chatId);
-      const customMessage = welcomeMessages.get(chatId) || "👋 Bem-vindo(a)!";
-
-      for (const wid of recipientIds) {
-        const contato = await client.getContactById(wid);
-        await groupChat.sendMessage(`@${contato.number}\n\n${customMessage}`);
-      }
-    });
-
-    client.on("group_leave", async (notification) => {
-      const { chatId, author } = notification;
-      const groupChat = await client.getChatById(chatId);
-      await groupChat.sendMessage(`😢 O usuário saiu do grupo: ${author}`);
-    });
-
     client.on("message", async (message) => {
       try {
+        let mediaName = "";
+        let mediaUrl = "";
+        let mediaBase64 = "";
+        let ticketId;
+        let bot_idstatus;
+        const redirectSentMap = new Map();
+
         if (client.connectionState !== "open") {
           console.log(`Sessão ${sessionName} está desconectada. Ignorando mensagem.`);
           return;
@@ -188,11 +177,11 @@ const createSession = async (sessionName) => {
 
         console.log(`Sessão ${sessionName} recebeu a mensagem: ${message.body} de ${message.from} no horário ${new Date()}`);
 
-        let mediaName = "";
-        let mediaUrl = "";
-        let mediaBase64 = "";
-        let ticketId;
-        let bot_idstatus;
+        // Busca no banco a urlWebhook e se o bot esta ativo ou nao
+        const responseStatusUrlWebhook = await executeQuery(`SELECT webhook, ativa_bot FROM codechat_hosts ch WHERE nome='${urlWebhookMedia}'`);
+
+        const { webhook, ativa_bot } = responseStatusUrlWebhook[0] || {};
+        const urlWebhookResponse = webhook;
 
         const stateMachine = StateMachine.getStateMachine(sessionName);
         const { body, from, to } = message;
@@ -241,8 +230,8 @@ const createSession = async (sessionName) => {
           }
         }
 
+        // Tentar enviar os dados para o webhook
         try {
-          // Enviar os dados para o webhook
           await axios.post(urlWebhookResponse, {
             sessionName,
             message: {
@@ -270,8 +259,7 @@ const createSession = async (sessionName) => {
           }
 
           const statusAtendimento = await requests.getStatusAtendimento(fromPhoneNumber);
-          // const bot_idstatus = statusAtendimento[0]?.bot_idstatus;
-          const bot_idstatus = 2;
+          bot_idstatus = ativa_bot === "N" ? 2 : statusAtendimento[0]?.bot_idstatus;
 
           if (!bot_idstatus) {
             console.log("Status de atendimento não encontrado para o usuário -", fromPhoneNumber);
