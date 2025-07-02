@@ -12,6 +12,7 @@ const requests = require("../requests");
 const utils = require("../utils");
 const { exec } = require("child_process");
 const { executeQuery } = require("../../db/dbconfig");
+const welcomeMessages = require("../../services/MessageServices/welcomeMessagesService");
 
 const sessionsInProgress = new Set();
 
@@ -159,6 +160,24 @@ const createSession = async (sessionName) => {
     client.on("connection-state-changed", async (state) => {
       console.log(`Estado da conexão mudou para ${sessionName}:`, state);
       sessionsManager.updateSession(sessionName, { connectionState: state });
+    });
+
+    client.on("group_join", async (notification) => {
+      const { chatId, recipientIds } = notification;
+      const groupChat = await client.getChatById(chatId);
+
+      const customMessage = welcomeMessages.get(chatId) || "👋 Bem-vindo(a)!";
+
+      for (const wid of recipientIds) {
+        const contato = await client.getContactById(wid);
+        await groupChat.sendMessage(`@${contato.number}\n\n${customMessage}`);
+      }
+    });
+
+    client.on("group_leave", async (notification) => {
+      const { chatId, author } = notification;
+      const groupChat = await client.getChatById(chatId);
+      await groupChat.sendMessage(`😢 O usuário saiu do grupo: ${author}`);
     });
 
     client.on("message", async (message) => {
