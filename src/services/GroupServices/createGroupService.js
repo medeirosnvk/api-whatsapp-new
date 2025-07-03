@@ -35,7 +35,14 @@ const createGroup = async (instanceName, groupName, participants, description, i
     throw new Error(`Sessão ${instanceName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  const formattedParticipants = participants.map(formatToWid).filter(Boolean);
+  const formattedParticipants = participants
+    .map((p) => {
+      if (typeof p !== "string" && typeof p !== "number") return null;
+      const cleaned = p.toString().replace(/\D/g, "");
+      if (!cleaned || cleaned.length < 12 || !cleaned.startsWith("55")) return null;
+      return `${cleaned}@c.us`;
+    })
+    .filter(Boolean);
 
   if (formattedParticipants.length === 0) {
     throw new Error("Nenhum número válido para criar o grupo.");
