@@ -52,7 +52,7 @@ const createGroup = async (instanceName, groupName, participants, description, i
 
   try {
     const group = await session.client.createGroup(groupName, formattedParticipants);
-    console.log("Grupo criado:", JSON.stringify(group, null, 2));
+    console.log("Resposta criacao grupo:", JSON.stringify(group, null, 2));
 
     const chatId = group?.gid?._serialized;
 
