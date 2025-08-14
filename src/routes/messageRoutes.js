@@ -3,6 +3,7 @@ const { sendTextMessage } = require("../services/MessageServices/sendTextMessage
 const { sendMediaMessage } = require("../services/MessageServices/sendMediaMessageService");
 const { checkWhatsappNumber } = require("../services/MessageServices/checkWhatsappNumberService");
 const { sendBase64Message, sendAudioBase64Message } = require("../services/MessageServices/sendBase64MessageService");
+const { sendMessageNewVoice } = require("../services/MessageServices/sendMessageNewVoice");
 
 const messageRoutes = express.Router();
 
@@ -102,6 +103,22 @@ messageRoutes.post("/chat/whatsappNumbers/:sessionName", async (req, res) => {
         exists: false,
       },
     ]);
+  }
+});
+
+messageRoutes.post("/acordo/newVoice/sendMessage", async (req, res) => {
+  const { iddevedor, plano, telefone, token } = req.query;
+
+  if (!iddevedor || !plano || !telefone || !token) {
+    return res.status(400).send("iddevedor, plano, telefone e token são obrigatórios");
+  }
+
+  try {
+    await sendMessageNewVoice(iddevedor, plano, telefone, token);
+    res.status(200).json({ status: "PENDING" });
+  } catch (error) {
+    console.error("Erro ao enviar mensagem:", error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 

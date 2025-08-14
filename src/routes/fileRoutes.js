@@ -7,7 +7,7 @@ const { getAllFiles } = require("../services/FileServices/getAllFilesService");
 
 const port = process.env.PORT;
 const urlHostIP = process.env.HOST_IP;
-const urlWebhookMedia = `${urlHostIP}/${port}`;
+const urlWebhookMedia = `${urlHostIP}:${port}`;
 
 const fileRoutes = express.Router();
 const mediaDataPath = path.join(__dirname, "../media");

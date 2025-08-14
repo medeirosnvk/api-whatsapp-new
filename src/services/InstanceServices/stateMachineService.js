@@ -693,12 +693,16 @@ class StateMachine {
             idboleto,
             banco,
           });
-
           const responseBoletoContent = await requests.getImagemBoleto(parsedData4);
 
           const parsedData5 = utils.parseDadosImagemQrCode({ idboleto });
-
           const responseQrcodeContent = await requests.getImagemQrCode(parsedData5);
+
+          if (!responseBoletoContent && !responseQrcodeContent) {
+            console.error("Erro ao executar responseBoletoContent ou responseQrcodeContent.");
+            setErro("Erro ao executar responseBoletoContent ou responseQrcodeContent.");
+            return;
+          }
 
           await utils.saveQRCodeImageToLocal(responseQrcodeContent.url, idboleto);
 
@@ -708,7 +712,7 @@ class StateMachine {
           const imageExists = await utils.checkIfFileExists(`src/qrcodes/${idboleto}.png`);
           console.log("A imagem foi salva corretamente:", imageExists);
 
-          const mensagemAcordo = `*ACORDO REALIZADO COM SUCESSO!*\n\nPague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n\nhttp://cobrance.com.br/acordo/boleto.php?idboleto=${responseBoletoContent.idboleto}&email=2`;
+          const mensagemAcordo = `*ACORDO REALIZADO COM SUCESSO!*\n\nPague a primeira parcela através do QRCODE ou link do BOLETO abaixo:\n\nhttp://cobrance.com.br/acordo/boleto.php?idboleto=${idboleto}&email=2`;
 
           const mensagemRecibo =
             "*ATENÇÃO! CONFIRA SEUS DADOS E VALOR NA HORA DO PAGAMENTO!*\n\nPor favor, nos envie o *comprovante* assim que possivel para registro! Atendimento finalizado, obrigado e bons negócios.";
