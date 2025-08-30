@@ -81,6 +81,7 @@ const createSession = async (sessionName) => {
       try {
         if (!isQRFunctionExposed) {
           console.log(`QR Code para a sessão ${sessionName}:`);
+          console.log(`Estado atual da conexão: ${client.connectionState}`);
           qrcode.generate(qr, { small: true });
           await saveQRCodeImage(qr, sessionName);
           isQRFunctionExposed = true;
@@ -92,12 +93,16 @@ const createSession = async (sessionName) => {
 
     client.on("ready", async () => {
       try {
+        console.log(`Evento ready disparado para sessão ${sessionName}`);
+        console.log(`Estado anterior: ${client.connectionState}`);
+
         if (qrTimeout) {
           clearTimeout(qrTimeout);
           console.log("Timeout de QR Code limpo com sucesso.");
         }
 
         client.connectionState = "open";
+        console.log(`Novo estado após ready: ${client.connectionState}`);
 
         // Salvar os dados do cliente no sessionManager
         saveClientDataService.addOrUpdateDataSession(client);
@@ -157,8 +162,12 @@ const createSession = async (sessionName) => {
     });
 
     client.on("connection-state-changed", async (state) => {
-      console.log(`Estado da conexão mudou para ${sessionName}:`, state);
+      console.log(`Estado da conexão mudou para sessão ${sessionName}:`);
+      console.log(`Estado anterior: ${client.connectionState}`);
+      console.log(`Novo estado recebido: ${state}`);
       sessionsManager.updateSession(sessionName, { connectionState: state });
+      client.connectionState = state;
+      console.log(`Estado atualizado no client: ${client.connectionState}`);
     });
 
     client.on("message", async (message) => {
