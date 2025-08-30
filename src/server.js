@@ -12,7 +12,7 @@ const { restoreAllSessions } = require("../src/services/InstanceServices/restore
 
 const qrCodeDir = path.join(__dirname, "qrcodes");
 const mediaDir = path.join(__dirname, "media");
-const clientDataFile = path.join(__dirname, "..", "clientData.json");
+const clientDataFile = path.join(__dirname, "clientData.json");
 
 const port = process.env.PORT;
 const environment = process.env.NODE_ENV;
