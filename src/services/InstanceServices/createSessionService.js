@@ -125,39 +125,93 @@ const createSession = async (sessionName) => {
     client.on("disconnected", async (data) => {
       try {
         clearTimeout(qrTimeout);
-        console.error(`Sessão ${sessionName} foi desconectada.`);
+        console.log(`Iniciando processo de desconexão para sessão ${sessionName}`);
 
+        // Primeiro atualizar os estados
         client.connectionState = "disconnected";
         sessionsManager.updateSession(sessionName, { connectionState: "disconnected" });
-        saveClientDataService.addOrUpdateDataSession(client);
 
-        await client.logout();
+        // Salvar o estado atual
+        await saveClientDataService.addOrUpdateDataSession(client);
+
+        try {
+          // Tentar fazer logout de forma segura
+          if (client.pupPage && !client.pupPage.isClosed()) {
+            await client.logout().catch(() => {});
+          }
+        } catch (logoutError) {
+          console.log(`Erro ao fazer logout da sessão ${sessionName}, continuando com a limpeza:`, logoutError.message);
+        }
+
+        // Limpar recursos
+        try {
+          if (client.pupPage && !client.pupPage.isClosed()) {
+            await client.pupPage.close().catch(() => {});
+          }
+          if (client.pupBrowser && !client.pupBrowser.isConnected()) {
+            await client.pupBrowser.close().catch(() => {});
+          }
+        } catch (cleanupError) {
+          console.log(`Erro ao limpar recursos da sessão ${sessionName}:`, cleanupError.message);
+        }
+
+        console.log(`Sessão ${sessionName} desconectada e recursos liberados`);
+
+        // Remover a sessão do Set de sessões em progresso
+        sessionsInProgress.delete(sessionName);
       } catch (error) {
-        console.error("Erro ao lidar com desconexão:", error.message);
+        console.error(`Erro durante a desconexão da sessão ${sessionName}:`, error.message);
 
-        if (
-          error.message.includes("Cannot read properties of undefined") ||
-          error.message.includes("ENOTEMPTY") ||
-          error.message.includes("Protocol error (Runtime.callFunctionOn): Target closed")
-        ) {
-          console.error("Erro ao acessar propriedades indefinidas ou diretório não vazio durante a desconexão:", error.message);
-          sessionsManager.updateSession(sessionName, { connectionState: "banned" });
-          saveClientDataService.addOrUpdateDataSession(client);
+        // Garantir que a sessão seja marcada como desconectada mesmo em caso de erro
+        try {
+          sessionsManager.updateSession(sessionName, { connectionState: "disconnected" });
+          await saveClientDataService.addOrUpdateDataSession(client);
+          sessionsInProgress.delete(sessionName);
+        } catch (finalError) {
+          console.error(`Erro final ao atualizar estado da sessão ${sessionName}:`, finalError.message);
         }
       }
     });
 
     client.on("auth_failure", async (data) => {
-      clearTimeout(qrTimeout);
-      console.error(`Sessão ${sessionName} falhou na autenticação.`);
+      try {
+        clearTimeout(qrTimeout);
+        console.error(`Sessão ${sessionName} falhou na autenticação. Motivo:`, data);
 
-      client.connectionState = "auth_failure";
-      sessionsManager.updateSession(sessionName, { connectionState: "auth_failure" });
-      saveClientDataService.addOrUpdateDataSession(client);
+        const newState = data?.includes("ban") ? "banned" : "auth_failure";
+        client.connectionState = newState;
 
-      if (data.includes("ban")) {
-        console.error(`A sessão ${sessionName} foi banida.`);
-        sessionsManager.updateSession(sessionName, { connectionState: "banned" });
+        // Atualizar estado no gerenciador de sessões
+        sessionsManager.updateSession(sessionName, { connectionState: newState });
+        await saveClientDataService.addOrUpdateDataSession(client);
+
+        // Limpar recursos em caso de falha de autenticação
+        try {
+          if (client.pupPage && !client.pupPage.isClosed()) {
+            await client.pupPage.close().catch(() => {});
+          }
+          if (client.pupBrowser && !client.pupBrowser.isConnected()) {
+            await client.pupBrowser.close().catch(() => {});
+          }
+        } catch (cleanupError) {
+          console.log(`Erro ao limpar recursos após falha de autenticação para ${sessionName}:`, cleanupError.message);
+        }
+
+        // Remover a sessão do Set de sessões em progresso
+        sessionsInProgress.delete(sessionName);
+
+        console.log(`Sessão ${sessionName} marcada como ${newState} e recursos liberados`);
+      } catch (error) {
+        console.error(`Erro ao processar falha de autenticação para ${sessionName}:`, error.message);
+
+        // Garantir que a sessão seja marcada como falha mesmo em caso de erro
+        try {
+          sessionsManager.updateSession(sessionName, { connectionState: "auth_failure" });
+          await saveClientDataService.addOrUpdateDataSession(client);
+          sessionsInProgress.delete(sessionName);
+        } catch (finalError) {
+          console.error(`Erro final ao atualizar estado da sessão ${sessionName}:`, finalError.message);
+        }
       }
     });
 
