@@ -48,6 +48,7 @@ const createSession = async (sessionName) => {
     const localAuth = new LocalAuth({ clientId: sessionName });
     const client = new Client({
       authStrategy: localAuth,
+      restartOnAuthFail: true,
       puppeteer: {
         headless: "new",
         args: [
@@ -105,15 +106,28 @@ const createSession = async (sessionName) => {
 
     client.on("qr", async (qr) => {
       try {
-        if (!isQRFunctionExposed) {
-          console.log(`QR Code para a sessão ${sessionName}:`);
-          console.log(`Estado atual da conexão: ${client.connectionState}`);
-          qrcode.generate(qr, { small: true });
-          await saveQRCodeImage(qr, sessionName);
-          isQRFunctionExposed = true;
-        }
+        console.log(`QR Code para a sessão ${sessionName}:`);
+        console.log(`Estado atual da conexão: ${client.connectionState}`);
+        qrcode.generate(qr, { small: true });
+        await saveQRCodeImage(qr, sessionName);
+        isQRFunctionExposed = true;
+
+        // Atualizar estado no gerenciador de sessões
+        client.connectionState = "connecting";
+        sessionsManager.updateSession(sessionName, { connectionState: "connecting" });
       } catch (error) {
         console.error("Erro ao lidar com QR Code:", error.message);
+      }
+    });
+
+    // Adicionar evento de autenticação
+    client.on("authenticated", async () => {
+      try {
+        console.log(`Sessão ${sessionName} autenticada com sucesso`);
+        client.connectionState = "authenticated";
+        sessionsManager.updateSession(sessionName, { connectionState: "authenticated" });
+      } catch (error) {
+        console.error("Erro ao processar autenticação:", error.message);
       }
     });
 
@@ -449,7 +463,13 @@ const createSession = async (sessionName) => {
     });
 
     try {
-      await client.initialize().catch(async (error) => {
+      console.log(`Iniciando inicialização do cliente para sessão ${sessionName}`);
+
+      // Aumentar timeout para inicialização
+      const initializationPromise = client.initialize();
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout na inicialização")), 90000));
+
+      await Promise.race([initializationPromise, timeoutPromise]).catch(async (error) => {
         console.error(`Erro na inicialização do cliente ${sessionName}:`, error);
         if (client.pupPage && !client.pupPage.isClosed()) {
           await client.pupPage.close().catch(() => {});
