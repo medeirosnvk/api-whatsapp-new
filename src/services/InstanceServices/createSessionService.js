@@ -68,7 +68,7 @@ const createSession = async (sessionName) => {
           "--disable-renderer-backgrounding",
         ],
         defaultViewport: null,
-        timeout: 0,
+        timeout: 60000,
         protocolTimeout: 30000,
         browserWSEndpoint: null,
         ignoreHTTPSErrors: true,
@@ -81,12 +81,25 @@ const createSession = async (sessionName) => {
     // Atualiza a sessão no SessionManager
     sessionsManager.addSession(sessionName, client, { connectionState: "connecting" });
 
-    const qrTimeout = setTimeout(() => {
+    const qrTimeout = setTimeout(async () => {
       if (client.connectionState !== "open") {
-        client.connectionState = "disconnected";
-        console.log(`Tempo esgotado para a sessão ${sessionName}. Desconectando...`);
-        client.destroy();
-        sessionsManager.removeSession(sessionName);
+        try {
+          client.connectionState = "disconnected";
+          console.log(`Tempo esgotado para a sessão ${sessionName}. Desconectando...`);
+
+          // Garante que todas as operações pendentes sejam concluídas
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+
+          if (client.pupPage && !client.pupPage.isClosed()) {
+            await client.pupPage.close().catch(() => {});
+          }
+
+          await client.destroy().catch(() => {});
+          sessionsManager.removeSession(sessionName);
+          sessionsInProgress.delete(sessionName);
+        } catch (error) {
+          console.error(`Erro ao limpar sessão ${sessionName} após timeout:`, error);
+        }
       }
     }, 30 * 60 * 1000);
 
@@ -435,9 +448,22 @@ const createSession = async (sessionName) => {
       }
     });
 
-    await client.initialize();
+    try {
+      await client.initialize().catch(async (error) => {
+        console.error(`Erro na inicialização do cliente ${sessionName}:`, error);
+        if (client.pupPage && !client.pupPage.isClosed()) {
+          await client.pupPage.close().catch(() => {});
+        }
+        throw error;
+      });
 
-    return client;
+      return client;
+    } catch (error) {
+      console.error(`Falha na inicialização do cliente ${sessionName}:`, error);
+      sessionsManager.removeSession(sessionName);
+      sessionsInProgress.delete(sessionName);
+      throw error;
+    }
   } catch (error) {
     console.error(`Erro ao criar a sessão ${sessionName}:`, error);
     sessionsManager.removeSession(sessionName);
