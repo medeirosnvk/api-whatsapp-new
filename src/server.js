@@ -12,7 +12,7 @@ const { restoreAllSessions } = require("../src/services/InstanceServices/restore
 
 const qrCodeDir = path.join(__dirname, "qrcodes");
 const mediaDir = path.join(__dirname, "media");
-const clientDataFile = path.join(__dirname, "..", "clientData.json");
+const clientDataFile = path.join(__dirname, "clientData.json");
 
 const port = process.env.PORT;
 const environment = process.env.NODE_ENV;
@@ -32,23 +32,13 @@ const initializeDirectories = async () => {
 };
 
 const loadSessions = async () => {
-  try {
-    if (fs.existsSync(clientDataFile)) {
-      console.log(`Carregando sessões do arquivo: ${clientDataFile}`);
-      sessions = JSON.parse(fs.readFileSync(clientDataFile, "utf8"));
-      Object.keys(sessions).forEach((instanceName) => {
-        sessions[instanceName].connectionState = "disconnected";
-      });
-      fs.writeFileSync(clientDataFile, JSON.stringify(sessions, null, 2));
-      console.log("Sessões carregadas e atualizadas com sucesso");
-    } else {
-      console.log(`Arquivo clientData.json não encontrado em: ${clientDataFile}`);
-      console.log("Criando novo arquivo clientData.json");
-      fs.writeFileSync(clientDataFile, JSON.stringify({}, null, 2));
-      console.log("Novo arquivo clientData.json criado com sucesso");
-    }
-  } catch (error) {
-    console.error("Erro ao carregar/criar arquivo de sessões:", error);
+  if (fs.existsSync(clientDataFile)) {
+    sessions = JSON.parse(fs.readFileSync(clientDataFile, "utf8"));
+    Object.keys(sessions).forEach((instanceName) => {
+      sessions[instanceName].connectionState = "disconnected";
+    });
+    console.log("Diretório 'media' não existe, criando...");
+    fs.writeFileSync(clientDataFile, JSON.stringify(sessions, null, 2));
   }
 };
 

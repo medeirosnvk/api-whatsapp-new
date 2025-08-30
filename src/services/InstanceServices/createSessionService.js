@@ -48,9 +48,8 @@ const createSession = async (sessionName) => {
     const localAuth = new LocalAuth({ clientId: sessionName });
     const client = new Client({
       authStrategy: localAuth,
-      restartOnAuthFail: true,
       puppeteer: {
-        headless: "new",
+        headless: true,
         args: [
           "--no-default-browser-check",
           "--disable-session-crashed-bubble",
@@ -59,20 +58,7 @@ const createSession = async (sessionName) => {
           "--disable-setuid-sandbox",
           "--disable-accelerated-2d-canvas",
           "--no-first-run",
-          "--disable-gpu",
-          "--disable-translations",
-          "--disable-extensions",
-          "--disable-setuid-sandbox",
-          "--no-zygote",
-          "--disable-background-timer-throttling",
-          "--disable-backgrounding-occluded-windows",
-          "--disable-renderer-backgrounding",
         ],
-        defaultViewport: null,
-        timeout: 60000,
-        protocolTimeout: 30000,
-        browserWSEndpoint: null,
-        ignoreHTTPSErrors: true,
       },
     });
 
@@ -82,67 +68,36 @@ const createSession = async (sessionName) => {
     // Atualiza a sessão no SessionManager
     sessionsManager.addSession(sessionName, client, { connectionState: "connecting" });
 
-    const qrTimeout = setTimeout(async () => {
+    const qrTimeout = setTimeout(() => {
       if (client.connectionState !== "open") {
-        try {
-          client.connectionState = "disconnected";
-          console.log(`Tempo esgotado para a sessão ${sessionName}. Desconectando...`);
-
-          // Garante que todas as operações pendentes sejam concluídas
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-
-          if (client.pupPage && !client.pupPage.isClosed()) {
-            await client.pupPage.close().catch(() => {});
-          }
-
-          await client.destroy().catch(() => {});
-          sessionsManager.removeSession(sessionName);
-          sessionsInProgress.delete(sessionName);
-        } catch (error) {
-          console.error(`Erro ao limpar sessão ${sessionName} após timeout:`, error);
-        }
+        client.connectionState = "disconnected";
+        console.log(`Tempo esgotado para a sessão ${sessionName}. Desconectando...`);
+        client.destroy();
+        sessionsManager.removeSession(sessionName);
       }
     }, 30 * 60 * 1000);
 
     client.on("qr", async (qr) => {
       try {
-        console.log(`QR Code para a sessão ${sessionName}:`);
-        console.log(`Estado atual da conexão: ${client.connectionState}`);
-        qrcode.generate(qr, { small: true });
-        await saveQRCodeImage(qr, sessionName);
-        isQRFunctionExposed = true;
-
-        // Atualizar estado no gerenciador de sessões
-        client.connectionState = "connecting";
-        sessionsManager.updateSession(sessionName, { connectionState: "connecting" });
+        if (!isQRFunctionExposed) {
+          console.log(`QR Code para a sessão ${sessionName}:`);
+          qrcode.generate(qr, { small: true });
+          await saveQRCodeImage(qr, sessionName);
+          isQRFunctionExposed = true;
+        }
       } catch (error) {
         console.error("Erro ao lidar com QR Code:", error.message);
       }
     });
 
-    // Adicionar evento de autenticação
-    client.on("authenticated", async () => {
-      try {
-        console.log(`Sessão ${sessionName} autenticada com sucesso`);
-        client.connectionState = "authenticated";
-        sessionsManager.updateSession(sessionName, { connectionState: "authenticated" });
-      } catch (error) {
-        console.error("Erro ao processar autenticação:", error.message);
-      }
-    });
-
     client.on("ready", async () => {
       try {
-        console.log(`Evento ready disparado para sessão ${sessionName}`);
-        console.log(`Estado anterior: ${client.connectionState}`);
-
         if (qrTimeout) {
           clearTimeout(qrTimeout);
           console.log("Timeout de QR Code limpo com sucesso.");
         }
 
         client.connectionState = "open";
-        console.log(`Novo estado após ready: ${client.connectionState}`);
 
         // Salvar os dados do cliente no sessionManager
         saveClientDataService.addOrUpdateDataSession(client);
@@ -163,150 +118,47 @@ const createSession = async (sessionName) => {
     });
 
     client.on("disconnected", async (data) => {
-      let hasBeenClosed = false;
       try {
         clearTimeout(qrTimeout);
-        console.log(`Iniciando processo de desconexão para sessão ${sessionName}`);
+        console.error(`Sessão ${sessionName} foi desconectada.`);
 
-        // Primeiro remover todos os listeners para evitar callbacks durante o processo de desconexão
-        client.removeAllListeners("message");
-        client.removeAllListeners("change_state");
-        client.removeAllListeners("qr");
-        client.removeAllListeners("ready");
-
-        // Atualizar estados imediatamente
         client.connectionState = "disconnected";
         sessionsManager.updateSession(sessionName, { connectionState: "disconnected" });
+        saveClientDataService.addOrUpdateDataSession(client);
 
-        // Salvar o estado atual
-        try {
-          await saveClientDataService.addOrUpdateDataSession(client);
-        } catch (saveError) {
-          console.log(`Erro ao salvar estado da sessão ${sessionName}:`, saveError.message);
-        }
-
-        // Aguardar um momento antes de começar a limpeza
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        // Tentar fazer logout e limpar página de forma segura
-        if (client.pupPage && !hasBeenClosed) {
-          try {
-            const page = client.pupPage;
-            if (!page.isClosed()) {
-              // Desativar listeners da página
-              await page
-                .evaluate(() => {
-                  window.onbeforeunload = null;
-                  window.onunload = null;
-                })
-                .catch(() => {});
-
-              // Tentar fazer logout com timeout
-              await Promise.race([client.logout(), new Promise((resolve) => setTimeout(resolve, 5000))]).catch(() => {});
-
-              // Fechar página se ainda não foi fechada
-              if (!page.isClosed()) {
-                await page.close().catch(() => {});
-              }
-            }
-          } catch (pageError) {
-            console.log(`Erro ao limpar página para sessão ${sessionName}:`, pageError.message);
-          }
-        }
-
-        // Aguardar mais um momento
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        // Tentar fechar o browser com timeout
-        if (client.pupBrowser && !hasBeenClosed) {
-          try {
-            const browser = client.pupBrowser;
-            if (browser.isConnected()) {
-              await Promise.race([browser.close(), new Promise((resolve) => setTimeout(resolve, 5000))]).catch(() => {});
-            }
-          } catch (browserError) {
-            console.log(`Erro ao fechar browser para sessão ${sessionName}:`, browserError.message);
-          }
-        }
-
-        // Marcar como fechado e limpar referências
-        hasBeenClosed = true;
-        client.pupPage = null;
-        client.pupBrowser = null;
-
-        console.log(`Sessão ${sessionName} desconectada e recursos liberados`);
-        sessionsInProgress.delete(sessionName);
+        await client.logout();
       } catch (error) {
-        console.error(`Erro durante a desconexão da sessão ${sessionName}:`, error.message);
+        console.error("Erro ao lidar com desconexão:", error.message);
 
-        // Garantir que a sessão seja marcada como desconectada mesmo em caso de erro
-        try {
-          if (!hasBeenClosed) {
-            sessionsManager.updateSession(sessionName, { connectionState: "disconnected" });
-            await saveClientDataService.addOrUpdateDataSession(client);
-
-            // Limpar referências mesmo em caso de erro
-            client.pupPage = null;
-            client.pupBrowser = null;
-            hasBeenClosed = true;
-          }
-
-          sessionsInProgress.delete(sessionName);
-        } catch (finalError) {
-          console.error(`Erro final ao atualizar estado da sessão ${sessionName}:`, finalError.message);
+        if (
+          error.message.includes("Cannot read properties of undefined") ||
+          error.message.includes("ENOTEMPTY") ||
+          error.message.includes("Protocol error (Runtime.callFunctionOn): Target closed")
+        ) {
+          console.error("Erro ao acessar propriedades indefinidas ou diretório não vazio durante a desconexão:", error.message);
+          sessionsManager.updateSession(sessionName, { connectionState: "banned" });
+          saveClientDataService.addOrUpdateDataSession(client);
         }
       }
     });
 
     client.on("auth_failure", async (data) => {
-      try {
-        clearTimeout(qrTimeout);
-        console.error(`Sessão ${sessionName} falhou na autenticação. Motivo:`, data);
+      clearTimeout(qrTimeout);
+      console.error(`Sessão ${sessionName} falhou na autenticação.`);
 
-        const newState = data?.includes("ban") ? "banned" : "auth_failure";
-        client.connectionState = newState;
+      client.connectionState = "auth_failure";
+      sessionsManager.updateSession(sessionName, { connectionState: "auth_failure" });
+      saveClientDataService.addOrUpdateDataSession(client);
 
-        // Atualizar estado no gerenciador de sessões
-        sessionsManager.updateSession(sessionName, { connectionState: newState });
-        await saveClientDataService.addOrUpdateDataSession(client);
-
-        // Limpar recursos em caso de falha de autenticação
-        try {
-          if (client.pupPage && !client.pupPage.isClosed()) {
-            await client.pupPage.close().catch(() => {});
-          }
-          if (client.pupBrowser && !client.pupBrowser.isConnected()) {
-            await client.pupBrowser.close().catch(() => {});
-          }
-        } catch (cleanupError) {
-          console.log(`Erro ao limpar recursos após falha de autenticação para ${sessionName}:`, cleanupError.message);
-        }
-
-        // Remover a sessão do Set de sessões em progresso
-        sessionsInProgress.delete(sessionName);
-
-        console.log(`Sessão ${sessionName} marcada como ${newState} e recursos liberados`);
-      } catch (error) {
-        console.error(`Erro ao processar falha de autenticação para ${sessionName}:`, error.message);
-
-        // Garantir que a sessão seja marcada como falha mesmo em caso de erro
-        try {
-          sessionsManager.updateSession(sessionName, { connectionState: "auth_failure" });
-          await saveClientDataService.addOrUpdateDataSession(client);
-          sessionsInProgress.delete(sessionName);
-        } catch (finalError) {
-          console.error(`Erro final ao atualizar estado da sessão ${sessionName}:`, finalError.message);
-        }
+      if (data.includes("ban")) {
+        console.error(`A sessão ${sessionName} foi banida.`);
+        sessionsManager.updateSession(sessionName, { connectionState: "banned" });
       }
     });
 
     client.on("connection-state-changed", async (state) => {
-      console.log(`Estado da conexão mudou para sessão ${sessionName}:`);
-      console.log(`Estado anterior: ${client.connectionState}`);
-      console.log(`Novo estado recebido: ${state}`);
+      console.log(`Estado da conexão mudou para ${sessionName}:`, state);
       sessionsManager.updateSession(sessionName, { connectionState: state });
-      client.connectionState = state;
-      console.log(`Estado atualizado no client: ${client.connectionState}`);
     });
 
     client.on("message", async (message) => {
@@ -462,28 +314,9 @@ const createSession = async (sessionName) => {
       }
     });
 
-    try {
-      console.log(`Iniciando inicialização do cliente para sessão ${sessionName}`);
+    await client.initialize();
 
-      // Aumentar timeout para inicialização
-      const initializationPromise = client.initialize();
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout na inicialização")), 90000));
-
-      await Promise.race([initializationPromise, timeoutPromise]).catch(async (error) => {
-        console.error(`Erro na inicialização do cliente ${sessionName}:`, error);
-        if (client.pupPage && !client.pupPage.isClosed()) {
-          await client.pupPage.close().catch(() => {});
-        }
-        throw error;
-      });
-
-      return client;
-    } catch (error) {
-      console.error(`Falha na inicialização do cliente ${sessionName}:`, error);
-      sessionsManager.removeSession(sessionName);
-      sessionsInProgress.delete(sessionName);
-      throw error;
-    }
+    return client;
   } catch (error) {
     console.error(`Erro ao criar a sessão ${sessionName}:`, error);
     sessionsManager.removeSession(sessionName);
