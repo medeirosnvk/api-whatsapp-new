@@ -136,49 +136,94 @@ const createSession = async (sessionName) => {
     });
 
     client.on("disconnected", async (data) => {
+      let hasBeenClosed = false;
       try {
         clearTimeout(qrTimeout);
         console.log(`Iniciando processo de desconexão para sessão ${sessionName}`);
 
-        // Primeiro atualizar os estados
+        // Primeiro remover todos os listeners para evitar callbacks durante o processo de desconexão
+        client.removeAllListeners("message");
+        client.removeAllListeners("change_state");
+        client.removeAllListeners("qr");
+        client.removeAllListeners("ready");
+
+        // Atualizar estados imediatamente
         client.connectionState = "disconnected";
         sessionsManager.updateSession(sessionName, { connectionState: "disconnected" });
 
         // Salvar o estado atual
-        await saveClientDataService.addOrUpdateDataSession(client);
-
         try {
-          // Tentar fazer logout de forma segura
-          if (client.pupPage && !client.pupPage.isClosed()) {
-            await client.logout().catch(() => {});
-          }
-        } catch (logoutError) {
-          console.log(`Erro ao fazer logout da sessão ${sessionName}, continuando com a limpeza:`, logoutError.message);
+          await saveClientDataService.addOrUpdateDataSession(client);
+        } catch (saveError) {
+          console.log(`Erro ao salvar estado da sessão ${sessionName}:`, saveError.message);
         }
 
-        // Limpar recursos
-        try {
-          if (client.pupPage && !client.pupPage.isClosed()) {
-            await client.pupPage.close().catch(() => {});
+        // Aguardar um momento antes de começar a limpeza
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // Tentar fazer logout e limpar página de forma segura
+        if (client.pupPage && !hasBeenClosed) {
+          try {
+            const page = client.pupPage;
+            if (!page.isClosed()) {
+              // Desativar listeners da página
+              await page
+                .evaluate(() => {
+                  window.onbeforeunload = null;
+                  window.onunload = null;
+                })
+                .catch(() => {});
+
+              // Tentar fazer logout com timeout
+              await Promise.race([client.logout(), new Promise((resolve) => setTimeout(resolve, 5000))]).catch(() => {});
+
+              // Fechar página se ainda não foi fechada
+              if (!page.isClosed()) {
+                await page.close().catch(() => {});
+              }
+            }
+          } catch (pageError) {
+            console.log(`Erro ao limpar página para sessão ${sessionName}:`, pageError.message);
           }
-          if (client.pupBrowser && !client.pupBrowser.isConnected()) {
-            await client.pupBrowser.close().catch(() => {});
-          }
-        } catch (cleanupError) {
-          console.log(`Erro ao limpar recursos da sessão ${sessionName}:`, cleanupError.message);
         }
+
+        // Aguardar mais um momento
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // Tentar fechar o browser com timeout
+        if (client.pupBrowser && !hasBeenClosed) {
+          try {
+            const browser = client.pupBrowser;
+            if (browser.isConnected()) {
+              await Promise.race([browser.close(), new Promise((resolve) => setTimeout(resolve, 5000))]).catch(() => {});
+            }
+          } catch (browserError) {
+            console.log(`Erro ao fechar browser para sessão ${sessionName}:`, browserError.message);
+          }
+        }
+
+        // Marcar como fechado e limpar referências
+        hasBeenClosed = true;
+        client.pupPage = null;
+        client.pupBrowser = null;
 
         console.log(`Sessão ${sessionName} desconectada e recursos liberados`);
-
-        // Remover a sessão do Set de sessões em progresso
         sessionsInProgress.delete(sessionName);
       } catch (error) {
         console.error(`Erro durante a desconexão da sessão ${sessionName}:`, error.message);
 
         // Garantir que a sessão seja marcada como desconectada mesmo em caso de erro
         try {
-          sessionsManager.updateSession(sessionName, { connectionState: "disconnected" });
-          await saveClientDataService.addOrUpdateDataSession(client);
+          if (!hasBeenClosed) {
+            sessionsManager.updateSession(sessionName, { connectionState: "disconnected" });
+            await saveClientDataService.addOrUpdateDataSession(client);
+
+            // Limpar referências mesmo em caso de erro
+            client.pupPage = null;
+            client.pupBrowser = null;
+            hasBeenClosed = true;
+          }
+
           sessionsInProgress.delete(sessionName);
         } catch (finalError) {
           console.error(`Erro final ao atualizar estado da sessão ${sessionName}:`, finalError.message);
