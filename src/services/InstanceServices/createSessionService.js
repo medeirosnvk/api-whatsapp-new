@@ -49,7 +49,7 @@ const createSession = async (sessionName) => {
     const client = new Client({
       authStrategy: localAuth,
       puppeteer: {
-        headless: true,
+        headless: "new",
         args: [
           "--no-default-browser-check",
           "--disable-session-crashed-bubble",
@@ -58,7 +58,20 @@ const createSession = async (sessionName) => {
           "--disable-setuid-sandbox",
           "--disable-accelerated-2d-canvas",
           "--no-first-run",
+          "--disable-gpu",
+          "--disable-translations",
+          "--disable-extensions",
+          "--disable-setuid-sandbox",
+          "--no-zygote",
+          "--disable-background-timer-throttling",
+          "--disable-backgrounding-occluded-windows",
+          "--disable-renderer-backgrounding",
         ],
+        defaultViewport: null,
+        timeout: 0,
+        protocolTimeout: 30000,
+        browserWSEndpoint: null,
+        ignoreHTTPSErrors: true,
       },
     });
 
