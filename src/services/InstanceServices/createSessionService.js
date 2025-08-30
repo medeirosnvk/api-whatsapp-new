@@ -261,7 +261,7 @@ const createSession = async (sessionName) => {
           }
 
           const statusAtendimento = await requests.getStatusAtendimento(fromPhoneNumber);
-          bot_idstatus = ativa_bot === "N" ? 2 : statusAtendimento[0]?.bot_idstatus;
+          bot_idstatus = ativa_bot === "N" ? 2 : statusAtendimento[0] && statusAtendimento[0].bot_idstatus;
 
           if (!bot_idstatus) {
             console.log("Status de atendimento não encontrado para o usuário -", fromPhoneNumber);
