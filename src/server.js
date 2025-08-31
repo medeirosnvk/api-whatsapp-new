@@ -69,11 +69,21 @@ const handleRejectionError = async (reason) => {
 };
 
 const startHttpServer = async () => {
-  app.listen(port, () => {
-    console.log(`Servidor HTTP LOCALHOST iniciado na porta ${port}`);
-
-    restoreAllSessions();
-  });
+  const server = app
+    .listen(port)
+    .on("error", (error) => {
+      if (error.code === "EADDRINUSE") {
+        console.error(`A porta ${port} já está em uso. Verifique se não há outra instância do servidor rodando.`);
+        process.exit(1);
+      } else {
+        console.error("Erro ao iniciar o servidor:", error);
+        process.exit(1);
+      }
+    })
+    .on("listening", () => {
+      console.log(`Servidor HTTP LOCALHOST iniciado na porta ${port}`);
+      restoreAllSessions();
+    });
 };
 
 const startHttpsServer = async () => {
@@ -85,11 +95,20 @@ const startHttpsServer = async () => {
 
   httpsServer.setTimeout(50000); // 50 segundos
 
-  httpsServer.listen(port, async () => {
-    console.log(`Servidor HTTPS iniciado na porta ${port}`);
-
-    restoreAllSessions();
-  });
+  httpsServer
+    .on("error", (error) => {
+      if (error.code === "EADDRINUSE") {
+        console.error(`A porta ${port} já está em uso. Verifique se não há outra instância do servidor rodando.`);
+        process.exit(1);
+      } else {
+        console.error("Erro ao iniciar o servidor:", error);
+        process.exit(1);
+      }
+    })
+    .listen(port, async () => {
+      console.log(`Servidor HTTPS iniciado na porta ${port}`);
+      restoreAllSessions();
+    });
 };
 
 const startServer = async () => {
