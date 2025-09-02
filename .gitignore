@@ -76,3 +76,4 @@ typings/
 .wwebjs_cache/
 
 clientData.json
+ecosystem.config.js
