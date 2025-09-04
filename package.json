@@ -35,7 +35,7 @@
     "cors": "^2.8.5",
     "express": "^4.21.1",
     "fluent-ffmpeg": "2.1.2",
-    "mime": "^3.0.0",
+    "mime": "^4.0.4",
     "node-fetch": "^2.6.9",
     "node-webpmux": "3.1.7",
     "nodemon": "^3.1.4",
