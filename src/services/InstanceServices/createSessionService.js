@@ -316,6 +316,7 @@ const createSession = async (sessionName) => {
 
     await client.initialize();
 
+    console.log("client -", client);
     return client;
   } catch (error) {
     console.error(`Erro ao criar a sessão ${sessionName}:`, error);
