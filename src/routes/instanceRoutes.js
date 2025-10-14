@@ -278,7 +278,7 @@ instanceRoutes.post("/instance/frontend/updateStatusConnection", async (req, res
   }
 });
 
-instanceRoutes.post("/instance/frontend/listHostsConnections", async (req, res) => {
+instanceRoutes.get("/instance/frontend/listHostsConnections", async (req, res) => {
   try {
     const result = await listHostsConnections();
     res.json({
