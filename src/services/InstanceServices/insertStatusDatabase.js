@@ -14,6 +14,19 @@ const insertStatusDatabase = async (nome, status, host) => {
   }
 };
 
+const listHostsConnections = async () => {
+  try {
+    const query = `
+      SELECT * FROM codechat_hosts ch WHERE ativo = 'S'
+    `;
+    await executeQuery(query);
+    console.log(`Conexoes open listadas.`);
+  } catch (error) {
+    console.error(`Erro ao listar conexoes open no banco de dados:`, error);
+  }
+};
+
 module.exports = {
   insertStatusDatabase,
+  listHostsConnections,
 };

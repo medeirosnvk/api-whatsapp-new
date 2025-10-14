@@ -10,7 +10,7 @@ const { restoreSession } = require("../services/InstanceServices/restoreSessionS
 const { deleteSession } = require("../services/InstanceServices/deleteSessionService");
 const { deleteUnusedSessions } = require("../services/InstanceServices/deleteUnusedSessionsService");
 const sessionsManager = require("../services/sessionsManager");
-const { insertStatusDatabase } = require("../services/InstanceServices/insertStatusDatabase");
+const { insertStatusDatabase, listHostsConnections } = require("../services/InstanceServices/insertStatusDatabase");
 
 const instanceRoutes = express.Router();
 
@@ -258,7 +258,7 @@ instanceRoutes.get("/instance/connectionState/:instanceName", async (req, res) =
   }
 });
 
-instanceRoutes.post("/instance/status/database", async (req, res) => {
+instanceRoutes.post("/instance/frontend/updateStatusConnection", async (req, res) => {
   const { nome, status, host } = req.body;
 
   if (!nome || !status || !host) {
@@ -274,6 +274,20 @@ instanceRoutes.post("/instance/status/database", async (req, res) => {
   } catch (error) {
     res.status(403).json({
       error: `Error insert status: ${error.message}`,
+    });
+  }
+});
+
+instanceRoutes.post("/instance/frontend/listHostsConnections", async (req, res) => {
+  try {
+    await listHostsConnections();
+    res.json({
+      success: true,
+      message: `List hosts list successfully`,
+    });
+  } catch (error) {
+    res.status(403).json({
+      error: `Error list hosts: ${error.message}`,
     });
   }
 });
