@@ -10,6 +10,7 @@ const { restoreSession } = require("../services/InstanceServices/restoreSessionS
 const { deleteSession } = require("../services/InstanceServices/deleteSessionService");
 const { deleteUnusedSessions } = require("../services/InstanceServices/deleteUnusedSessionsService");
 const sessionsManager = require("../services/sessionsManager");
+const { insertStatusDatabase } = require("../services/InstanceServices/insertStatusDatabase");
 
 const instanceRoutes = express.Router();
 
@@ -253,6 +254,26 @@ instanceRoutes.get("/instance/connectionState/:instanceName", async (req, res) =
     return res.status(500).json({
       error: "Internal Server Error",
       details: error.message,
+    });
+  }
+});
+
+instanceRoutes.post("/instance/status/database", async (req, res) => {
+  const { nome, status, host } = req.body;
+
+  if (!nome || !status || !host) {
+    return res.status(400).send("nome, status, host are required");
+  }
+
+  try {
+    await insertStatusDatabase(nome, status, host);
+    res.json({
+      success: true,
+      message: `Session ${nome} status update successfully`,
+    });
+  } catch (error) {
+    res.status(403).json({
+      error: `Error insert status: ${error.message}`,
     });
   }
 });
