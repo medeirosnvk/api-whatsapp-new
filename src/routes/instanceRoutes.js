@@ -20,8 +20,8 @@ instanceRoutes.post("/instance/create", async (req, res) => {
   const { instanceName } = req.body;
 
   try {
-    await createSession(instanceName);
-    res.status(200).json({ message: `Sessão ${instanceName} criada com sucesso.` });
+    const result = await createSession(instanceName);
+    res.status(200).json({ result });
   } catch (error) {
     console.error("Erro ao criar sessão:", error.message);
     res.status(500).json({ error: error.message });
