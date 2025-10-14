@@ -280,10 +280,11 @@ instanceRoutes.post("/instance/frontend/updateStatusConnection", async (req, res
 
 instanceRoutes.post("/instance/frontend/listHostsConnections", async (req, res) => {
   try {
-    await listHostsConnections();
+    const result = await listHostsConnections();
     res.json({
       success: true,
       message: `List hosts list successfully`,
+      data: result,
     });
   } catch (error) {
     res.status(403).json({
