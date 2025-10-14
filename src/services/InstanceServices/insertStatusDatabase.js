@@ -20,8 +20,10 @@ const listHostsConnections = async () => {
       SELECT * FROM codechat_hosts ch WHERE ativo = 'S'
     `;
     const result = await executeQuery(query);
-    const hosts = result.map((row) => row.host);
-    console.log("Hosts ativos:", hosts);
+    console.log("result -", result);
+
+    const hosts = result.data[0];
+    console.log("hosts -", hosts);
     return hosts;
   } catch (error) {
     console.error(`Erro ao listar conexoes open no banco de dados:`, error);
