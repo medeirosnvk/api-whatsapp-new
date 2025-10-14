@@ -316,8 +316,18 @@ const createSession = async (sessionName) => {
 
     await client.initialize();
 
-    console.log("client -", client);
-    return client;
+    const status = {
+      success: true,
+      message: "Conexão criada com sucesso.",
+      data: {
+        id: client.sessionName,
+        status: client.connectionState,
+        api: client.sessionName,
+        createdAt: new Date(),
+      },
+    };
+
+    return status;
   } catch (error) {
     console.error(`Erro ao criar a sessão ${sessionName}:`, error);
     sessionsManager.removeSession(sessionName);
