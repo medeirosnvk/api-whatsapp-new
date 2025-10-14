@@ -233,20 +233,20 @@ const createSession = async (sessionName) => {
         }
 
         // Tentar enviar os dados para o webhook
-        try {
-          await axios.post(urlWebhookResponse, {
-            sessionName,
-            message: {
-              ...message,
-              body: mediaName || message.body,
-              mediaName,
-              mediaUrl,
-              mediaBase64,
-            },
-          });
-        } catch (error) {
-          console.error(`Erro ao enviar dados para o webhook para a sessão ${sessionName}:`, error);
-        }
+        // try {
+        //   await axios.post(urlWebhookResponse, {
+        //     sessionName,
+        //     message: {
+        //       ...message,
+        //       body: mediaName || message.body,
+        //       mediaName,
+        //       mediaUrl,
+        //       mediaBase64,
+        //     },
+        //   });
+        // } catch (error) {
+        //   console.error(`Erro ao enviar dados para o webhook para a sessão ${sessionName}:`, error);
+        // }
 
         if (!fromPhoneNumber || !response) {
           console.log("Mensagem inválida recebida", message.body);
