@@ -1,6 +1,48 @@
 const sessionManager = require("../sessionsManager");
 const { MessageMedia } = require("whatsapp-web.js");
 
+// Helper: normalize brazilian phone numbers using right-to-left counting
+const normalizeBrazilianNumber = (raw) => {
+  if (!raw) return raw;
+  const digits = String(raw).replace(/\D/g, "");
+
+  const len = digits.length;
+  if (len === 0) return digits;
+
+  // Decide local number length (8 or 9) by inspecting the 9th digit from the right when available
+  let localLen = 8; // default
+  if (len >= 9) {
+    const idx9FromRight = len - 9;
+    if (digits[idx9FromRight] === "9") {
+      localLen = 9;
+    } else if (len === 11 || len === 12 || len === 13) {
+      // heuristic: lengths that commonly include country + ddd + 9-digit mobile
+      localLen = 9;
+    }
+  }
+
+  const localNumber = digits.slice(-localLen);
+
+  const dddStart = len - localLen - 2;
+  const ddd = dddStart >= 0 ? digits.slice(dddStart, dddStart + 2) : "";
+
+  const countryPart = dddStart > 0 ? digits.slice(0, dddStart) : "";
+  const country = countryPart && countryPart.startsWith("55") ? countryPart : "55";
+
+  // If we couldn't extract DDD (ddd empty), fallback to best-effort: return country + localNumber
+  const normalized = ddd ? `${country}${ddd}${localNumber}` : `${country}${localNumber}`;
+
+  // strip any accidental leading zeros
+  return normalized.replace(/^0+/, "");
+};
+
+const stripDataUriPrefix = (data) => {
+  if (!data || typeof data !== "string") return data;
+  const idx = data.indexOf(",");
+  if (idx === -1) return data;
+  return data.slice(idx + 1);
+};
+
 const sendBase64Message = async (sessionName, phoneNumber, message) => {
   const session = sessionManager.getSession(sessionName);
 
@@ -12,26 +54,24 @@ const sendBase64Message = async (sessionName, phoneNumber, message) => {
     throw new Error(`Sessão ${sessionName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  let processedNumber = phoneNumber;
-  const brazilCountryCode = "55";
+  const processedNumber = normalizeBrazilianNumber(String(phoneNumber));
+  const { base64: rawBase64, fileName, caption, mimeType } = message || {};
 
-  if (processedNumber.startsWith(brazilCountryCode)) {
-    const localNumber = processedNumber.slice(4);
+  if (!rawBase64) throw new Error("Campo 'base64' ausente na mensagem.");
 
-    if (localNumber.length === 9 && localNumber.startsWith("9")) {
-      processedNumber = brazilCountryCode + processedNumber.slice(2, 4) + localNumber.slice(1);
-    }
-  }
+  const cleanBase64 = stripDataUriPrefix(rawBase64);
 
-  const { base64, fileName, caption, mimeType } = message;
+  const usedMime = mimeType || undefined;
 
-  const messageMedia = new MessageMedia(mimeType, base64, fileName);
+  const messageMedia = new MessageMedia(usedMime, cleanBase64, fileName);
 
   await session.client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
     caption: caption,
   });
 
-  console.log(`Mensagem de mídia Base64 enviada com sucesso ao número ${phoneNumber} pela instância ${sessionName} no horário ${new Date()}!`);
+  console.log(
+    `Mensagem de mídia Base64 enviada com sucesso ao número ${phoneNumber} (processado: ${processedNumber}) pela instância ${sessionName} no horário ${new Date()}!`
+  );
 };
 
 const sendAudioBase64Message = async (sessionName, phoneNumber, message) => {
@@ -45,54 +85,40 @@ const sendAudioBase64Message = async (sessionName, phoneNumber, message) => {
     throw new Error(`Sessão ${sessionName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
-  let processedNumber = phoneNumber;
-  const brazilCountryCode = "55";
+  const processedNumber = normalizeBrazilianNumber(String(phoneNumber));
 
-  if (processedNumber.startsWith(brazilCountryCode)) {
-    const localNumber = processedNumber.slice(4);
+  let { base64: rawBase64, fileName, caption, mimeType } = message || {};
 
-    if (localNumber.length === 9 && localNumber.startsWith("9")) {
-      processedNumber = brazilCountryCode + processedNumber.slice(2, 4) + localNumber.slice(1);
+  if (!rawBase64) throw new Error("Campo 'base64' ausente na mensagem.");
+
+  // If data URI, detect mime and strip prefix
+  if (rawBase64.startsWith("data:")) {
+    // format: data:<mimeType>;base64,<data>
+    const match = rawBase64.match(/^data:([^;]+);base64,(.+)$/);
+    if (match) {
+      mimeType = mimeType || match[1];
+      rawBase64 = match[2];
+    } else {
+      // fallback: split at first comma
+      rawBase64 = stripDataUriPrefix(rawBase64);
     }
+  } else {
+    rawBase64 = stripDataUriPrefix(rawBase64);
   }
 
-  let { base64, fileName, caption } = message;
+  const messageMedia = new MessageMedia(mimeType || "audio/ogg", rawBase64, fileName);
 
-  if (base64.includes(",")) {
-    base64 = base64.split(",")[1]; // Remove prefixo 'data:<mime>;base64,'
-  }
+  try {
+    await session.client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
+      caption: caption,
+    });
 
-  const mimeTypesToTest = [
-    "audio/webm", // WebM Audio
-    "audio/ogg", // Ogg Audio
-    "audio/mp3", // MP3 Audio
-    "audio/mpeg", // MPEG Audio
-    "audio/wav", // WAV Audio
-    "audio/x-wav", // WAV Audio (alternativo)
-    "audio/flac", // FLAC Audio
-    "audio/aac", // AAC Audio
-    "image/jpeg", // JPEG Image
-    "image/png", // PNG Image
-    "image/gif", // GIF Image
-    "image/webp", // WebP Image
-    "video/mp4", // MP4 Video
-    "video/webm", // WebM Video
-  ];
-
-  for (let mimeType of mimeTypesToTest) {
-    try {
-      console.log(`Enviando mensagem com MIME type: ${mimeType}`);
-
-      const messageMedia = new MessageMedia(mimeType, base64, fileName);
-
-      await session.client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
-        caption: caption,
-      });
-
-      console.log(`Mensagem de ${mimeType} enviada com sucesso ao número ${phoneNumber} pela instância ${sessionName} no horário ${new Date()}!`);
-    } catch (error) {
-      console.error(`Erro ao enviar mensagem com MIME type ${mimeType} para o número ${phoneNumber}:`, error);
-    }
+    console.log(
+      `Mensagem de áudio Base64 enviada com sucesso ao número ${phoneNumber} (processado: ${processedNumber}) pela instância ${sessionName} no horário ${new Date()}!`
+    );
+  } catch (error) {
+    console.error(`Erro ao enviar áudio para ${phoneNumber}:`, error);
+    throw error;
   }
 };
 
