@@ -54,24 +54,35 @@ const sendBase64Message = async (sessionName, phoneNumber, message) => {
     throw new Error(`Sessão ${sessionName} não está conectada. Estado atual: ${session.connectionState}`);
   }
 
+  console.log("sessionName", sessionName);
+  console.log("connectionState", session.connectionState);
+  console.log("client info", session.client.info ? session.client.info.wid : "sem info");
+  console.log("isReady? ", typeof session.client.sendMessage === "function");
+
   const processedNumber = normalizeBrazilianNumber(String(phoneNumber));
   const { base64: rawBase64, fileName, caption, mimeType } = message || {};
 
   if (!rawBase64) throw new Error("Campo 'base64' ausente na mensagem.");
 
   const cleanBase64 = stripDataUriPrefix(rawBase64);
-
   const usedMime = mimeType || undefined;
-
   const messageMedia = new MessageMedia(usedMime, cleanBase64, fileName);
 
-  await session.client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
-    caption: caption,
-  });
+  try {
+    const lid = await session.client.getContactLidAndPhone([jid]);
+    console.log("getContactLidAndPhone result", lid);
 
-  console.log(
-    `Mensagem de mídia Base64 enviada com sucesso ao número ${phoneNumber} (processado: ${processedNumber}) pela instância ${sessionName} no horário ${new Date()}!`
-  );
+    await session.client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
+      caption: caption,
+    });
+
+    console.log(
+      `Mensagem de mídia Base64 enviada com sucesso ao número ${phoneNumber} (processado: ${processedNumber}) pela instância ${sessionName} no horário ${new Date()}!`
+    );
+  } catch (error) {
+    console.error(`Erro ao enviar mensagem para ${phoneNumber}:`, error);
+    throw error;
+  }
 };
 
 const sendAudioBase64Message = async (sessionName, phoneNumber, message) => {

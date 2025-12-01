@@ -43,7 +43,7 @@
     "puppeteer-core": "^24.17.1",
     "qr-image": "^3.2.0",
     "qrcode-terminal": "^0.12.0",
-    "whatsapp-web.js": "^1.25.0"
+    "whatsapp-web.js": "^1.34.2"
   },
   "devDependencies": {
     "@types/node-fetch": "^2.5.12",
