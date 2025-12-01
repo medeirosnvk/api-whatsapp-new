@@ -61,6 +61,7 @@ const sendBase64Message = async (sessionName, phoneNumber, message) => {
 
   const processedNumber = normalizeBrazilianNumber(String(phoneNumber));
   const { base64: rawBase64, fileName, caption, mimeType } = message || {};
+  const jid = `${processedNumber}@c.us`;
 
   if (!rawBase64) throw new Error("Campo 'base64' ausente na mensagem.");
 
