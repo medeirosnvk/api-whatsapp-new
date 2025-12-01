@@ -1,7 +1,6 @@
+const { MessageMedia } = require("whatsapp-web.js");
 const { randomBytes } = require("crypto");
 const mime = require("mime-types");
-const axios = require("axios");
-const { MessageMedia } = require("whatsapp-web.js");
 const sessionManager = require("../../services/sessionsManager");
 
 // helpers simples

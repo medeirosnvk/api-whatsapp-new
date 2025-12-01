@@ -1,6 +1,6 @@
+const { MessageMedia } = require("whatsapp-web.js");
 const sessionManager = require("../../services/sessionsManager");
 const axios = require("axios");
-const { MessageMedia } = require("whatsapp-web.js");
 
 const sendMediaMessage = async (sessionName, phoneNumber, message) => {
   const session = sessionManager.getSession(sessionName);
