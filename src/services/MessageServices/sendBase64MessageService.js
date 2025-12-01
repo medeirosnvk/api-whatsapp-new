@@ -3,7 +3,40 @@ const { randomBytes } = require("crypto");
 const mime = require("mime-types");
 const sessionManager = require("../../services/sessionsManager");
 
-// helpers simples
+const normalizeBrazilianNumber = (raw) => {
+  if (!raw) return raw;
+  const digits = String(raw).replace(/\D/g, "");
+
+  const len = digits.length;
+  if (len === 0) return digits;
+
+  // Decide local number length (8 or 9) by inspecting the 9th digit from the right when available
+  let localLen = 8; // default
+  if (len >= 9) {
+    const idx9FromRight = len - 9;
+    if (digits[idx9FromRight] === "9") {
+      localLen = 9;
+    } else if (len === 11 || len === 12 || len === 13) {
+      // heuristic: lengths that commonly include country + ddd + 9-digit mobile
+      localLen = 9;
+    }
+  }
+
+  const localNumber = digits.slice(-localLen);
+
+  const dddStart = len - localLen - 2;
+  const ddd = dddStart >= 0 ? digits.slice(dddStart, dddStart + 2) : "";
+
+  const countryPart = dddStart > 0 ? digits.slice(0, dddStart) : "";
+  const country = countryPart && countryPart.startsWith("55") ? countryPart : "55";
+
+  // If we couldn't extract DDD (ddd empty), fallback to best-effort: return country + localNumber
+  const normalized = ddd ? `${country}${ddd}${localNumber}` : `${country}${localNumber}`;
+
+  // strip any accidental leading zeros
+  return normalized.replace(/^0+/, "");
+};
+
 const stripDataUriPrefix = (s) => {
   if (!s) return s;
   // aceita formatos como: data:[mime];base64,AAAA...
