@@ -69,16 +69,84 @@ const sendBase64Message = async (sessionName, phoneNumber, message) => {
   const usedMime = mimeType || undefined;
   const messageMedia = new MessageMedia(usedMime, cleanBase64, fileName);
 
+  // Função auxiliar para tentativas de envios com logs
+  const trySend = async (targetId) => {
+    try {
+      await session.client.sendMessage(targetId, messageMedia, { caption });
+      console.log(`Enviado com sucesso para ${targetId}`);
+      return true;
+    } catch (err) {
+      console.warn(`Falha ao enviar para ${targetId}, erro:`, err && err.message ? err.message : err);
+      return false;
+    }
+  };
+
   try {
-    const lid = await session.client.getContactLidAndPhone([jid]);
-    console.log("getContactLidAndPhone result", lid);
+    // tentativa padrão de obter lid e telefone
+    try {
+      const lidResult = await session.client.getContactLidAndPhone([jid]);
+      console.log("getContactLidAndPhone result", lidResult);
+      // se retornou um mapeamento, use o jid normal para enviar
+      if (Array.isArray(lidResult) && lidResult.length > 0) {
+        const entry = lidResult[0];
+        // entry pode ter { lid, pn } dependendo da versão
+        if (entry && entry.pn) {
+          const target = `${normalizeBrazilianNumber(entry.pn)}@c.us`;
+          const ok = await trySend(target);
+          if (ok) return;
+        }
+      }
+    } catch (err) {
+      // Captura o erro específico, mas não para a execução, vamos aplicar fallbacks
+      console.warn("getContactLidAndPhone falhou, aplicando fallbacks:", err && err.message ? err.message : err);
+    }
 
-    await session.client.sendMessage(`${processedNumber}@c.us`, messageMedia, {
-      caption: caption,
-    });
+    // 1º fallback, tente enviar direto para o jid formado a partir do número fornecido
+    if (await trySend(jid)) return;
 
-    console.log(
-      `Mensagem de mídia Base64 enviada com sucesso ao número ${phoneNumber} (processado: ${processedNumber}) pela instância ${sessionName} no horário ${new Date()}!`
+    // 2º fallback, tente recuperar o contact/chat pela API da lib
+    try {
+      const contact = await session.client.getContactById(jid).catch(() => null);
+      const chat = await session.client.getChatById(jid).catch(() => null);
+      console.log("contact fallback", !!contact, "chat fallback", !!chat);
+      if (contact || chat) {
+        if (await trySend(jid)) return;
+      }
+    } catch (err) {
+      console.warn("Erro ao tentar getContactById/getChatById:", err && err.message ? err.message : err);
+    }
+
+    // 3º fallback, tentar converter @lid para @c.us no contexto da página, se as funções internas existirem
+    try {
+      if (session.client.pupPage && typeof session.client.pupPage.evaluate === "function") {
+        const converted = await session.client.pupPage.evaluate((rawId) => {
+          try {
+            // Tentativa de usar WidFactory ou outras rotinas internas, protegida por try/catch
+            if (window.Store && window.Store.WidFactory && typeof window.Store.WidFactory.toUserWidOrThrow === "function") {
+              const wid = window.Store.WidFactory.toUserWidOrThrow(rawId);
+              return wid && wid && wid.user ? `${wid.user}@c.us` : null;
+            }
+            // alternativa tentar buscar na store de contatos
+            if (window.Store && window.Store.Contact) {
+              const item = window.Store.Contact.get(rawId);
+              if (item && item.id && item.id.user) return `${item.id.user}@c.us`;
+            }
+            return null;
+          } catch (e) {
+            return null;
+          }
+        }, jid);
+
+        console.log("converted from page context", converted);
+        if (converted && (await trySend(converted))) return;
+      }
+    } catch (err) {
+      console.warn("Falha ao executar avaliação na página para converter LID:", err && err.message ? err.message : err);
+    }
+
+    // Se chegou aqui, todas as tentativas falharam
+    throw new Error(
+      `Não foi possível enviar a mensagem, nenhuma estratégia teve sucesso para ${phoneNumber}, verifique se o número está acessível a partir da sessão e se a sessão está atualizada.`
     );
   } catch (error) {
     console.error(`Erro ao enviar mensagem para ${phoneNumber}:`, error);

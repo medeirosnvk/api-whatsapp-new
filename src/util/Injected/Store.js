@@ -176,12 +176,4 @@ exports.ExposeStore = () => {
     const [proto] = args;
     return proto.locationMessage || proto.groupInviteMessage ? "text" : func(...args);
   });
-
-  window.injectToFunction({ module: "WAWebLid1X1MigrationGating", function: "Lid1X1MigrationUtils.isLidMigrated" }, (func, ...args) => {
-    try {
-      return func(...args); // call original function
-    } catch {
-      return false; // fallback only if broken
-    }
-  });
 };
