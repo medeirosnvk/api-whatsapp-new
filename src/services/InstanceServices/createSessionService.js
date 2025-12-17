@@ -232,6 +232,8 @@ const createSession = async (sessionName) => {
           }
         }
 
+        console.log("message object:", message);
+
         // Tentar enviar os dados para o webhook
         try {
           await axios.post(urlWebhookResponse, {
