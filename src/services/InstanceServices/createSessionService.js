@@ -234,18 +234,29 @@ const createSession = async (sessionName) => {
 
         console.log("message object:", message);
 
+        const isStatus = message.isStatus === true;
+        const fromReal = isStatus ? utils.formatPhoneNumber(message.author) : utils.formatPhoneNumber(message.from);
+        const toReal = utils.formatPhoneNumber(message.to);
+
+        const payloadWebhook = {
+          sessionName,
+          message: {
+            _data: {
+              from: fromReal,
+              to: toReal,
+            },
+            id: {
+              id: message?.id?.id || "",
+            },
+            body: message.body || "",
+            timestamp: message.timestamp || Math.floor(Date.now() / 1000),
+            mediaUrl: mediaUrl || "",
+          },
+        };
+
         // Tentar enviar os dados para o webhook
         try {
-          await axios.post(urlWebhookResponse, {
-            sessionName,
-            message: {
-              ...message,
-              body: mediaName || message.body,
-              mediaName,
-              mediaUrl,
-              mediaBase64,
-            },
-          });
+          await axios.post(urlWebhookResponse, payloadWebhook);
         } catch (error) {
           console.error(`Erro ao enviar dados para o webhook para a sessão ${sessionName}:`, error);
         }
