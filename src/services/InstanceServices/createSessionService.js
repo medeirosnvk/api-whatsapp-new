@@ -257,6 +257,7 @@ const createSession = async (sessionName) => {
         // Tentar enviar os dados para o webhook
         try {
           await axios.post(urlWebhookResponse, payloadWebhook);
+          console.log(`Dados enviados para o webhook para a sessão ${sessionName}`);
         } catch (error) {
           console.error(`Erro ao enviar dados para o webhook para a sessão ${sessionName}:`, error);
         }
