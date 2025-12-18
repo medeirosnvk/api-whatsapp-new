@@ -232,8 +232,10 @@ const createSession = async (sessionName) => {
           }
         }
 
+        console.log("Message:", message);
+
         const isStatus = message.isStatus === true;
-        const fromReal = isStatus ? utils.formatPhoneNumber(message.author) : utils.formatPhoneNumber(message.from);
+        const fromReal = isStatus ? message.author : message.from;
         const toReal = utils.formatPhoneNumber(message.to);
 
         const payloadWebhook = {
