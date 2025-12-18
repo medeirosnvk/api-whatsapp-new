@@ -678,25 +678,11 @@ async function checkIfFileExists(filePath) {
   }
 }
 
-async function resolveFromNumber(message) {
+function resolveFromNumber(message) {
   if (message.author && !message.author.includes("@lid")) {
     return message.author;
   }
-
-  if (message.from && !message.from.includes("@lid")) {
-    return message.from;
-  }
-
-  try {
-    const contact = await message.getContact();
-    if (contact?.id?.user) {
-      return `${contact.id.user}@c.us`;
-    }
-  } catch (err) {
-    console.error("Erro ao resolver contato:", err);
-  }
-
-  return "";
+  return message.from;
 }
 
 module.exports = {

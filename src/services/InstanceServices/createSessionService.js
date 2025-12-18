@@ -232,8 +232,6 @@ const createSession = async (sessionName) => {
           }
         }
 
-        console.log("Message:", message);
-
         const fromResolved = await utils.resolveFromNumber(message);
 
         const payloadWebhook = {
