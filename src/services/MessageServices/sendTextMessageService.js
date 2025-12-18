@@ -26,14 +26,14 @@ const sendTextMessage = async (sessionName, phoneNumber, message) => {
   const jid = `${processedNumber}@c.us`;
 
   try {
-    // Força o WhatsApp a resolver o contato e gerar o LID
-    const contact = await session.client.getContactById(jid);
+    // valida se o numero existe no WhatsApp
+    const isRegistered = await session.client.isRegisteredUser(jid);
 
-    if (!contact) {
-      throw new Error("Contato não encontrado ou inválido");
+    if (!isRegistered) {
+      throw new Error("Número não registrado no WhatsApp");
     }
 
-    await session.client.sendMessage(contact.id._serialized, message.text);
+    await session.client.sendMessage(jid, message.text);
 
     console.log(`Mensagem enviada para ${processedNumber} na sessão ${sessionName}`);
   } catch (error) {
