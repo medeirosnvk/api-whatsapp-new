@@ -2,11 +2,13 @@ const sessionManager = require("../../services/sessionsManager");
 
 const sendTextMessage = async (sessionName, phoneNumber, message) => {
   const session = sessionManager.getSession(sessionName);
-  console.log("message to send:", message);
+  console.log("session:", session);
 
   if (!session.client) {
     throw new Error(`Sessão ${sessionName} não encontrada.`);
   }
+
+  console.log("session client:", session.client);
 
   if (session.connectionState !== "open") {
     throw new Error(`Sessão ${sessionName} não está conectada. Estado atual: ${session.connectionState}`);
