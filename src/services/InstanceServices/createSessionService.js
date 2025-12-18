@@ -234,16 +234,14 @@ const createSession = async (sessionName) => {
 
         console.log("Message:", message);
 
-        const isStatus = message.isStatus === true;
-        const fromReal = isStatus ? message.author : message.from;
-        const toReal = utils.formatPhoneNumber(message.to);
+        const fromResolved = await utils.resolveFromNumber(message);
 
         const payloadWebhook = {
           sessionName,
           message: {
             _data: {
-              from: fromReal,
-              to: toReal,
+              from: fromResolved,
+              to: message.to || "",
             },
             id: {
               id: message?.id?.id || "",

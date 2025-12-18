@@ -77,7 +77,10 @@ function formatCredorInfo(creditorInfo) {
   return creditorInfo
     .map(
       (info, index) =>
-        `*${index + 1}*)\n` + `Empresa: ${info.empresa}\n` + `Seu Código na Cobrance: ${info.iddevedor}\n` + `Saldo Principal: ${formatValue(info.saldo)}`
+        `*${index + 1}*)\n` +
+        `Empresa: ${info.empresa}\n` +
+        `Seu Código na Cobrance: ${info.iddevedor}\n` +
+        `Saldo Principal: ${formatValue(info.saldo)}`
     )
     .join("\n\n");
 }
@@ -675,6 +678,27 @@ async function checkIfFileExists(filePath) {
   }
 }
 
+async function resolveFromNumber(message) {
+  if (message.author && !message.author.includes("@lid")) {
+    return message.author;
+  }
+
+  if (message.from && !message.from.includes("@lid")) {
+    return message.from;
+  }
+
+  try {
+    const contact = await message.getContact();
+    if (contact?.id?.user) {
+      return `${contact.id.user}@c.us`;
+    }
+  } catch (err) {
+    console.error("Erro ao resolver contato:", err);
+  }
+
+  return "";
+}
+
 module.exports = {
   formatValue,
   formatarMoeda,
@@ -702,4 +726,5 @@ module.exports = {
   formatPhoneNumber,
   checkIfFileExists,
   getBrazilTimeFormatted,
+  resolveFromNumber,
 };
