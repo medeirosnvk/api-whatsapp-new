@@ -25,11 +25,19 @@ const sendTextMessage = async (sessionName, phoneNumber, message) => {
     }
   }
 
+  const jid = `${processedNumber}@c.us`;
+
+  const isRegistered = await session.client.isRegisteredUser(jid);
+
+  if (!isRegistered) {
+    throw new Error("Número não registrado no WhatsApp");
+  }
+
   console.log(`Número processado: ${processedNumber}`);
   console.log(`Texto: ${message.text}`);
 
   try {
-    await session.client.sendMessage(`${processedNumber}@c.us`, message.text);
+    await session.client.sendMessage(jid, message.text);
     console.log(`Mensagem enviada para ${phoneNumber} na sessão ${sessionName}: ${message.text}`);
   } catch (error) {
     console.error(`- Erro: ${error.message}`);
