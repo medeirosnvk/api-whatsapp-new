@@ -232,8 +232,6 @@ const createSession = async (sessionName) => {
           }
         }
 
-        console.log("message object:", message);
-
         const isStatus = message.isStatus === true;
         const fromReal = isStatus ? utils.formatPhoneNumber(message.author) : utils.formatPhoneNumber(message.from);
         const toReal = utils.formatPhoneNumber(message.to);
@@ -253,6 +251,8 @@ const createSession = async (sessionName) => {
             mediaUrl: mediaUrl || "",
           },
         };
+
+        console.log("Payload para o webhook:", payloadWebhook);
 
         // Tentar enviar os dados para o webhook
         try {
